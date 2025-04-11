@@ -8,6 +8,7 @@ class REACTORUMG_API UReactorUIWidget : public UUserWidget
 {
 	GENERATED_UCLASS_BODY()
 public:
+	
 	UFUNCTION(BlueprintCallable, Category = "SmartUIWorks | CoreWidget")
 	UPanelSlot* AddChild(UWidget* Content);
 
@@ -25,6 +26,13 @@ public:
 	void RestartJsScript();
 	
 	virtual void BeginDestroy() override;
+	
+protected:
+	
+#if WITH_EDITOR
+	virtual const FText GetPaletteCategory() override;
+#endif // WITH_EDITOR
+	
 private:
 	void init();
 	

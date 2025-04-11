@@ -1,6 +1,7 @@
 #include "ReactorUtils.h"
 
 #include "LogReactorUMG.h"
+#include "ReactorUMGSetting.h"
 #include "HAL/PlatformFilemanager.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Misc/Paths.h"
@@ -62,6 +63,22 @@ bool FReactorUtils::DeleteDirectoryRecursive(const FString& DirPath)
 	
 	UE_LOG(LogReactorUMG, Log, TEXT("Directory does not exist: %s"), *DirPath);
 	return true;
+}
+
+bool FReactorUtils::CreateDirectoryRecursive(const FString& DirPath)
+{
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (!PlatformFile.DirectoryExists(*DirPath))
+	{
+		return PlatformFile.CreateDirectoryTree(*DirPath);
+	}
+	return true;
+}
+
+FString FReactorUtils::GetTypeScriptHomeDir()
+{
+	const UReactorUMGSetting* PluginSettings = GetDefault<UReactorUMGSetting>();
+	return FPackageName::LongPackageNameToFilename(PluginSettings->TsScriptHomeDir);
 }
 
 bool FReactorUtils::CheckNameExistInArray(const TArray<FString>& SkipExistFiles, const FString& CheckName)

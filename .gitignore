@@ -8,6 +8,7 @@
 *.lo
 *.o
 *.obj
+*.csproj.props
 
 # Precompiled Headers
 *.gch

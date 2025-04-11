@@ -1,6 +1,7 @@
 #include "ReactorUMGBlueprint.h"
 #include "LogReactorUMG.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
+#include "ReactorUMGSetting.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "ReactorUtils.h"
 
@@ -9,7 +10,8 @@ UReactorUMGBlueprint::UReactorUMGBlueprint(const FObjectInitializer& ObjectIniti
 {
 	WidgetName = GetName();
 	
-	TsScriptHomeDir = TEXT("Main") / WidgetName;
+	TsScriptHomeDir = FReactorUtils::GetTypeScriptHomeDir();
+	
 	TemplateFileDir = FPaths::Combine(TEXT("Template"), TEXT("smart_ui/"));
 	JsScriptMainFileName = TEXT("main");
 
@@ -147,6 +149,69 @@ UClass* UReactorUMGBlueprint::GetBlueprintClass() const
 bool UReactorUMGBlueprint::SupportedByDefaultBlueprintFactory() const
 {
 	return false;
+}
+
+void UReactorUMGBlueprint::GenerateTemplateLaunchScripts()
+{
+	FString ScriptHomeDir = FPaths::Combine(TsScriptHomeDir, TEXT("components"), WidgetName);
+	FReactorUtils::CreateDirectoryRecursive(ScriptHomeDir);
+	GenerateLaunchTsxFile(ScriptHomeDir);
+	GenerateIndexTsFile(ScriptHomeDir);
+	GenerateAppFile(ScriptHomeDir);
+}
+
+void UReactorUMGBlueprint::GenerateLaunchTsxFile(const FString& ScriptHome)
+{
+	const FString LaunchTsxFilePath = FPaths::Combine(ScriptHome, TEXT("launch.tsx"));
+	GeneratedTemplateOutput = {"", ""};
+	GeneratedTemplateOutput << "/** Note: Automatically generate code, Do not modify it */ \n";
+	GeneratedTemplateOutput << "import * as UE from \"ue\";\n";
+	GeneratedTemplateOutput << "import { argv } from \"puerts\";\n";
+	GeneratedTemplateOutput << "let bridgeCaller = (argv.getByName(\"BridgeCaller\") as UE.JsBridgeCaller);\n";
+	GeneratedTemplateOutput << "let coreWidget = (argv.getByName(\"CoreWidget\") as UE.ReactorUIWidget);\n";
+	GeneratedTemplateOutput << "bridgeCaller.MainCaller.Bind(Launch);\n";
+	GeneratedTemplateOutput << "coreWidget.ReleaseJsEnv();\n";
+	GeneratedTemplateOutput << "function Launch(coreWidget: $Nullable<UE.ReactorUIWidget>) : Root {\n";
+	GeneratedTemplateOutput << "ReactUMG.init(coreWidget);\n";
+	GeneratedTemplateOutput << "return ReactUMG.render(\n";
+
+	const FString ComponentName = FString::Printf(TEXT("<%s/> \n"), *WidgetName);
+	GeneratedTemplateOutput << ComponentName;
+	GeneratedTemplateOutput << ");\n";
+	GeneratedTemplateOutput << "}\n";
+	GeneratedTemplateOutput.Indent(4);
+	
+	GeneratedTemplateOutput.Prefix = TEXT(".tsx");
+	FFileHelper::SaveStringToFile(GeneratedTemplateOutput.Buffer, *LaunchTsxFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
+}
+
+void UReactorUMGBlueprint::GenerateAppFile(const FString& ScriptHome)
+{
+	const FString AppFilePath = FPaths::Combine(ScriptHome, WidgetName + TEXT(".tsx"));
+	GeneratedTemplateOutput = {"", ""};
+	GeneratedTemplateOutput << "/** Note:  */ \n";
+	GeneratedTemplateOutput << "import * as UE from \"ue\";\n";
+
+	const FString ClassDeclare = FString::Printf(TEXT("export class %s extends UE.ReactComponent {\n"), *WidgetName);
+	GeneratedTemplateOutput << ClassDeclare;
+	GeneratedTemplateOutput << "render() {\n";
+	GeneratedTemplateOutput << "/* Write your code here */\n";
+	GeneratedTemplateOutput << "return <div>Hello ReactorUMG!</div>\n";
+	GeneratedTemplateOutput << "}\n";
+	GeneratedTemplateOutput << "}\n";
+
+	GeneratedTemplateOutput.Prefix = TEXT(".tsx");
+	FFileHelper::SaveStringToFile(GeneratedTemplateOutput.Buffer, *AppFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
+}
+
+void UReactorUMGBlueprint::GenerateIndexTsFile(const FString& ScriptHome)
+{
+	const FString IndexFilePath = FPaths::Combine(ScriptHome, TEXT("index.ts"));
+	GeneratedTemplateOutput = {"", ""};
+	GeneratedTemplateOutput << "/** Note: Automatically generate code, Do not modify it */ \n";
+
+	const FString Export = FString::Printf(TEXT("export * from \"./%s\"; \n"), *WidgetName);
+	GeneratedTemplateOutput << Export;
 }
 
 #endif

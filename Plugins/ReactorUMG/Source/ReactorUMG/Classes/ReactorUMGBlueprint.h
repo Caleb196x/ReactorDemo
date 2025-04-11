@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TypeScriptDeclarationGenerator.h"
 #include "ReactorUMGBlueprint.generated.h"
 
 UCLASS()
@@ -43,6 +44,13 @@ protected:
 	
 	UClass* GetBlueprintClass() const;
 	bool SupportedByDefaultBlueprintFactory() const;
+	void GenerateTemplateLaunchScripts();
+	void GenerateIndexTsFile(const FString&);
+	void GenerateLaunchTsxFile(const FString&);
+	void GenerateAppFile(const FString&);
+
+private:
+	FStringBuffer GeneratedTemplateOutput;
 #endif
 	
 };
