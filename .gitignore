@@ -77,3 +77,4 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 Plugins/ReactorUMG/Source/Puerts/CSharpParamDefaultValueMetas/obj
 Plugins/Binaries
+Plugins/**/node_modules/*
