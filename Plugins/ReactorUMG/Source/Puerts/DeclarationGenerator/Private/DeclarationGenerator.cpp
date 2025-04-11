@@ -402,15 +402,8 @@ void FTypeScriptDeclarationGenerator::GenTypeScriptDeclaration(bool InGenStruct,
     End();
 
     IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-    // todo@Caleb196x：修改生成逻辑
-    /*PlatformFile.CopyDirectoryTree(*(FPaths::ProjectDir() / TEXT("Typing")),
-        *(IPluginManager::Get().FindPlugin("SmartUIWorks")->GetBaseDir() / TEXT("Typing")), false);*/
-    /*
-    PlatformFile.CopyDirectoryTree(*(FPaths::ProjectContentDir() / TEXT("JavaScript")),
-        *(IPluginManager::Get().FindPlugin("SmartUIWorks")->GetBaseDir() / TEXT("Content") / TEXT("JavaScript")), true);
-        */
 
-    const FString UEDeclarationFilePath = FPaths::ProjectDir() / TEXT("Typing/ue/ue.d.ts");
+    const FString UEDeclarationFilePath = GetDeclFilePathFromOutputDir(OutDir, TEXT("ue.d.ts"));
 
 #ifdef PUERTS_WITH_SOURCE_CONTROL
     PuertsSourceControlUtils::MakeSourceControlFileWritable(UEDeclarationFilePath);
@@ -433,7 +426,7 @@ void FTypeScriptDeclarationGenerator::GenTypeScriptDeclaration(bool InGenStruct,
     }
     End();
 
-    const FString BPDeclarationFilePath = FPaths::ProjectDir() / TEXT("Typing/ue/ue_bp.d.ts");
+    const FString BPDeclarationFilePath = GetDeclFilePathFromOutputDir(OutDir, TEXT("ue_bp.d.ts"));
 
 #ifdef PUERTS_WITH_SOURCE_CONTROL
     PuertsSourceControlUtils::MakeSourceControlFileWritable(BPDeclarationFilePath);
@@ -534,10 +527,28 @@ void FTypeScriptDeclarationGenerator::WriteOutput(UObject* Obj, const FStringBuf
     }
 }
 
+FString FTypeScriptDeclarationGenerator::GetDeclFilePathFromOutputDir(const FString& OutDir, const FString& FileName)
+{
+    FString BPDeclFilePath = FPaths::ProjectDir() / TEXT("Typing/ue") / FileName;
+    if (!OutDir.IsEmpty())
+    {
+        const FString BPDeclDir = FPaths::Combine(OutDir, TEXT("ue"));
+        if (!FPaths::DirectoryExists(BPDeclDir))
+        {
+            FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*BPDeclDir);
+        }
+        
+        BPDeclFilePath = FPaths::Combine(BPDeclDir, FileName);
+    }
+
+    return BPDeclFilePath;
+}
+
 void FTypeScriptDeclarationGenerator::RestoreBlueprintTypeDeclInfos(bool InGenFull)
 {
     FString FileContent;
-    FFileHelper::LoadFileToString(FileContent, *(FPaths::ProjectDir() / TEXT("Typing/ue/ue_bp.d.ts")));
+    const FString BPDeclFilePath = GetDeclFilePathFromOutputDir(OutDir, TEXT("ue_bp.d.ts"));
+    FFileHelper::LoadFileToString(FileContent, *BPDeclFilePath);
     RestoreBlueprintTypeDeclInfos(FileContent, InGenFull);
 }
 

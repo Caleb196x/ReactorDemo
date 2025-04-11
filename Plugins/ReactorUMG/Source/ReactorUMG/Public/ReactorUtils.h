@@ -20,9 +20,21 @@ public:
 		return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetContentDir());
 	}
 
+	FORCEINLINE static FString GetPluginDir()
+	{
+		return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetBaseDir());
+
+	}
+
 	static bool DeleteDirectoryRecursive(const FString& DirPath);
 
 	static bool CreateDirectoryRecursive(const FString& DirPath);
+
+	FORCEINLINE static bool CopyDirectoryTree(const FString& Src, const FString& Dest, bool Overrided)
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		return PlatformFile.CopyDirectoryTree(*Dest, *Src, Overrided);
+	}
 
 	static FString GetTypeScriptHomeDir();
 

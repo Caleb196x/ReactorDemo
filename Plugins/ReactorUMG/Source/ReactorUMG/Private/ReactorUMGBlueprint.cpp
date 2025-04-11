@@ -153,7 +153,7 @@ bool UReactorUMGBlueprint::SupportedByDefaultBlueprintFactory() const
 
 void UReactorUMGBlueprint::GenerateTemplateLaunchScripts()
 {
-	FString ScriptHomeDir = FPaths::Combine(TsScriptHomeDir, TEXT("components"), WidgetName);
+	FString ScriptHomeDir = FPaths::Combine(TsScriptHomeDir, TEXT("src"), TEXT("components"), WidgetName);
 	FReactorUtils::CreateDirectoryRecursive(ScriptHomeDir);
 	GenerateLaunchTsxFile(ScriptHomeDir);
 	GenerateIndexTsFile(ScriptHomeDir);

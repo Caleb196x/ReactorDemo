@@ -33,6 +33,7 @@ struct DECLARATIONGENERATOR_API FStringBuffer
 struct DECLARATIONGENERATOR_API FTypeScriptDeclarationGenerator
 {
     FStringBuffer Output{"", ""};
+    FString OutDir;
     TSet<UObject*> Processed;
     TSet<FString> ProcessedByName;
     std::map<UStruct*, std::vector<UFunction*>> ExtensionMethodsMap;
@@ -84,6 +85,8 @@ struct DECLARATIONGENERATOR_API FTypeScriptDeclarationGenerator
     void NamespaceEnd(UObject* Obj, FStringBuffer& Buff);
 
     void WriteOutput(UObject* Obj, const FStringBuffer& Buff);
+
+    FString GetDeclFilePathFromOutputDir(const FString& OutDir, const FString& FileName);
 
     void RestoreBlueprintTypeDeclInfos(bool InGenFull);
 
