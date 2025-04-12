@@ -22,7 +22,7 @@ UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
 	if (UReactorUMGBlueprint* Blueprint = Cast<UReactorUMGBlueprint>(Class->ClassGeneratedBy))
 	{
 		WidgetName = Blueprint->WidgetName;
-		ScriptHomeDir = Blueprint->TsScriptHomeDir;
+		ScriptHomeDir = Blueprint->TsScriptHomeFullDir;
 	}
 	
 	MainReactJsScriptPath = FString::Printf(TEXT("Main/%s/launch"), *WidgetName);

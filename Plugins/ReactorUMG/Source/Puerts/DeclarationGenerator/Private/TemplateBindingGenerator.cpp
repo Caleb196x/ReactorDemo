@@ -181,7 +181,7 @@ struct FGenImp
     }
 };
 
-void UTemplateBindingGenerator::Gen_Implementation() const
+void UTemplateBindingGenerator::Gen_Implementation(const FString& OutDir) const
 {
     FGenImp Gen;
 
@@ -198,7 +198,15 @@ void UTemplateBindingGenerator::Gen_Implementation() const
 
     Gen.End();
 
-    const FString FilePath = FPaths::ProjectDir() / TEXT("Typing/cpp/index.d.ts");
+    FString FilePath;
+    if (!OutDir.IsEmpty())
+    {
+        FilePath = FPaths::Combine(OutDir, TEXT("cpp/index.d.ts"));
+    } else
+    {
+       FilePath = FPaths::ProjectDir() / TEXT("Typing/cpp/index.d.ts");
+    }
+    
 
 #ifdef PUERTS_WITH_SOURCE_CONTROL
     PuertsSourceControlUtils::MakeSourceControlFileWritable(FilePath);

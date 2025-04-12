@@ -9,7 +9,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ReactCoreWidget.h"
+#include "ReactorUIWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GameFramework/PlayerController.h"
@@ -27,7 +27,7 @@ class REACTORUMG_API UUMGManager : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 public:
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
-    static UReactCoreWidget* CreateReactWidget(UWorld* World);
+    static UReactorUIWidget* CreateReactWidget(UWorld* World);
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
     static UUserWidget* CreateWidget(UWorld* World, UClass* Class);

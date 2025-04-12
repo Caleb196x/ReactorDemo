@@ -11,4 +11,5 @@ public:
     
     TSharedPtr<class FReactorUMGBlueprintAssetTypeActions> TestBlueprintAssetTypeActions;
     TSharedPtr<class FReactorUMGBlueprintCompiler> ReactorUMGBlueprintCompiler;
+    TUniquePtr<FAutoConsoleCommand> ConsoleCommand;
 };

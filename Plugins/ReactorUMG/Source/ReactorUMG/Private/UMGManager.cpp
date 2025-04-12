@@ -8,9 +8,9 @@
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Rive/RiveFile.h"
 
-UReactCoreWidget* UUMGManager::CreateReactWidget(UWorld* World)
+UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
-    return ::CreateWidget<UReactCoreWidget>(World);
+    return ::CreateWidget<UReactorUIWidget>(World);
 }
 
 UUserWidget* UUMGManager::CreateWidget(UWorld* World, UClass* Class)
