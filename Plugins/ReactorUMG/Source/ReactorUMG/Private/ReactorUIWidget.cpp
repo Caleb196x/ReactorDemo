@@ -22,18 +22,15 @@ UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
 	if (UReactorUMGBlueprint* Blueprint = Cast<UReactorUMGBlueprint>(Class->ClassGeneratedBy))
 	{
 		WidgetName = Blueprint->WidgetName;
-		ScriptHomeDir = Blueprint->TsScriptHomeFullDir;
+		ScriptHomeDir = Blueprint->TsScriptHomeRelativeDir;
 	}
 	
-	MainReactJsScriptPath = FString::Printf(TEXT("Main/%s/launch"), *WidgetName);
+	LaunchJsScriptPath = FPaths::Combine(ScriptHomeDir, TEXT("launch"));
 
-	if (WidgetName.IsEmpty())
+	if (!WidgetName.IsEmpty())
 	{
-		// default object use template
-		MainReactJsScriptPath =TEXT("Template/smart_ui/launch");
+		init();
 	}
-
-	init();
 }
 
 void UReactorUIWidget::BeginDestroy()
@@ -63,12 +60,12 @@ void UReactorUIWidget::init()
 		if (JsEnv)
 		{
 		
-			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, MainReactJsScriptPath, Arguments);
+			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
 			if (!Result)
 			{
 				UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
 				ReleaseJsEnv();
-				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *MainReactJsScriptPath);
+				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchJsScriptPath);
 			}
 		}
 		else
@@ -171,5 +168,5 @@ void UReactorUIWidget::RestartJsScript()
 	Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
 	Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
 	
-	FJsEnvRuntime::GetInstance().RestartJsScripts(ScriptHomeDir, MainReactJsScriptPath, Arguments);
+	FJsEnvRuntime::GetInstance().RestartJsScripts(ScriptHomeDir, LaunchJsScriptPath, Arguments);
 }

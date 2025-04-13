@@ -111,7 +111,7 @@ void CopyPredefinedTSProject()
 		const FString TSProjectDir = FReactorUtils::GetTypeScriptHomeDir();
 		FReactorUtils::CreateDirectoryRecursive(TSProjectDir);
 
-		FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, true);
+		FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, false);
 	}
 }
 

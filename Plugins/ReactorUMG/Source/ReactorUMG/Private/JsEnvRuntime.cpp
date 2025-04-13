@@ -60,8 +60,8 @@ bool FJsEnvRuntime::StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, con
 
 bool FJsEnvRuntime::CheckScriptLegal(const FString& Script) const
 {
-	FString PluginContentDir = FReactorUtils::GetPluginContentDir();
-	FString FullPath = FPaths::Combine(PluginContentDir, TEXT("JavaScript"), Script);
+	const FString JSContentDir = FPaths::ProjectContentDir() / TEXT("JavaScript");
+	FString FullPath = JSContentDir / Script;
 	
 	if (!FPaths::FileExists(FullPath + TEXT(".js")))
 	{

@@ -9,14 +9,13 @@
     "paths": {
     },
     "outDir": "../Content/JavaScript",
+    "rootDir": ".",
     "typeRoots": [
       "src/types",
       "./node_modules/@types"
     ]
   },
   "include": [
-    "reactorUMG/**/*",
-    "src/**/*",
-    "src/globals.d.ts"
+    "src/**/*"
   ]
 }

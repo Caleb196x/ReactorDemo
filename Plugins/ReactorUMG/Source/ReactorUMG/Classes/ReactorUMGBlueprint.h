@@ -39,13 +39,6 @@ protected:
 	
 	UClass* GetBlueprintClass() const;
 	bool SupportedByDefaultBlueprintFactory() const;
-	void GenerateTemplateLaunchScripts();
-	void GenerateIndexTsFile(const FString&);
-	void GenerateLaunchTsxFile(const FString&);
-	void GenerateAppFile(const FString&);
-
-private:
-	FStringBuffer GeneratedTemplateOutput;
 #endif
 	
 };

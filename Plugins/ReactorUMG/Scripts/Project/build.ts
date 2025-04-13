@@ -6,7 +6,7 @@ import * as path from 'path';
 const SOURCE_DIR = '.'; 
 const tsConfig = JSON.parse(fs.readFileSync('./tsconfig.json', 'utf-8'));
 const OUT_DIR = tsConfig.compilerOptions.outDir;
-const IGNORE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.map'] as string[];
+const IGNORE_EXTENSIONS = ['.ts', '.tsx'] as string[];
 const IGNORE_FILES = ['tsconfig.json', 'package-lock.json', 'build.ts', 'README.md', 'yarn.lock'] as string[];
 
 async function build() {

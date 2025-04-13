@@ -356,7 +356,7 @@ const hostConfig : Reconciler.HostConfig<string, any, UEWidgetRoot, UEWidget, UE
 const reconciler = Reconciler(hostConfig)
 let coreWidget: UE.ReactorUIWidget;
 
-export const ReactUMG = {
+export const ReactorUMG = {
     render: function(reactElement: React.ReactNode) {
         if (coreWidget == undefined) {
             throw new Error("init with ReactorUIWidget first!");
