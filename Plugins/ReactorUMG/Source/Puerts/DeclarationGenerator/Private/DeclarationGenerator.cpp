@@ -527,10 +527,10 @@ void FTypeScriptDeclarationGenerator::WriteOutput(UObject* Obj, const FStringBuf
     }
 }
 
-FString FTypeScriptDeclarationGenerator::GetDeclFilePathFromOutputDir(const FString& OutDir, const FString& FileName)
+FString FTypeScriptDeclarationGenerator::GetDeclFilePathFromOutputDir(const FString& InOutDir, const FString& FileName)
 {
     FString BPDeclFilePath = FPaths::ProjectDir() / TEXT("Typing/ue") / FileName;
-    if (!OutDir.IsEmpty())
+    if (!InOutDir.IsEmpty())
     {
         const FString BPDeclDir = FPaths::Combine(OutDir, TEXT("ue"));
         if (!FPaths::DirectoryExists(BPDeclDir))
@@ -1590,7 +1590,7 @@ private:
             UClass* Class = Cast<UClass>(SortedClasses[i]);
             if (Class && Class->ImplementsInterface(UCodeGenerator::StaticClass()))
             {
-                ICodeGenerator::Execute_Gen(Class->GetDefaultObject());
+                ICodeGenerator::Execute_Gen(Class->GetDefaultObject(), "");
             }
         }
 

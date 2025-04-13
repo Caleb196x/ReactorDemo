@@ -26,6 +26,10 @@ public class ReactorUMGEditor : ModuleRules
                 "AssetRegistry",
                 "KismetCompiler",
                 "Kismet",
+                "DeclarationGenerator",
+                "DeveloperSettings",
+                "UnrealEd",
+                "Projects",
                 "UMG"
             }
         );

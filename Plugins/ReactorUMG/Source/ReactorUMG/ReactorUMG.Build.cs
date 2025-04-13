@@ -46,6 +46,7 @@ public class ReactorUMG : ModuleRules
 				"InputCore",
 				"Projects",
 				"DeclarationGenerator",
+				"DeveloperSettings",
 				"JsEnv",
 				"SpinePlugin",
 				"Rive"

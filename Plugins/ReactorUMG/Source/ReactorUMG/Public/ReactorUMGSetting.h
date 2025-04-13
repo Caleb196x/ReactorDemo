@@ -14,7 +14,14 @@ public:
 		  config,
 		  Category = "ReactorUMG",
 		  DisplayName = "TypeScript Code Home Directory")
-	FString TsScriptHomeDir;
+	FString TsScriptProjectDir;
+
+	UPROPERTY(EditAnywhere, config,
+		Category = "ReactorUMG",
+		DisplayName = "Generate TypeScript projects automatically",
+		meta = (ToolTip =
+			"If the option is set, the system will automatically generate a TypeScript project. If not, you need to manually create a TS project, manually generate a type file, and set TsScriptProjectDir to a custom path."))
+	bool bAutoGenerateTSProject;
 
 	virtual FName GetCategoryName() const override
 	{

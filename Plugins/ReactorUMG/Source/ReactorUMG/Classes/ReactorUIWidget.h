@@ -37,7 +37,7 @@ private:
 	void init();
 	
 	// js程序入口
-	FString MainReactJsScriptPath;
+	FString LaunchJsScriptPath;
 
 	FString ScriptHomeDir;
 

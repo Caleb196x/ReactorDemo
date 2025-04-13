@@ -78,7 +78,18 @@ bool FReactorUtils::CreateDirectoryRecursive(const FString& DirPath)
 FString FReactorUtils::GetTypeScriptHomeDir()
 {
 	const UReactorUMGSetting* PluginSettings = GetDefault<UReactorUMGSetting>();
-	return FPackageName::LongPackageNameToFilename(PluginSettings->TsScriptHomeDir);
+	FString ScriptHomeDir = PluginSettings->TsScriptProjectDir;
+	if (ScriptHomeDir.IsEmpty())
+	{
+		ScriptHomeDir = TEXT("TypeScript");
+	}
+
+	if (ScriptHomeDir.StartsWith("/Game"))
+	{
+		return FPackageName::LongPackageNameToFilename(ScriptHomeDir);
+	}
+
+	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir()), ScriptHomeDir);
 }
 
 bool FReactorUtils::CheckNameExistInArray(const TArray<FString>& SkipExistFiles, const FString& CheckName)

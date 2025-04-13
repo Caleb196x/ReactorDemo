@@ -8,27 +8,22 @@ UCLASS()
 class REACTORUMG_API UReactorUMGBlueprint : public UBlueprint
 {
 	GENERATED_UCLASS_BODY()
-	
-	UPROPERTY(BlueprintType, EditAnywhere, Category = "ReactorUMG")
-	FString TsScriptHomeDir;
 
 	UPROPERTY(BlueprintType, EditAnywhere, Category = "ReactorUMG")
-	FString TemplateFileDir;
+	FString TsProjectDir;
 	
 	UPROPERTY(BlueprintType, EditAnywhere, Category = "ReactorUMG")
-	FString JsScriptMainFileName;
+	FString TsScriptHomeFullDir;
 
+	UPROPERTY(BlueprintType, EditAnywhere, Category = "ReactorUMG")
+	FString TsScriptHomeRelativeDir;
+	
 	UPROPERTY(BlueprintType, EditAnywhere, BlueprintReadWrite, Category = "ReactorUMG")
 	FString WidgetName;
 
 	FORCEINLINE FString GetTsScriptHomeDir()
 	{
-		return TsScriptHomeDir;
-	}
-
-	FORCEINLINE FString GetTsScriptMainFileShortPath()
-	{
-		return TsScriptHomeDir / JsScriptMainFileName;
+		return TsScriptHomeFullDir;
 	}
 
 protected:
@@ -44,13 +39,6 @@ protected:
 	
 	UClass* GetBlueprintClass() const;
 	bool SupportedByDefaultBlueprintFactory() const;
-	void GenerateTemplateLaunchScripts();
-	void GenerateIndexTsFile(const FString&);
-	void GenerateLaunchTsxFile(const FString&);
-	void GenerateAppFile(const FString&);
-
-private:
-	FStringBuffer GeneratedTemplateOutput;
 #endif
 	
 };

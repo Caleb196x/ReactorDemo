@@ -1,21 +1,21 @@
 {
-    "compilerOptions": {
-      "target": "esnext",
-      "module": "commonjs",
-      "experimentalDecorators": true,
-      "jsx": "react",
-      "sourceMap": true,
-      "baseUrl": ".",
-      "paths": {
-      },
-      "typeRoots": [
-        "src/types",
-        "./node_modules/@types"
-      ],
-      "outDir": "../JavaScript"
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
     },
-    "include": [
-      "reactUMG/**/*",
-      "src/types/**/*"
-    ],
-  }
+    "outDir": "../Content/JavaScript",
+    "rootDir": ".",
+    "typeRoots": [
+      "src/types",
+      "./node_modules/@types"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
