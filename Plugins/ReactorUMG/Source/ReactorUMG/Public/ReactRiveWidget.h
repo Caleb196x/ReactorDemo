@@ -22,7 +22,8 @@ public:
 	void SetRiveDescriptor(const FRiveDescriptor& newDescriptor);
 
 	UFUNCTION(BlueprintCallable)
-	void SetRiveFile(URiveFile* InRiveFile);
+	void SetRiveFile(URiveFile* InRiveFile, const FString& ArtBoard = TEXT(""), const FString& StateMachine=TEXT(""),
+		uint8 ArtBoardIndex=0, uint8 FitType=1/*Contain*/, uint8 Alignment=4/*Center*/, float Scale=1.0f);
 	
 	UFUNCTION()
 	void OnSWidgetSizeChanged(const FVector2D& NewSize);

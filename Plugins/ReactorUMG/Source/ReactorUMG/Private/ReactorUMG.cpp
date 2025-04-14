@@ -15,5 +15,5 @@ void FReactorUMGModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FReactorUMGModule, ReactorUMG)

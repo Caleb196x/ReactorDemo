@@ -68,16 +68,16 @@ void callbackWidget(AnimationState *state, spine::EventType type, TrackEntry *en
 }
 
 USpineWidget::USpineWidget(const FObjectInitializer &ObjectInitializer) : Super(ObjectInitializer) {
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> NormalMaterialRef(TEXT("/RectorUMG/Spine/UI_SpineUnlitNormalMaterial"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> NormalMaterialRef(TEXT("/ReactorUMG/Spine/UI_SpineUnlitNormalMaterial"));
 	NormalBlendMaterial = NormalMaterialRef.Object;
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> AdditiveMaterialRef(TEXT("/RectorUMG/Spine/UI_SpineUnlitAdditiveMaterial"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> AdditiveMaterialRef(TEXT("/ReactorUMG/Spine/UI_SpineUnlitAdditiveMaterial"));
 	AdditiveBlendMaterial = AdditiveMaterialRef.Object;
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MultiplyMaterialRef(TEXT("/RectorUMG/Spine/UI_SpineUnlitMultiplyMaterial"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MultiplyMaterialRef(TEXT("/ReactorUMG/Spine/UI_SpineUnlitMultiplyMaterial"));
 	MultiplyBlendMaterial = MultiplyMaterialRef.Object;
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ScreenMaterialRef(TEXT("/RectorUMG/Spine/UI_SpineUnlitScreenMaterial"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ScreenMaterialRef(TEXT("/ReactorUMG/Spine/UI_SpineUnlitScreenMaterial"));
 	ScreenBlendMaterial = ScreenMaterialRef.Object;
 
 	TextureParameterName = FName(TEXT("SpriteTexture"));

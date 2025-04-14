@@ -420,15 +420,16 @@ void UReactRiveWidget::SetRiveDescriptor(const FRiveDescriptor& newDescriptor)
     Setup();
 }
 
-void UReactRiveWidget::SetRiveFile(URiveFile* InRiveFile)
+void UReactRiveWidget::SetRiveFile(URiveFile* InRiveFile, const FString& ArtBoard, const FString& StateMachine,
+    uint8 ArtBoardIndex, uint8 FitType, uint8 Alignment, float Scale)
 {
     if (InRiveFile)
     {
-        SetRiveDescriptor(FRiveDescriptor{InRiveFile, "", 0, "",
-            ERiveFitType::Contain, ERiveAlignment::Center, 1.0f}); 
+        const ERiveFitType Fit = static_cast<ERiveFitType>(FitType);
+        const ERiveAlignment Align = static_cast<ERiveAlignment>(Alignment);
+        SetRiveDescriptor(FRiveDescriptor{InRiveFile, ArtBoard, ArtBoardIndex, StateMachine, Fit, Align, Scale}); 
     }
 }
-
 
 void UReactRiveWidget::CheckArtboardSize()
 {
