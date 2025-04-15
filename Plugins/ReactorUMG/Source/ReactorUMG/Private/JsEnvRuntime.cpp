@@ -88,9 +88,9 @@ void FJsEnvRuntime::ReleaseJsEnv(TSharedPtr<puerts::FJsEnv> JsEnv)
 
 void FJsEnvRuntime::RestartJsScripts(const FString& ScriptHomeDir, const FString& MainJsScript,  const TArray<TPair<FString, UObject*>>& Arguments)
 {
-	FString PluginContentDir = FReactorUtils::GetPluginContentDir();
-	FString JSContentDir = FPaths::Combine(PluginContentDir, TEXT("JavaScript"));
-	FString JsHomeDir = FPaths::Combine(PluginContentDir, TEXT("JavaScript"),ScriptHomeDir);
+	const FString ProjectContentDir = FPaths::ProjectContentDir();
+	FString JSContentDir = FPaths::Combine(ProjectContentDir, TEXT("JavaScript"));
+	FString JsHomeDir = FPaths::Combine(ProjectContentDir, TEXT("JavaScript"), ScriptHomeDir);
 
 	if (ScriptHomeDir.IsEmpty() || !FPaths::DirectoryExists(JsHomeDir))
 	{
