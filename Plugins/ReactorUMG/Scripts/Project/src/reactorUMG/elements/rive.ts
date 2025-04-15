@@ -57,7 +57,9 @@ export class RiveWrapper extends ComponentWrapper {
     }
 
     override convertToWidget() {
-        const Rive = new UE.ReactRiveWidget();
+        // const Rive = new UE.ReactRiveWidget();
+        const World = UE.UMGManager.GetWorld();
+        const Rive = UE.UMGManager.CreateWidget(World, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
         this.commonPropertyInitialized(Rive);
 
         const artBoard = this.props?.artBoard || "";
@@ -68,14 +70,20 @@ export class RiveWrapper extends ComponentWrapper {
 
         const riveFile = this.props?.rive;
         if (riveFile) {
-            Rive.SetRiveFile(UE.UMGManager.LoadRiveFile(Rive, riveFile), artBoard, 
-                            artBoardIndex, this.convertFitType(fitType), scale, this.convertAlignment(alignment));
+            const descriptor = new UE.RiveDescriptor();
+            descriptor.RiveFile = UE.UMGManager.LoadRiveFile(Rive, riveFile);
+            descriptor.ArtboardName = artBoard;
+            descriptor.ArtboardIndex = artBoardIndex;
+            descriptor.FitType = this.convertFitType(fitType);
+            descriptor.ScaleFactor = scale;
+            descriptor.Alignment = this.convertAlignment(alignment);
+            Rive.SetRiveDescriptor(descriptor);
         }
 
-        const initStateMachine = this.props?.initStateMachine;
-        if (initStateMachine && initStateMachine !== '') {
-            Rive.SetStateMachine(initStateMachine);
-        }
+        // const initStateMachine = this.props?.initStateMachine;
+        // if (initStateMachine && initStateMachine !== '') {
+        //     Rive.SetStateMachine(initStateMachine);
+        // }
 
         const RiveReady = this.props?.onRiveReady;
         if (RiveReady) {

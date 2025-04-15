@@ -24,9 +24,20 @@ export class RiveTest extends React.Component {
 
             {/* <button style={{backgroundColor: "transparent"}}>
             </button> */}
-            <Rive fitType="contain" rive={start} style={{justifySelf: "center", alignSelf: "center", padding: "0"}} scale={2.0}/>
-            <Rive fitType="contain" rive={settings} style={{justifySelf: "center", alignSelf: "center", padding: "200px 0 0 0"}} scale={2.0}/>
-            <Rive fitType="contain" rive={rewards} style={{justifySelf: "center", alignSelf: "center", padding: "400px 0 0 0"}} scale={2.0}/>
+            <Overlay style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>
+                <Rive fitType="contain" rive={start} scale={2.0} style={{justifySelf: "center", alignSelf: "center"}}/>
+                <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Start</p>
+            </Overlay>
+
+            <Overlay style={{justifySelf: "center", alignSelf: "center", padding: "200px 0 0 0"}}>
+                <Rive fitType="contain" rive={settings} scale={2.0} style={{justifySelf: "center", alignSelf: "center"}}/>
+                <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Settings</p>
+            </Overlay>
+
+            <Overlay style={{justifySelf: "center", alignSelf: "center", padding: "400px 0 0 0"}}>
+                <Rive fitType="contain" rive={rewards} scale={2.0} style={{justifySelf: "center", alignSelf: "center"}}/>
+                <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Rewards</p>
+            </Overlay>
 
 
             {/* <button style={{backgroundColor: "transparent"}}>

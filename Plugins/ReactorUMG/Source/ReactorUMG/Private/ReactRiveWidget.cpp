@@ -145,23 +145,16 @@ TSharedRef<SWidget> UReactRiveWidget::RebuildWidget()
             FIntPoint::ZeroValue; // Setting to zero value here will make the
                                   // rive texture use the artboard size
                                   // initially
-        /*if (APlayerController* OwningPlayer = GetOwningPlayer())
-        {
-            if (UWorld* World = OwningPlayer->GetWorld())
-            {
-                World->GetTimerManager().ClearTimer(TimerHandle);
-                World->GetTimerManager().SetTimer(
-                    TimerHandle,
-                    [this]() { Setup(); },
-                    0.05f,
-                    false);
-            }
-        }*/
 
-        AsyncTask(ENamedThreads::GameThread,
-            [this]() {
-                Setup();
-            });
+        if (UWorld* World = RiveWidget->GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(TimerHandle);
+            World->GetTimerManager().SetTimer(
+                TimerHandle,
+                [this]() { Setup(); },
+                0.05f,
+                false);
+        }
     }
 
     RiveWidget->SetOnMouseButtonDown(BIND_UOBJECT_DELEGATE(FPointerEventHandler, 
