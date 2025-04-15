@@ -1589,6 +1589,11 @@ declare module "reactorUMG" {
     interface RiveProp extends CommonProps {
         rive?: string | undefined;
         initStateMachine?: string | undefined;
+        artBoard?: string | undefined;
+        artBoardIndex?: number | undefined;
+        fitType?: 'contain' | 'cover' | 'fill' | 'fit-width' | 'fit-height' | 'none' | 'scale-down' | 'layout' | undefined;
+        scale?: number | undefined;
+        alignment?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | undefined;
 
         onRiveReady?: () => void;
         onRiveNamedEvent?: (eventName: string) => void;

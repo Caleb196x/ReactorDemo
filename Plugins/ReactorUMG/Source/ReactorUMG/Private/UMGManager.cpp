@@ -129,3 +129,25 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
 
     return RiveFile;
 }
+
+UWorld* UUMGManager::GetWorld()
+{
+#if WITH_EDITOR
+    if (GEditor && GEditor->PlayWorld)
+    {
+        return GEditor->PlayWorld;
+    }
+
+    if (GEditor && GEditor->GetEditorWorldContext().World())
+    {
+        return GEditor->GetEditorWorldContext().World();
+    }
+#endif
+
+    if (GEngine && GEngine->GetWorld())
+    {
+        return GEngine->GetWorld();
+    }
+
+    return nullptr;
+}

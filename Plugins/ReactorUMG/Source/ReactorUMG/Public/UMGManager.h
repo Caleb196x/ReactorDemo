@@ -52,4 +52,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Rive")
 	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath);
+
+	UFUNCTION(BlueprintCallable, Category="Widget")
+	static UWorld* GetWorld();
 };

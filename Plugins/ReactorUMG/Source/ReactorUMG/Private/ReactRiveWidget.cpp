@@ -145,23 +145,16 @@ TSharedRef<SWidget> UReactRiveWidget::RebuildWidget()
             FIntPoint::ZeroValue; // Setting to zero value here will make the
                                   // rive texture use the artboard size
                                   // initially
-        /*if (APlayerController* OwningPlayer = GetOwningPlayer())
-        {
-            if (UWorld* World = OwningPlayer->GetWorld())
-            {
-                World->GetTimerManager().ClearTimer(TimerHandle);
-                World->GetTimerManager().SetTimer(
-                    TimerHandle,
-                    [this]() { Setup(); },
-                    0.05f,
-                    false);
-            }
-        }*/
 
-        AsyncTask(ENamedThreads::GameThread,
-            [this]() {
-                Setup();
-            });
+        if (UWorld* World = RiveWidget->GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(TimerHandle);
+            World->GetTimerManager().SetTimer(
+                TimerHandle,
+                [this]() { Setup(); },
+                0.05f,
+                false);
+        }
     }
 
     RiveWidget->SetOnMouseButtonDown(BIND_UOBJECT_DELEGATE(FPointerEventHandler, 
@@ -420,15 +413,16 @@ void UReactRiveWidget::SetRiveDescriptor(const FRiveDescriptor& newDescriptor)
     Setup();
 }
 
-void UReactRiveWidget::SetRiveFile(URiveFile* InRiveFile)
+void UReactRiveWidget::SetRiveFile(URiveFile* InRiveFile, const FString& ArtBoard, const FString& StateMachine,
+    uint8 ArtBoardIndex, uint8 FitType, uint8 Alignment, float Scale)
 {
     if (InRiveFile)
     {
-        SetRiveDescriptor(FRiveDescriptor{InRiveFile, "", 0, "",
-            ERiveFitType::Contain, ERiveAlignment::Center, 1.0f}); 
+        const ERiveFitType Fit = static_cast<ERiveFitType>(FitType);
+        const ERiveAlignment Align = static_cast<ERiveAlignment>(Alignment);
+        SetRiveDescriptor(FRiveDescriptor{InRiveFile, ArtBoard, ArtBoardIndex, StateMachine, Fit, Align, Scale}); 
     }
 }
-
 
 void UReactRiveWidget::CheckArtboardSize()
 {

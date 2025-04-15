@@ -192,7 +192,7 @@ void FReactorUMGEditorModule::StartupModule()
 	const UReactorUMGSetting* PluginSettings = GetDefault<UReactorUMGSetting>();
 	if (PluginSettings->bAutoGenerateTSProject)
 	{
-		CopyPredefinedTSProject();
+		// CopyPredefinedTSProject();
 		SetupAutoExecGenDTSCommand();
 	}
 	

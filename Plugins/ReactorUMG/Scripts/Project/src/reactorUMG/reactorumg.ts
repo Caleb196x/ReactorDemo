@@ -176,11 +176,13 @@ class UEWidget {
 
         if (this.nativePtr instanceof UE.ListView 
             || this.type === 'div'
-            || this.type === 'canvas') 
+            || this.type === 'canvas'
+            || this.type === 'Overlay') 
         {
             if (this.reactWrapper) {
                 this.reactWrapper.appendChildItem(this.nativePtr, child.nativePtr, child.type, child.props);
             }
+
             return;
         }
 

@@ -43,7 +43,7 @@ bool FReactorUtils::CopyDirectoryRecursive(const FString& SrcDir, const FString&
 
 		// 执行文件拷贝
 		if (!PlatformFile.CopyFile(*DestPath, *SourcePath))
-		{
+		{ 
 			UE_LOG(LogReactorUMG, Warning, TEXT("Failed to copy file: %s"), *SourcePath);
 		}
 	}

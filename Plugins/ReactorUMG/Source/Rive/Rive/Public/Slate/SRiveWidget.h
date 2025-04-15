@@ -38,9 +38,10 @@ public:
 
     void SetRiveTexture(URiveTexture* InRiveTexture);
     FVector2D GetSize();
-
-private:
     UWorld* GetWorld() const;
+    
+private:
+    
     void OnResize() const;
 
     URiveTexture* RiveTexture = nullptr;
