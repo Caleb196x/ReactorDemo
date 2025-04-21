@@ -532,3 +532,43 @@ export function safeParseFloat(value: string | number) : number {
 
     return 0;
 }
+
+export function parseFontFamily(cssText) {
+    const regex = /\s*:\s*([^;]+);?/i;
+    const match = cssText.match(regex);
+  
+    if (!match) return [];
+  
+    const rawValue = match[1];
+  
+    // 使用正则处理带引号和不带引号的字体名
+    const fonts = [];
+    let current = '';
+    let inQuotes = false;
+    let quoteChar = '';
+  
+    for (let i = 0; i < rawValue.length; i++) {
+      const char = rawValue[i];
+  
+      if ((char === '"' || char === "'")) {
+        if (!inQuotes) {
+          inQuotes = true;
+          quoteChar = char;
+        } else if (quoteChar === char) {
+          inQuotes = false;
+        }
+        continue;
+      }
+  
+      if (char === ',' && !inQuotes) {
+        fonts.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+  
+    if (current.trim()) fonts.push(current.trim());
+  
+    return fonts.map(f => f.replace(/^["']|["']$/g, '').trim());
+}
