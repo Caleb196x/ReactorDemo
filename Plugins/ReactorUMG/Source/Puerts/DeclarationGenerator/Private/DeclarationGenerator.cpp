@@ -1627,7 +1627,7 @@ public:
         PluginCommands->MapAction(FGenDTSCommands::Get().PluginAction,
             FExecuteAction::CreateRaw(this, &FDeclarationGenerator::GenUeDtsCallback), FCanExecuteAction());
 
-#if (ENGINE_MAJOR_VERSION >= 5)
+/*#if (ENGINE_MAJOR_VERSION >= 5)
         UToolMenus::RegisterStartupCallback(
             FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FDeclarationGenerator::RegisterMenus));
 #else
@@ -1640,7 +1640,7 @@ public:
 
             LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
         }
-#endif
+#endif*/
 
         ConsoleCommand = MakeUnique<FAutoConsoleCommand>(TEXT("Puerts.Gen"), TEXT("Execute GenDTS action"),
             FConsoleCommandWithArgsDelegate::CreateLambda(

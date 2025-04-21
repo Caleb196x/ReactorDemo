@@ -26,12 +26,24 @@ export class SelectWrapper extends ComponentWrapper {
     }
 
     private addOptions(comboBox: UE.ComboBoxString, children: any[]) {
-        for (const child of children) {
-            if (child.type === 'option') {
-                const text = child.props.value ?? child.props.children;
-                comboBox.DefaultOptions.Add(text);
-                comboBox.AddOption(text);
+        const length = children?.length;
+        const addOptionInternal = (item) => {
+            const type = item?.type;
+            if (type && type === 'option') {
+                const text = item?.props.value ?? item?.props.children;
+                if (text) {
+                    comboBox.DefaultOptions.Add(text);
+                    comboBox.AddOption(text);
+                }
             }
+        }
+
+        for (let i = 0; i < length; i++) {
+            addOptionInternal(children[i]);
+        }
+
+        if (length === 0) {
+            addOptionInternal(children);
         }
     }
 
@@ -83,7 +95,9 @@ export class SelectWrapper extends ComponentWrapper {
 
         if (disabled) comboBox.bIsEnabled = false;
 
-        this.addOptions(comboBox, children);
+        if (children) {
+            this.addOptions(comboBox, children);
+        }
         this.setupChangeHandler(comboBox, onChange);
         comboBox.SelectedOption = defaultValue;
         

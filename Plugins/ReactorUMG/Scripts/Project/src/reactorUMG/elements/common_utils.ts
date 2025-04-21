@@ -36,6 +36,18 @@ export function convertLengthUnitToSlateUnit(length: string, style: any): number
             if (match) {
                 return parseInt(match[1]) * numSize;
             }
+        } else if (length === 'thin') {
+            return 12;
+        } else if (length === 'medium') {
+            return 16;
+        } else if (length === 'normal') {
+            return 16;
+        } else if (length === 'thick') {
+            return 20;
+        } 
+        else if (!isNaN(parseFloat(length))) {
+            // If it's just a number without units, return it directly
+            return parseFloat(length);
         }
 
         return 0; 

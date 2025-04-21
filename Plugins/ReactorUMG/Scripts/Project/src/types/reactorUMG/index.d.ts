@@ -1166,6 +1166,29 @@ declare module "reactorUMG" {
         padding?: CssType.Property.Padding | undefined;
     }
 
+    interface FontStyle {
+        fontSize?: number | undefined;
+        fontColor?: CssType.Property.Color | undefined;
+        fontFamily?: string | undefined;
+        fontWeight?: string | undefined;
+        fontStyle?: string | undefined;
+        textShadow?: string | undefined;
+        lineHeight?: number | undefined;
+        letterSpacing?: number | undefined;
+        wordSpacing?: number | undefined;
+        whiteSpace?: 'normal' | 'nowrap' | 'pre' | 'pre-wrap' | 'pre-line' | undefined;
+        outline?: string | undefined;
+        outlineColor?: CssType.Property.Color | undefined;
+        outlineWidth?: number | undefined;
+        outlineOffset?: number | undefined;
+        textAlign?: 'left' | 'center' | 'right' | undefined;
+        textOverflow?: 'ellipsis' | 'clip' | 'none' | undefined;
+        textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize' | undefined;
+        textDecoration?: 'none' | 'underline' | 'overline' | 'line-through' | undefined;
+        textDecorationColor?: CssType.Property.Color | undefined;
+        textDecorationThickness?: number | undefined;
+    }
+
     interface BorderProp extends CommonProps {
         backgroundColor?: CssType.Property.Color | undefined;
         backgroundImage?: ImageStyle | undefined;
