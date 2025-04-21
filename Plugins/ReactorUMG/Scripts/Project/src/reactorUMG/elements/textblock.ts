@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { ComponentWrapper } from "./common_wrapper";
-import { convertLengthUnitToSlateUnit, mergeClassStyleAndInlineStyle } from './common_utils';
+import { convertLengthUnitToSlateUnit, mergeClassStyleAndInlineStyle, parseFontFamily } from './common_utils';
 import { parseColor } from './parser/color_parser';
 
 export class TextBlockWrapper extends ComponentWrapper {
@@ -66,6 +66,19 @@ export class TextBlockWrapper extends ComponentWrapper {
             default:
                 return 'Normal';
         }
+    }
+
+    private setupFontFamily(textBlock: UE.TextBlock, fontFamily: string[], styles: any) {
+        const fontFamilyArray = parseFontFamily(fontFamily);
+        if (fontFamilyArray.includes('monospace')) {
+            textBlock.Font.bForceMonospaced = true;
+            const width = styles?.width;
+            if (width) {
+                textBlock.Font.MonospacedWidth = convertLengthUnitToSlateUnit(width, styles);
+            }
+        }
+
+        const fontObject = UE.Object.Load('/Game/NewDataTable.NewDataTable') as UE.Font;
     }
 
     private setupTextBlockProperties(textBlock: UE.TextBlock, props: any) {
@@ -173,6 +186,11 @@ export class TextBlockWrapper extends ComponentWrapper {
             const lineHeight = styles?.lineHeight;
             if (lineHeight) {
                 textBlock.LineHeightPercentage = convertLengthUnitToSlateUnit(lineHeight, styles);
+            }
+
+            const fontFamily = styles?.fontFamily;
+            if (fontFamily) {
+                this.setupFontFamily(textBlock, fontFamily, styles);
             }
         }
     }
