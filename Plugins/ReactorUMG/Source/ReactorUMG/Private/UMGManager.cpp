@@ -7,6 +7,7 @@
 #include "Async/Async.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Rive/RiveFile.h"
+#include "Engine/Font.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -149,5 +150,26 @@ UWorld* UUMGManager::GetWorld()
         return GEngine->GetWorld();
     }
 
+    return nullptr;
+}
+
+UObject* UUMGManager::FindFontFamily(const TArray<FString>& Names, UObject* InOuter)
+{
+    const FString FontDir = TEXT("/ReactorUMG/FontFamily");
+    for (const FString& Name : Names)
+    {
+        const FString FontAssetPath = FontDir / Name + TEXT(".") + Name;
+        if (UFont* Font = Cast<UFont>(StaticLoadObject(UFont::StaticClass(), InOuter, *FontAssetPath)))
+        {
+            return Font;
+        }
+    }
+
+    const FString DefaultEngineFont = TEXT("/Engine/EngineFonts/Roboto.Roboto");
+    if (UFont* DefaultFont = Cast<UFont>(StaticLoadObject(UFont::StaticClass(), InOuter, *DefaultEngineFont)))
+    {
+        return DefaultFont;
+    }
+    
     return nullptr;
 }
