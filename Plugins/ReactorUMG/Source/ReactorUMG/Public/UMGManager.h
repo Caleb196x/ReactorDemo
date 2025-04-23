@@ -26,16 +26,16 @@ class REACTORUMG_API UUMGManager : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 public:
-    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
     static UReactorUIWidget* CreateReactWidget(UWorld* World);
 
-    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
     static UUserWidget* CreateWidget(UWorld* World, UClass* Class);
 
-    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
     static void SynchronizeWidgetProperties(UWidget* Widget);
 
-    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
+    UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
     static void SynchronizeSlotProperties(UPanelSlot* Slot);
 
     /**
@@ -53,6 +53,15 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Rive")
 	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath);
 
-	UFUNCTION(BlueprintCallable, Category="Widget")
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static UWorld* GetWorld();
+
+    /**
+     * 从插件资产中查找可用字体，按顺序从Names中进行搜索，如果找到一个可用字体族，那么直接返回
+     * @param Names 字体族名字
+     * @param InOuter 父对象用于生命周期管理
+     * @return 
+     */
+    UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static UObject* FindFontFamily(const TArray<FString>& Names, UObject* InOuter);
 };

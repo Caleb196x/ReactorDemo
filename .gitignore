@@ -78,3 +78,6 @@ DerivedDataCache/*
 Plugins/ReactorUMG/Source/Puerts/CSharpParamDefaultValueMetas/obj
 Plugins/Binaries
 Plugins/**/node_modules/*
+Plugins/ReactorUMG/Scripts/Project/src/types/ue/ue.d.ts
+Plugins/ReactorUMG/Scripts/Project/src/types/ue/ue_bp.d.ts
+Plugins/ReactorUMG/Scripts/Project/src/types/cpp
