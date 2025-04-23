@@ -77,10 +77,10 @@ export class TextBlockWrapper extends ComponentWrapper {
                 return 'Bold Italic';
             case 'light':
                 return 'Light';
-            case 'regular':
-                return 'Normal';
+            case 'normal':
+                return 'Regular';
             default:
-                return 'Default';
+                return fontStyle;
         }
     }
 
