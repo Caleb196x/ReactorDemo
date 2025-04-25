@@ -54,7 +54,7 @@ class UMGWidget {
     }
 
     update(oldProps: any, newProps: any) {
-        this.converter.update(this.native, oldProps, newProps);
+        this.converter.updateWidget(this.native, oldProps, newProps);
     }
 
     appendChild(child: UMGWidget) {

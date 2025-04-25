@@ -1,11 +1,8 @@
 import * as UE from 'ue';
 import { findChangedProps, isKeyOfRecord, safeParseFloat } from './misc/utils';
-import { FlexConverter } from './container/flex';
-import { CanvasConverter } from './container/canvas';
-import { GridConverter } from './container/grid';
-import { OverlayConverter } from './container/overlay';
 import { getAllStyles } from './parsers/cssstyle_parser';
 import { parseCursor, parseTransform, parseTransformPivot, parseTranslate, parseVisibility } from './parsers/common_props_parser';
+import { ContainerConverter } from './container/container_converter';
 
 export abstract class ElementConverter {
     typeName: string;
@@ -66,17 +63,29 @@ export abstract class ElementConverter {
         }
     }
 }
-const containerConverters: Record<string, any> = {
-    "flex": FlexConverter,
-    "grid": GridConverter,
-    "overlay": OverlayConverter,
-    "canvas": CanvasConverter,
-}
+
+const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas'];
+const jsxComponentsKeywords = [
+    'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'div', 'p', 
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio'
+];
+const systemWidgetsKeywords = ['Radial']
 
 export function createElementConverter(typeName: string, props: any): ElementConverter {
-    if (isKeyOfRecord(typeName, containerConverters)) {
-        return new containerConverters[typeName](typeName, props);
+    if (containerKeywords.includes(typeName)) {
+        return new ContainerConverter(typeName, props);
     }
+
+    if (jsxComponentsKeywords.includes(typeName)) {
+
+    }
+
+
+    if (systemWidgetsKeywords.includes(typeName)) {
+
+    }
+
+    // create custom widget converter
 
     return null;
 }

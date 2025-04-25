@@ -1,3 +1,4 @@
+import * as UE from "ue";
 
 /**
  * Converts CSS length values to SU (Slate Units) for Unreal Engine UMG
@@ -46,4 +47,23 @@ export function convertLengthUnitToSlateUnit(length: string, style: any): number
     }
 
     return 0; 
+}
+
+export function convertGap(gap: string, style: any): UE.Vector2D {
+    if (!gap) {
+        return new UE.Vector2D(0, 0);
+    }
+    const gapValues = gap.split(' ').map(v => {
+        // todo@Caleb196x: 处理react的单位
+        v = v.trim();
+        return convertLengthUnitToSlateUnit(v, style);
+    });
+
+    if (gapValues.length === 2) {
+        // gap: row column
+        // innerSlotPadding: x(column) y(row)
+        return new UE.Vector2D(gapValues[1], gapValues[0]);
+    }
+
+    return new UE.Vector2D(gapValues[0], gapValues[0]);
 }
