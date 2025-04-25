@@ -73,7 +73,7 @@ class RootContainer {
     }
 
     appendChild(child: UMGWidget) {
-        let nativeSlot = this.native.AddChild(child.native);
+        this.native.AddChild(child.native);
     }
 
     removeChild(child: UMGWidget) {
@@ -98,7 +98,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     getPublicInstance (instance: UMGWidget) { return instance; },
     prepareForCommit(containerInfo: RootContainer): any {},
     resetAfterCommit (container: RootContainer) {},
-    resetTextContent (instance: UMGWidget) { console.error('resetTextContent not implemented!'); },
+    resetTextContent (instance: UMGWidget) { },
     shouldSetTextContent (type, props) { return false; },
     commitTextUpdate (textInstance: UMGWidget, oldText: string, newText: string) {
         if (oldText != newText) {
@@ -115,6 +115,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
             return true;
         }
     },
+
     commitUpdate (instance: UMGWidget, updatePayload: any, type : string, oldProps : any, newProps: any) {
         try{
             instance.update(oldProps, newProps);
@@ -122,6 +123,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
             console.error("commitUpdate fail!, " + e);
         }
     },
+
     removeChildFromContainer (container: RootContainer, child: UMGWidget) { container.removeChild(child); },
 
     removeChild(parent: UMGWidget, child: UMGWidget) {
