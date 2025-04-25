@@ -1,12 +1,14 @@
-import { EHorizontalAlignment, EOrientation, Widget, WrapBox } from "ue";
+import * as UE from "ue";
 import { ElementConverter } from "../converter";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 import { FlexConverter } from "./flex";
 import { CanvasConverter } from "./canvas";
 import { GridConverter } from "./grid";
 import { OverlayConverter } from "./overlay";
-import { convertGap } from "../parsers/css_length_parser";
-
+import { convertGap } from "../parsers/css_margin_parser";
+import { parseBackgroundProps } from "../parsers/css_background_parser";
+import { parseColor } from "../parsers/css_color_parser";
+import { parseScale } from "../parsers/css_length_parser";
 /**
  * 将容器参数以及布局参数转换中通用的功能实现在这个类中
  */
@@ -14,7 +16,8 @@ export class ContainerConverter extends ElementConverter {
     containerType: string;
     containerStyle: any;
     proxy: ContainerConverter;
-    originalWidget: Widget;
+    originalWidget: UE.Widget;
+    externalSlot: UE.PanelSlot; // 保存外部添加的容器slot
     
     private childConverters: Record<string, any>;
 
@@ -48,7 +51,7 @@ export class ContainerConverter extends ElementConverter {
         }
     }
 
-    private setupFlexWrap(widget: Widget, props: any): Widget {
+    private setupFlexWrap(widget: UE.Widget, props: any): UE.Widget {
         const style = getAllStyles(this.typeName, props);
 
         const flexWrap = style?.flexWrap || 'nowrap';
@@ -57,26 +60,26 @@ export class ContainerConverter extends ElementConverter {
             return widget;
         }
 
-        const wrapBox = new WrapBox();
+        const wrapBox = new UE.WrapBox();
         const flexDirection = style?.flexDirection;
         const gap = style?.gap; 
 
 
         wrapBox.Orientation = 
             (flexDirection === 'column'|| flexDirection === 'column-reverse')
-            ? EOrientation.Orient_Vertical : EOrientation.Orient_Horizontal;
+            ? UE.EOrientation.Orient_Vertical : UE.EOrientation.Orient_Horizontal;
 
         wrapBox.SetInnerSlotPadding(convertGap(gap, style));
 
         const justifyItemsActionMap = {
-            'flex-start': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Left),
-            'flex-end': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Right),
-            'start': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Left),
-            'end': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Right),
-            'left': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Left),
-            'right': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Right),
-            'center': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Center),
-            'stretch': () => wrapBox.SetHorizontalAlignment(EHorizontalAlignment.HAlign_Fill)
+            'flex-start': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
+            'flex-end': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
+            'start': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
+            'end': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
+            'left': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
+            'right': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
+            'center': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Center),
+            'stretch': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill)
         }
 
         // WrapBox中定义的justifyItems决定了子元素的主轴对齐方式
@@ -92,7 +95,7 @@ export class ContainerConverter extends ElementConverter {
         return wrapBox;
     }
 
-    private setupBackground(widget: Widget, props: any): Widget {
+    private setupBackground(widget: UE.Widget, props: any): UE.Widget {
         const style = getAllStyles(this.typeName, props);
         const background = style?.background;
         const backgroundColor = style?.backgroundColor;
@@ -104,35 +107,67 @@ export class ContainerConverter extends ElementConverter {
         if (!usingBackground) {
             return widget;
         } else {
+            const parsedBackgroundProps = parseBackgroundProps(style);
             
+            let useBorder = false;  
+            const borderWidget = new UE.Border();
+            if (parsedBackgroundProps?.image) {
+                borderWidget.SetBrush(parsedBackgroundProps.image);
+                useBorder = true;
+            }
+            if (parsedBackgroundProps?.color) {
+                borderWidget.SetBrushColor(parsedBackgroundProps.color);
+                useBorder = true;
+            }
+            if (parsedBackgroundProps?.alignment) {
+                borderWidget.SetVerticalAlignment(parsedBackgroundProps.alignment?.vertical);
+                borderWidget.SetHorizontalAlignment(parsedBackgroundProps.alignment?.horizontal);
+                borderWidget.SetPadding(parsedBackgroundProps.alignment?.padding);
+            }
+
+            const scale = style?.scale;
+            borderWidget.SetDesiredSizeScale(parseScale(scale));
+            
+            // color
+            const contentColor = style?.color;
+            if (contentColor) {
+                const color = parseColor(contentColor);
+                borderWidget.SetContentColorAndOpacity(
+                    new UE.LinearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a)
+                );
+            }
+
+            if (useBorder) {
+                this.externalSlot = borderWidget.AddChild(widget) as UE.BorderSlot;
+            } else {
+                return widget;
+            }
+
+            return borderWidget; 
         }
-        return widget;
     }
 
-    createNativeWidget(): Widget {
-        let widget: Widget = null;
+    createNativeWidget(): UE.Widget {
+        let widget: UE.Widget = null;
         if (this.proxy) {
             widget = this.proxy.createNativeWidget();
         }
-
-
-
         return widget;
     }
 
-    update(widget: Widget, oldProps: any, changedProps: any): void {
+    update(widget: UE.Widget, oldProps: any, changedProps: any): void {
         if (this.proxy) {
             this.proxy.update(widget, oldProps, changedProps);
         }
     }
 
-    appendChild(parent: Widget, child: Widget): void {
+    appendChild(parent: UE.Widget, child: UE.Widget): void {
         if (this.proxy) {
             this.proxy.appendChild(parent, child);
         }
     }
 
-    removeChild(parent: Widget, child: Widget): void {
+    removeChild(parent: UE.Widget, child: UE.Widget): void {
         if (this.proxy) {
             this.proxy.removeChild(parent, child);
         }

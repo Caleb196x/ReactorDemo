@@ -508,12 +508,7 @@ export function parseBackgroundProps(style: any, childStyle?: any): any {
     if (backgroundRepeat && result['image']) {
         result['image'] = parseBackgroundRepeat(backgroundRepeat, result['image']);
     }
-
-    // const backgroundPosition = style?.backgroundPosition;
-    // if (backgroundPosition && result['image']) {
-    //     result['alignment'] = parseBackgroundPosition(backgroundPosition);
-    // }
-
+    
     result['alignment'] = parseChildAlignment(childStyle);
     return result;
 }
