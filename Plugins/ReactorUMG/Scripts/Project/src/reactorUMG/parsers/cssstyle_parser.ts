@@ -45,6 +45,10 @@ export function getStyleFromTypeSelector(type: string): Record<string, any> {
  * @returns 
  */
 export function getAllStyles(type: string, props: any): Record<string, any> {
+    if (!props) {
+        return {};
+    }
+
     // get all the styles from css selector and jsx style
     const classNameStyles = getStylesFromClassSelector(props?.className);
     const idStyle = getStyleFromIdSelector(props?.id);

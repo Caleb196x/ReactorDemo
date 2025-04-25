@@ -63,3 +63,31 @@ export function parseScale(scale: string) : UE.Vector2D {
 
     return new UE.Vector2D(1, 1);
 }
+
+/**
+ * Parses a string representing an aspect ratio and returns a number
+ * @param aspectRatio - String representing aspect ratio (e.g., "16/9", "0.5", "1/1")
+ * @returns Number representing aspect ratio (e.g., 1.7777777777777777)
+ */
+export function parseAspectRatio(aspectRatio: string) {
+    if (!aspectRatio) {
+        return 1.0;
+    }
+
+    // Handle decimal format like '0.5'
+    if (!isNaN(Number(aspectRatio))) {
+        return Number(aspectRatio);
+    }
+
+    // Handle ratio format like '16/9' or '1/1'
+    const parts = aspectRatio.split('/');
+    if (parts.length === 2) {
+        const numerator = Number(parts[0]);
+        const denominator = Number(parts[1]);
+        if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+            return numerator / denominator;
+        }
+    }
+
+    return 1.0;
+}

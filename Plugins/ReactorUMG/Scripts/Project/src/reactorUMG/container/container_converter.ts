@@ -8,7 +8,9 @@ import { OverlayConverter } from "./overlay";
 import { convertGap } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
 import { parseColor } from "../parsers/css_color_parser";
-import { parseScale } from "../parsers/css_length_parser";
+import { convertLengthUnitToSlateUnit, parseScale, parseAspectRatio } from "../parsers/css_length_parser";
+import { safeParseFloat } from "../misc/utils";
+import { parseWidgetSelfAlignment } from "../parsers/alignment_parser";
 /**
  * 将容器参数以及布局参数转换中通用的功能实现在这个类中
  */
@@ -25,6 +27,7 @@ export class ContainerConverter extends ElementConverter {
         super(typeName, props);
         this.containerStyle = getAllStyles(this.typeName, this.props);
         this.containerType = this.parseContainerType(this.typeName);
+        this.externalSlot = null;
 
         this.childConverters = {
             "flex": FlexConverter,
@@ -51,8 +54,8 @@ export class ContainerConverter extends ElementConverter {
         }
     }
 
-    private setupFlexWrap(widget: UE.Widget, props: any): UE.Widget {
-        const style = getAllStyles(this.typeName, props);
+    private setupFlexWrap(widget: UE.Widget): UE.Widget {
+        const style = this.containerStyle;
 
         const flexWrap = style?.flexWrap || 'nowrap';
         
@@ -95,8 +98,8 @@ export class ContainerConverter extends ElementConverter {
         return wrapBox;
     }
 
-    private setupBackground(widget: UE.Widget, props: any): UE.Widget {
-        const style = getAllStyles(this.typeName, props);
+    private setupBackground(widget: UE.Widget): UE.Widget {
+        const style = this.containerStyle;
         const background = style?.background;
         const backgroundColor = style?.backgroundColor;
         const backgroundImage = style?.backgroundImage;
@@ -147,10 +150,126 @@ export class ContainerConverter extends ElementConverter {
         }
     }
 
+    private setupBoxSize(Widget: UE.Widget): UE.Widget {
+        const style = this.containerStyle;
+
+        const width = style?.width || 'auto';
+        const height = style?.height || 'auto';
+
+        if (width === 'auto' && height === 'auto') {
+            return Widget;
+        } else {
+            const sizeBox = new UE.SizeBox();
+            if (width !== 'auto') {
+                sizeBox.SetWidthOverride(convertLengthUnitToSlateUnit(width, style));
+            }
+
+            if (height !== 'auto') {
+                sizeBox.SetHeightOverride(convertLengthUnitToSlateUnit(height, style));
+            }
+
+            const maxWidth = this.containerStyle?.maxWidth;
+            if (maxWidth) {
+                sizeBox.SetMaxDesiredWidth(convertLengthUnitToSlateUnit(maxWidth, style));
+            }
+            
+            const maxHeight = this.containerStyle?.maxHeight;
+            if (maxHeight) {
+                sizeBox.SetMaxDesiredHeight(convertLengthUnitToSlateUnit(maxHeight, style));
+            }
+
+            const minWidth = this.containerStyle?.minWidth;
+            if (minWidth) {
+                sizeBox.SetMinDesiredWidth(convertLengthUnitToSlateUnit(minWidth, style));
+            }
+
+            const minHeight = this.containerStyle?.minHeight;
+            if (minHeight) {
+                sizeBox.SetMinDesiredHeight(convertLengthUnitToSlateUnit(minHeight, style));
+            }
+
+            const aspectRatio = this.containerStyle?.aspectRatio;
+            if (aspectRatio) {
+                sizeBox.SetMaxAspectRatio(parseAspectRatio(aspectRatio));
+                sizeBox.SetMinAspectRatio(parseAspectRatio(aspectRatio));
+            }
+
+            this.externalSlot = sizeBox.AddChild(Widget) as UE.SizeBoxSlot;
+
+            return sizeBox;
+        }
+    }
+
+    private setupBoxScale(widget: UE.Widget): UE.Widget {
+        const style = this.containerStyle;
+        
+        const objectFit = style?.objectFit;
+        if (objectFit) {
+            const scaleBox = new UE.ScaleBox();
+            if (objectFit === 'contain') {
+                scaleBox.SetStretch(UE.EStretch.ScaleToFit)
+            } else if (objectFit === 'cover') {
+                scaleBox.SetStretch(UE.EStretch.ScaleToFill);
+            } else if (objectFit === 'fill') {
+                scaleBox.SetStretch(UE.EStretch.Fill);
+            } else if (objectFit === 'none') {
+                scaleBox.SetStretch(UE.EStretch.None);
+            } else if (objectFit === 'scale-down') {
+                scaleBox.SetStretch(UE.EStretch.UserSpecifiedWithClipping);
+                const scale = style?.scale;
+                if (scale) {
+                    scaleBox.SetUserSpecifiedScale(safeParseFloat(scale));
+                }
+            }
+            
+            this.externalSlot = scaleBox.AddChild(widget) as UE.ScaleBoxSlot;
+
+            return scaleBox;
+        } else {
+            return widget;
+        }
+    }
+
+    private initClipChildWidget(parentWidget: UE.Widget) {
+        const style = this.containerStyle;
+        const visibility = style?.visibility;
+        if (visibility === 'clip') {
+            parentWidget.SetClipping(UE.EWidgetClipping.ClipToBounds);
+        }
+    }
+
+    private initChildAlignmentForExternalSlot(childProps: any) {
+        if (childProps && this.externalSlot ) {
+            const Style = getAllStyles(this.typeName, childProps);
+            const childAlignment = parseWidgetSelfAlignment(Style);
+            if (this.externalSlot instanceof UE.SizeBoxSlot) {
+                (this.externalSlot as UE.SizeBoxSlot).SetHorizontalAlignment(childAlignment.horizontal);
+                (this.externalSlot as UE.SizeBoxSlot).SetVerticalAlignment(childAlignment.vertical);
+                (this.externalSlot as UE.SizeBoxSlot).SetPadding(childAlignment.padding);
+            } else if (this.externalSlot instanceof UE.ScaleBoxSlot) {
+                (this.externalSlot as UE.ScaleBoxSlot).SetHorizontalAlignment(childAlignment.horizontal);
+                (this.externalSlot as UE.ScaleBoxSlot).SetVerticalAlignment(childAlignment.vertical);
+                (this.externalSlot as UE.ScaleBoxSlot).SetPadding(childAlignment.padding);
+            } else if (this.externalSlot instanceof UE.BorderSlot) {
+                (this.externalSlot as UE.BorderSlot).SetHorizontalAlignment(childAlignment.horizontal);
+                (this.externalSlot as UE.BorderSlot).SetVerticalAlignment(childAlignment.vertical);
+                (this.externalSlot as UE.BorderSlot).SetPadding(childAlignment.padding);
+            } else if (this.externalSlot instanceof UE.WrapBoxSlot) {
+                (this.externalSlot as UE.WrapBoxSlot).SetHorizontalAlignment(childAlignment.horizontal);
+                (this.externalSlot as UE.WrapBoxSlot).SetVerticalAlignment(childAlignment.vertical);
+                (this.externalSlot as UE.WrapBoxSlot).SetPadding(childAlignment.padding);
+            }
+        }
+    }
+
     createNativeWidget(): UE.Widget {
         let widget: UE.Widget = null;
         if (this.proxy) {
             widget = this.proxy.createNativeWidget();
+            this.setupFlexWrap(widget);
+            this.setupBackground(widget);
+            this.setupBoxSize(widget);
+            this.setupBoxScale(widget);
         }
         return widget;
     }
@@ -161,9 +280,11 @@ export class ContainerConverter extends ElementConverter {
         }
     }
 
-    appendChild(parent: UE.Widget, child: UE.Widget): void {
+    appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
         if (this.proxy) {
-            this.proxy.appendChild(parent, child);
+            this.initClipChildWidget(parent);
+            this.initChildAlignmentForExternalSlot(childProps);
+            this.proxy.appendChild(this.originalWidget, child, childTypeName, childProps);
         }
     }
 

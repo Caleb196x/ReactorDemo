@@ -15,7 +15,7 @@ export abstract class ElementConverter {
 
     abstract createNativeWidget(): UE.Widget;
     abstract update(widget: UE.Widget, oldProps: any, changedProps: any): void;
-    abstract appendChild(parent: UE.Widget, child: UE.Widget): void;
+    abstract appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void;
     abstract removeChild(parent: UE.Widget, child: UE.Widget): void;
     creatWidget(): UE.Widget {
         let widget = this.createNativeWidget();

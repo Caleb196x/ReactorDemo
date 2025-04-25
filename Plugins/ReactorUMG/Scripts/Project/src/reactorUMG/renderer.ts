@@ -58,7 +58,7 @@ class UMGWidget {
     }
 
     appendChild(child: UMGWidget) {
-        this.converter.appendChild(this.native, child.native);
+        this.converter.appendChild(this.native, child.native, child.typeName, child.props);
     }
 
     removeChild(child: UMGWidget) {

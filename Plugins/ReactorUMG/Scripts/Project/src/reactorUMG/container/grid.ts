@@ -16,7 +16,7 @@ export class GridConverter extends ContainerConverter {
 
     }
     
-    appendChild(parent: UE.Widget, child: UE.Widget): void {
+    appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
 
     }
 
