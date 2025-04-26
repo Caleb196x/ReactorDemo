@@ -354,7 +354,7 @@ export function parseRotate(rotate: CssType.Property.Rotate) {
     );
 }
 
-export function parseVisibility(visibility: string, hitTest?: string) {
+export function parseVisibility(visibility: string, hitTest?: string): UE.ESlateVisibility {
     if (!visibility) {
         return null;
     }

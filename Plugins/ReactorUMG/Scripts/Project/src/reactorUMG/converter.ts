@@ -3,7 +3,7 @@ import { findChangedProps, isKeyOfRecord, safeParseFloat } from './misc/utils';
 import { getAllStyles } from './parsers/cssstyle_parser';
 import { parseCursor, parseTransform, parseTransformPivot, parseTranslate, parseVisibility } from './parsers/common_props_parser';
 import { ContainerConverter } from './container/container_converter';
-
+import * as puerts from 'puerts';
 export abstract class ElementConverter {
     typeName: string;
     props: any;
@@ -26,12 +26,10 @@ export abstract class ElementConverter {
     updateWidget(widget: UE.Widget, oldProps: any, newProps: any) {
         // Find changed properties between oldProps and newProps
         const changedProps = findChangedProps(oldProps, newProps);
-        
-        // Update the widget with changed properties
-        this.update(widget, oldProps, changedProps);
-        
         // Update common properties
         this.initOrUpdateCommonProperties(widget, changedProps);
+        // Update the widget with changed properties
+        this.update(widget, oldProps, changedProps);
     }
 
     private initOrUpdateCommonProperties(widget: UE.Widget, changeProps: any) {
@@ -53,13 +51,19 @@ export abstract class ElementConverter {
             "VisibilityDelegate": () => {return changeProps?.visibilityBinding ? () => {return parseVisibility(changeProps.visibilityBinding())} : null},
         }
 
+        const widgetProps = {};
         for (const key in translators) {
             if (isKeyOfRecord(key, changeProps)) {
                 const value = translators[key]();
                 if (value) {
-                    widget[key] = value;
+                    widgetProps[key] = value;
                 }
             }
+        }
+
+        if (styles){
+            puerts.merge(widget, widgetProps);
+            UE.UMGManager.SynchronizeWidgetProperties(widget);
         }
     }
 }
