@@ -2,7 +2,6 @@ import * as UE from "ue";
 import { ContainerConverter } from "./container_converter";
 import { parseFlexHorizontalAlignmentActions, parseFlexVerticalAlignmentActions } from "../parsers/alignment_parser";
 import { getAllStyles } from "../parsers/cssstyle_parser";
-import { convertMargin } from "../parsers/css_margin_parser";
 
 export class FlexConverter extends ContainerConverter {
 
@@ -36,18 +35,6 @@ export class FlexConverter extends ContainerConverter {
             flexDirection.startsWith('row'),
             flexDirection.endsWith('-reverse')
         ];
-    }
-
-    private initPadding(panelSlot: UE.PanelSlot, childStyle: any): void {
-        let margin = convertMargin(childStyle?.margin, this.containerStyle);
-        if (margin) {
-            (panelSlot as any).SetPadding(margin);
-        }
-        
-        let padding = convertMargin(childStyle?.padding, this.containerStyle);
-        if (padding) {
-            (panelSlot as any).SetPadding(padding);
-        }
     }
 
     private setAlignmentUsingActions(slot: UE.PanelSlot, alignmentActions:any, childStyle: any) {
@@ -87,13 +74,11 @@ export class FlexConverter extends ContainerConverter {
     private initHorizontalBoxSlot(horizontalBoxSlot: UE.HorizontalBoxSlot, childStyle: any): void {
         const alignmentActions = parseFlexHorizontalAlignmentActions();
         this.setAlignmentUsingActions(horizontalBoxSlot, alignmentActions, childStyle);
-        this.initPadding(horizontalBoxSlot, childStyle);
     }
 
     private initVerticalBoxSlot(verticalBoxSlot: UE.VerticalBoxSlot, childStyle: any): void {
         const alignmentActions = parseFlexVerticalAlignmentActions();
         this.setAlignmentUsingActions(verticalBoxSlot, alignmentActions, childStyle);
-        this.initPadding(verticalBoxSlot, childStyle);
     }
 
     createNativeWidget(): UE.Widget {
@@ -116,10 +101,12 @@ export class FlexConverter extends ContainerConverter {
             const horizontalBox = parent as UE.HorizontalBox;
             const horizontalBoxSlot = horizontalBox.AddChildToHorizontalBox(child);
             this.initHorizontalBoxSlot(horizontalBoxSlot, childStyle);
+            super.initChildPadding(horizontalBoxSlot, childStyle);
         } else {
             const verticalBox = parent as UE.VerticalBox;
             const verticalBoxSlot = verticalBox.AddChildToVerticalBox(child);
             this.initVerticalBoxSlot(verticalBoxSlot, childStyle);
+            super.initChildPadding(verticalBoxSlot, childStyle);
         }
     }
 }

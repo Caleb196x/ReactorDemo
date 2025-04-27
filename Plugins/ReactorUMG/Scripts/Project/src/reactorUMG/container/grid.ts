@@ -2,7 +2,6 @@ import * as UE from "ue";
 import { ContainerConverter } from "./container_converter";
 import { convertLUToSUWithUnitType } from "../parsers/css_length_parser";
 import { getAllStyles } from "../parsers/cssstyle_parser";
-import { convertMargin } from "../parsers/css_margin_parser";
 
 export class GridConverter extends ContainerConverter {
     private totalColumns: number = 0;
@@ -344,15 +343,7 @@ export class GridConverter extends ContainerConverter {
         const childStyle = getAllStyles(childTypeName, childProps);
         this.initGridItemLoc(Slot, childStyle);
         this.initGridAlignment(Slot, childStyle);
-        const margin = this.containerStyle?.margin;
-        if (margin) {
-            Slot.SetPadding(convertMargin(margin, this.containerStyle));
-        }
-
-        const padding = this.containerStyle?.padding;
-        if (padding) {
-            Slot.SetPadding(convertMargin(padding, this.containerStyle));
-        }
+        super.initChildPadding(Slot, childStyle);
     }
 
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {

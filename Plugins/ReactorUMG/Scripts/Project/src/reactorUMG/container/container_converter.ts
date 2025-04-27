@@ -5,7 +5,7 @@ import { FlexConverter } from "./flex";
 import { CanvasConverter } from "./canvas";
 import { GridConverter } from "./grid";
 import { OverlayConverter } from "./overlay";
-import { convertGap } from "../parsers/css_margin_parser";
+import { convertGap, convertMargin, convertPadding } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
 import { parseColor } from "../parsers/css_color_parser";
 import { convertLengthUnitToSlateUnit, parseScale, parseAspectRatio } from "../parsers/css_length_parser";
@@ -294,6 +294,18 @@ export class ContainerConverter extends ElementConverter {
                 (this.externalSlot as UE.WrapBoxSlot).SetVerticalAlignment(childAlignment.vertical);
                 (this.externalSlot as UE.WrapBoxSlot).SetPadding(childAlignment.padding);
             }
+        }
+    }
+
+    initChildPadding(panelSlot: UE.PanelSlot, childStyle: any): void {
+        let margin = convertMargin(childStyle);
+        if (margin) {
+            (panelSlot as any).SetPadding(margin);
+        }
+        
+        let padding = convertPadding(childStyle);
+        if (padding) {
+            (panelSlot as any).SetPadding(padding);
         }
     }
 

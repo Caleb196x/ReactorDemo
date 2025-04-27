@@ -14,27 +14,63 @@ export function expandPaddingValues(paddingValues: number[]): number[] {
     } else if (paddingValues.length === 3) {
         // padding: top right bottom
         return [paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[1]];
+    } else {
+        return [0, 0, 0, 0];
     }
 
     return paddingValues;
 }
 
-export function convertMargin(margin: string, style: any): UE.Margin | undefined {
-    if (!margin) {
-        return undefined;
+function convertToUEMMargin(style: any, margin: string, top: string, right: string, bottom: string, left: string): UE.Margin {
+
+    if (!margin && !top && 
+        !right && !bottom && !left) {
+        return new UE.Margin(0, 0, 0, 0);
     }
 
     const marginValues = margin.split(' ').map(v => {
         // todo@Caleb196x: 处理margin的单位
-        v = v.trim();
-        return convertLengthUnitToSlateUnit(v, style);
+        return convertLengthUnitToSlateUnit(v.trim(), style);
     });
 
     let expandedMarginValues = expandPaddingValues(marginValues);
 
+    if (top) {
+        expandedMarginValues[0] = convertLengthUnitToSlateUnit(top.trim(), style);
+    }
+    if (right) {
+        expandedMarginValues[1] = convertLengthUnitToSlateUnit(right.trim(), style);
+    }
+    if (bottom) {
+        expandedMarginValues[2] = convertLengthUnitToSlateUnit(bottom.trim(), style);
+    }
+    if (left) {
+        expandedMarginValues[3] = convertLengthUnitToSlateUnit(left.trim(), style);
+    }
+
     // React Padding: top right bottom left
     // UMG Padding: Left, Top, Right, Bottom
     return new UE.Margin(expandedMarginValues[3], expandedMarginValues[0], expandedMarginValues[1], expandedMarginValues[2]);
+}
+
+export function convertPadding(style: any): UE.Margin {
+    const padding = style?.padding;
+    const paddingLeft = style?.paddingLeft;
+    const paddingRight = style?.paddingRight;
+    const paddingTop = style?.paddingTop;
+    const paddingBottom = style?.paddingBottom;
+    
+    return convertToUEMMargin(style, padding, paddingTop, paddingRight, paddingBottom, paddingLeft);
+}
+
+export function convertMargin(style: any): UE.Margin {
+    const margin = style?.margin;
+    const marginLeft = style?.marginLeft;
+    const marginRight = style?.marginRight;
+    const marginTop = style?.marginTop;
+    const marginBottom = style?.marginBottom;
+
+    return convertToUEMMargin(style, margin, marginTop, marginRight, marginBottom, marginLeft);
 }
 
 export function convertGap(gap: string, style: any): UE.Vector2D {

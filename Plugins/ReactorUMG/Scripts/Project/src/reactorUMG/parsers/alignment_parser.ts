@@ -1,5 +1,5 @@
 import * as UE from "ue";
-import { convertMargin } from "./css_margin_parser";
+import { convertPadding } from "./css_margin_parser";
 
 export function parseWidgetSelfAlignment(style: any) {
     let alignment = {
@@ -63,15 +63,7 @@ export function parseWidgetSelfAlignment(style: any) {
         }
     }
 
-    const padding = style?.padding;
-    if (padding) {
-        alignment.padding = convertMargin(padding, style);
-    }
-
-    const margin = style?.margin;
-    if (margin) {
-        alignment.padding = convertMargin(margin, style);
-    }
+    alignment.padding = convertPadding(style);
 
     return alignment;
 }
