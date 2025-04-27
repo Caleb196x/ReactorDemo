@@ -70,9 +70,10 @@ export abstract class ElementConverter {
 
 const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas'];
 const jsxComponentsKeywords = [
-    'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'div', 'p', 
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio'
+    'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'p', 'text',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress', 'label'
 ];
+
 const systemWidgetsKeywords = ['Radial']
 
 export function createElementConverter(typeName: string, props: any): ElementConverter {

@@ -65,7 +65,7 @@ export class OverlayConverter extends ContainerConverter {
         return widget;
     }
 
-    update(widget: UE.Widget, oldProps: any, newProps: any): void {
+    update(widget: UE.Widget, oldProps: any, changedProps: any): void {
         // do nothing
     }
 

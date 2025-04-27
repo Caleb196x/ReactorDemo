@@ -49,8 +49,15 @@ class UMGWidget {
     }
 
     init() {
-        this.converter = createElementConverter(this.typeName, this.props);
-        this.native = this.converter.creatWidget();
+        try {
+            this.converter = createElementConverter(this.typeName, this.props);
+            this.native = this.converter.creatWidget();
+            if (this.native == null) {
+                console.error("Not supported widget: " + this.typeName);
+            }
+        } catch(e) {
+            console.error("Failed to create widget: " + this.typeName + ", error: " + e);
+        }
     }
 
     update(oldProps: any, newProps: any) {
