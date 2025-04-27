@@ -64,4 +64,7 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static UObject* FindFontFamily(const TArray<FString>& Names, UObject* InOuter);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static FVector2D GetWidgetGeometrySize(UWidget* Widget);
 };

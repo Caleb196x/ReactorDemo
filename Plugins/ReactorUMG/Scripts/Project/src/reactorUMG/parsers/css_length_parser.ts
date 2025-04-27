@@ -1,4 +1,5 @@
 import * as UE from "ue";
+import { safeParseFloat } from "../misc/utils";
 
 /**
  * Converts CSS length values to SU (Slate Units) for Unreal Engine UMG
@@ -47,6 +48,48 @@ export function convertLengthUnitToSlateUnit(length: string, style: any): number
     }
 
     return 0; 
+}
+
+export function convertLUToSUWithUnitType(length: string, fontSize?: number): {type: string, value: number} {
+    if (!fontSize) {
+        fontSize = 16;
+    }
+
+    let result = { type: 'auto', value: 0 };
+    if (length === 'auto') {
+        return result;
+    }
+
+    if (length === 'thin') {
+        return {type: 'px', value: 12};
+    } else if (length === 'medium') {
+        return {type: 'px', value: 16};
+    } else if (length === 'normal') {
+        return {type: 'px', value: 16};
+    } else if (length === 'thick') {
+        return {type: 'px', value: 20};
+    } 
+    else if (!isNaN(parseFloat(length))) {
+        // If it's just a number without units, return it directly
+        return {type: 'px', value: parseFloat(length)};
+    }
+
+    // Match numeric value and unit
+    const match = length.match(/^(\d*\.?\d+)([a-z%]*)$/);
+    if (match) {
+        let numValue = safeParseFloat(match[1]);
+        const unit = match[2] || 'px';
+        
+        if (unit === 'em' || unit === 'rem') {
+            numValue = numValue * fontSize; // todo@Caleb196x: 读取font size，如果没有font size，则使用默认值16px
+        }
+
+        // todo@Caleb196x: 需要知道父控件的宽度和长度所占像素值，然后根据px值转换成占比值fr
+        return { type: unit, value: numValue };
+    }
+    
+    // Default fallback
+    return { type: 'fr', value: 1 };
 }
 
 export function parseScale(scale: string) : UE.Vector2D {

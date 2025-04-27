@@ -173,3 +173,18 @@ UObject* UUMGManager::FindFontFamily(const TArray<FString>& Names, UObject* InOu
     
     return nullptr;
 }
+
+FVector2D UUMGManager::GetWidgetGeometrySize(UWidget* Widget)
+{
+    if (!Widget)
+    {
+        return FVector2D::ZeroVector;
+    }
+    
+    const FGeometry Geometry = Widget->GetPaintSpaceGeometry();
+    const auto Size = Geometry.GetAbsoluteSize();
+    FVector2D Result;
+    Result.X = Size.X;
+    Result.Y = Size.Y;
+    return Result;
+}
