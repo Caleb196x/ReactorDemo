@@ -156,15 +156,6 @@ export class GridConverter extends ContainerConverter {
                 gridPanel.SetRowFill(i, rowFill[i]);
             }
         }
-        
-        
-        
-    }
-
-    private initGridRowAndColumn(gridPanel: UE.GridPanel) {
-        const gridTemplateColumns = this.containerStyle?.gridTemplateColumns;
-        const gridTemplateRows = this.containerStyle?.gridTemplateRows;
-
     }
 
     createNativeWidget(): UE.Widget {
@@ -175,8 +166,9 @@ export class GridConverter extends ContainerConverter {
     }
 
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {
-        const changedGridTemplateColumns = changedProps.gridTemplateColumns;
-        const changedGridTemplateRows = changedProps.gridTemplateRows;
+        const style = getAllStyles(this.typeName, changedProps);
+        const changedGridTemplateColumns = style?.gridTemplateColumns;
+        const changedGridTemplateRows = style?.gridTemplateRows;
         if (changedGridTemplateColumns) {
             this.initGridShape(widget as UE.GridPanel, changedGridTemplateColumns, oldProps.gridTemplateColumns);
         }
