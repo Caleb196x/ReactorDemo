@@ -6,9 +6,11 @@
 #include "ReactorUtils.h"
 #include "Engine/Engine.h"
 #include "Async/Async.h"
+#include "Engine/AssetManager.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Rive/RiveFile.h"
 #include "Engine/Font.h"
+#include "Engine/StreamableManager.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -190,34 +192,34 @@ FVector2D UUMGManager::GetWidgetGeometrySize(UWidget* Widget)
     return Result;
 }
 
-UObject* UUMGManager::LoadBrushImageObject(const FString& ImagePath, bool bIsSyncLoad,
-    FEasyDelegate OnLoaded, FEasyDelegate OnFailed, const FString& DirName)
+void UUMGManager::LoadBrushImageObject(const FString& ImagePath, FAssetLoadedDelegate OnLoaded,
+    FEasyDelegate OnFailed, UObject* Context, bool bIsSyncLoad, const FString& DirName)
 {
     if (ImagePath.StartsWith(TEXT("/")))
     {
-        // 处理UE资产包路径
+        // 处理UE资产包路径 
+        LoadImageBrushAsset(ImagePath, Context, bIsSyncLoad, OnLoaded, OnFailed);
+        return;
     }
 
     if (ImagePath.StartsWith(TEXT("http")) || ImagePath.StartsWith(TEXT("HTTP")))
     {
         // 处理网络资源
+        // LoadImageTextureFromURL
     }
 
-    // 1. 处理相对路径；
-    // 2. 处理绝对路径；
     FString AbsPath = GetAbsoluteJSContentPath(ImagePath, DirName);
-    // 3. 处理tsconfig.json中定义的替换路径；
     if (!FPaths::FileExists(*AbsPath))
     {
         AbsPath = FReactorUtils::ConvertRelativePathToFullUsingTSConfig(ImagePath, DirName);
     }
-
-    if (FPaths::FileExists(*AbsPath))
+    if (!FPaths::FileExists(*AbsPath))
     {
-        
+        UE_LOG(LogReactorUMG, Error, TEXT("Image file( %s ) not exists."), *AbsPath);
+        return; 
     }
-
-    return nullptr;
+    // LoadImageTextureFromLocalFile
+    LoadImageTextureFromLocalFile(AbsPath, Context, bIsSyncLoad, OnLoaded, OnFailed);
 }
 
 FString UUMGManager::GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName)
@@ -235,4 +237,68 @@ FString UUMGManager::GetAbsoluteJSContentPath(const FString& RelativePath, const
     }
     
     return AbsolutePath;
+}
+
+void UUMGManager::LoadImageBrushAsset(const FString& AssetPath, UObject* Context,
+    bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed)
+{
+    FSoftObjectPath SoftObjectPath(AssetPath);
+    if (bIsSyncLoad)
+    {
+        UAssetManager::GetStreamableManager().RequestSyncLoad(SoftObjectPath);
+        UObject* LoadedObject = SoftObjectPath.ResolveObject();
+        if (LoadedObject)
+        {
+            LoadedObject->AddToCluster(Context);
+            OnLoaded.ExecuteIfBound(LoadedObject);
+        } else
+        {
+            OnFailed.ExecuteIfBound();
+        }
+    }else
+    {
+        UAssetManager::GetStreamableManager().RequestAsyncLoad(SoftObjectPath,
+            FStreamableDelegate::CreateLambda([SoftObjectPath, OnLoaded, OnFailed]()
+        {
+                UObject* LoadedObject = SoftObjectPath.ResolveObject();
+                if (LoadedObject)
+                {
+                    OnLoaded.ExecuteIfBound(LoadedObject);
+                } else
+                {
+                    OnFailed.ExecuteIfBound();
+                }
+        }));   
+    }
+}
+
+void UUMGManager::LoadImageTextureFromLocalFile(const FString& FilePath, UObject* Context,
+    bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed)
+{
+    if (bIsSyncLoad)
+    {
+        UTexture2D* Texture = UKismetRenderingLibrary::ImportFileAsTexture2D(nullptr, FilePath);
+        if (Texture)
+        {
+            Texture->AddToCluster(Context);
+            OnLoaded.ExecuteIfBound(Texture);
+        } else
+        {
+            OnFailed.ExecuteIfBound();
+        }
+    }else
+    {
+        AsyncTask(ENamedThreads::GameThread, [FilePath, Context, OnLoaded, OnFailed]()
+        {
+            UTexture2D *Texture = UKismetRenderingLibrary::ImportFileAsTexture2D(nullptr, FilePath);
+            if (Texture)
+            {
+                Texture->AddToCluster(Context);
+                OnLoaded.ExecuteIfBound(Texture);
+            } else
+            {
+                OnFailed.ExecuteIfBound();
+            }
+        });
+    }
 }
