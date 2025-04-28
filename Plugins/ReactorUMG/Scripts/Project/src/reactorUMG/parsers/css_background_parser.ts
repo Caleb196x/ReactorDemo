@@ -461,7 +461,7 @@ export function parseBackground(background: string) : any {
 
     if (image !== 'none') {
         result['image'] = parseBackgroundImage(image, size);
-        result['repeat'] = parseBackgroundRepeat(repeat, result['image']);
+        result['image'] = parseBackgroundRepeat(repeat, result['image']);
     }
 
     if (position !== 'none') {

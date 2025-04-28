@@ -41,4 +41,6 @@ public:
 	static bool CheckNameExistInArray(const TArray<FString>& SkipExistFiles, const FString& CheckName);
 
 	static bool ReadFileContent(const FString& FilePath, FString& OutContent);
+
+	static FString ConvertRelativePathToFullUsingTSConfig(const FString& RelativePath, const FString& DirName);
 };

@@ -3,6 +3,7 @@
 #include "Components/PanelSlot.h"
 #include "IRiveRendererModule.h"
 #include "LogReactorUMG.h"
+#include "ReactorUtils.h"
 #include "Engine/Engine.h"
 #include "Async/Async.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -187,4 +188,51 @@ FVector2D UUMGManager::GetWidgetGeometrySize(UWidget* Widget)
     Result.X = Size.X;
     Result.Y = Size.Y;
     return Result;
+}
+
+UObject* UUMGManager::LoadBrushImageObject(const FString& ImagePath, bool bIsSyncLoad,
+    FEasyDelegate OnLoaded, FEasyDelegate OnFailed, const FString& DirName)
+{
+    if (ImagePath.StartsWith(TEXT("/")))
+    {
+        // 处理UE资产包路径
+    }
+
+    if (ImagePath.StartsWith(TEXT("http")) || ImagePath.StartsWith(TEXT("HTTP")))
+    {
+        // 处理网络资源
+    }
+
+    // 1. 处理相对路径；
+    // 2. 处理绝对路径；
+    FString AbsPath = GetAbsoluteJSContentPath(ImagePath, DirName);
+    // 3. 处理tsconfig.json中定义的替换路径；
+    if (!FPaths::FileExists(*AbsPath))
+    {
+        AbsPath = FReactorUtils::ConvertRelativePathToFullUsingTSConfig(ImagePath, DirName);
+    }
+
+    if (FPaths::FileExists(*AbsPath))
+    {
+        
+    }
+
+    return nullptr;
+}
+
+FString UUMGManager::GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName)
+{
+    if (DirName.IsEmpty() || RelativePath.IsEmpty())
+    {
+        return RelativePath;
+    }
+
+    FString AbsolutePath = RelativePath;
+    if (FPaths::IsRelative(RelativePath))
+    {
+        // 处理相对路径的情况
+        AbsolutePath = FPaths::ConvertRelativePathToFull(DirName / RelativePath);
+    }
+    
+    return AbsolutePath;
 }

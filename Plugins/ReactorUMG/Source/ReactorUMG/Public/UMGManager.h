@@ -18,10 +18,9 @@
 #include "Rive/RiveDescriptor.h"
 #include "UMGManager.generated.h"
 
-/**
- *
- */
-UCLASS()
+DECLARE_DYNAMIC_DELEGATE(FEasyDelegate);
+
+UCLASS(BlueprintType)
 class REACTORUMG_API UUMGManager : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
@@ -67,4 +66,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static FVector2D GetWidgetGeometrySize(UWidget* Widget);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static UObject* LoadBrushImageObject(const FString& imagePath, bool bIsSyncLoad,
+		FEasyDelegate OnLoaded, FEasyDelegate OnFailed, const FString& DirName = TEXT(""));
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static FString GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName);
 };

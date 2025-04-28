@@ -4,6 +4,7 @@ import { getAllStyles } from './parsers/cssstyle_parser';
 import { parseCursor, parseTransform, parseTransformPivot, parseTranslate, parseVisibility } from './parsers/common_props_parser';
 import { ContainerConverter } from './container/container_converter';
 import * as puerts from 'puerts';
+import { JSXConverter } from './jsx/jsx_converter';
 export abstract class ElementConverter {
     typeName: string;
     props: any;
@@ -82,9 +83,8 @@ export function createElementConverter(typeName: string, props: any): ElementCon
     }
 
     if (jsxComponentsKeywords.includes(typeName)) {
-
+        return new JSXConverter(typeName, props);
     }
-
 
     if (systemWidgetsKeywords.includes(typeName)) {
 

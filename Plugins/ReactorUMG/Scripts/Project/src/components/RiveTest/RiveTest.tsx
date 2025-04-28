@@ -38,7 +38,7 @@ export class RiveTest extends React.Component {
                 <Rive fitType="contain" rive={rewards} scale={2.0} style={{justifySelf: "center", alignSelf: "center"}}/>
                 <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Rewards</p>
             </Overlay>
-
+            <img onLoad={()=>{console.log("load")}} onError={()=>{console.log("error")}} src='https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png'/>
 
             {/* <button style={{backgroundColor: "transparent"}}>
             </button>

@@ -11,4 +11,11 @@ export class ImageLoader {
         }
         return undefined;
     }
+
+    static loadBrushImageObject(imagePath: string, syncLoad?: boolean, onLoad?: ()=>void, onError?: ()=>void) 
+        : UE.Texture2D | UE.MaterialInterface | UE.SlateTextureAtlasInterface | undefined 
+    {
+        
+        return undefined;
+    }
 }
