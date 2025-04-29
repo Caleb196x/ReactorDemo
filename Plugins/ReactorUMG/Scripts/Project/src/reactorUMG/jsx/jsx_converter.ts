@@ -18,6 +18,7 @@ export class JSXConverter extends ElementConverter {
     private createProxy(): ElementConverter {
         const JsxElementConverters = {
             "button": ButtonConverter,
+            
         };
 
         if (JsxElementConverters.hasOwnProperty(this.typeName)) {
