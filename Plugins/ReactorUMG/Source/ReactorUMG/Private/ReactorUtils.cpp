@@ -121,3 +121,65 @@ bool FReactorUtils::ReadFileContent(const FString& FilePath, FString& OutContent
 	UE_LOG(LogReactorUMG, Error, TEXT("Failed to read file: %s (file not found)"), *FilePath);
 	return false;
 }
+
+FString FReactorUtils::ConvertRelativePathToFullUsingTSConfig(const FString& RelativePath, const FString& DirName)
+{
+	auto FindTSConfig = [](const FString& Dir)
+    {
+        FString CurrentDir = Dir;
+        while (!CurrentDir.IsEmpty())
+        {
+            FString TSConfigPath = FPaths::Combine(CurrentDir, TEXT("tsconfig.json"));
+            if (FPaths::FileExists(TSConfigPath))
+            {
+                return TSConfigPath; // 找到文件，返回路径
+            }
+            // 向上回溯到父目录
+            CurrentDir = FPaths::GetPath(CurrentDir);
+        }
+        
+        return FString(); // 没有找到，返回空字符串
+    };
+
+	FString Result = FPaths::ConvertRelativePathToFull(DirName / RelativePath);
+
+    const FString TSConfigPath = FindTSConfig(DirName);
+    if (!FPaths::FileExists(*TSConfigPath))
+    {
+    	return Result;
+    }
+	
+	FString FileBuffer;
+	if (!FFileHelper::LoadFileToString(FileBuffer, *TSConfigPath))
+	{
+		UE_LOG(LogReactorUMG, Error, TEXT("Failed to load tsconfig.json file: %s"), *TSConfigPath);
+		return FString();
+	}
+        
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileBuffer);
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
+	{
+		const TSharedPtr<FJsonObject>* PathsObject;
+		if (JsonObject->TryGetObjectField(TEXT("paths"), PathsObject))
+		{
+			for (const auto& Pair : PathsObject->Get()->Values)
+			{
+				FString Key = Pair.Key.TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
+				const TArray<TSharedPtr<FJsonValue>>& ValueArray = Pair.Value->AsArray();
+				for (const auto& Value : ValueArray)
+				{
+					FString ValueString = Value->AsString().TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
+					if (RelativePath.StartsWith(Key))
+					{
+						FString RelativePathToTSConfig = RelativePath.Replace(*Key, *ValueString);
+						Result = FPaths::Combine(FPaths::GetPath(TSConfigPath), RelativePathToTSConfig);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	return Result;
+}

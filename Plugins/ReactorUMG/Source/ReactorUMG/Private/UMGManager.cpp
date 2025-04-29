@@ -3,11 +3,14 @@
 #include "Components/PanelSlot.h"
 #include "IRiveRendererModule.h"
 #include "LogReactorUMG.h"
+#include "ReactorUtils.h"
 #include "Engine/Engine.h"
 #include "Async/Async.h"
+#include "Engine/AssetManager.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Rive/RiveFile.h"
 #include "Engine/Font.h"
+#include "Engine/StreamableManager.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -172,4 +175,130 @@ UObject* UUMGManager::FindFontFamily(const TArray<FString>& Names, UObject* InOu
     }
     
     return nullptr;
+}
+
+FVector2D UUMGManager::GetWidgetGeometrySize(UWidget* Widget)
+{
+    if (!Widget)
+    {
+        return FVector2D::ZeroVector;
+    }
+    
+    const FGeometry Geometry = Widget->GetPaintSpaceGeometry();
+    const auto Size = Geometry.GetAbsoluteSize();
+    FVector2D Result;
+    Result.X = Size.X;
+    Result.Y = Size.Y;
+    return Result;
+}
+
+void UUMGManager::LoadBrushImageObject(const FString& ImagePath, FAssetLoadedDelegate OnLoaded,
+    FEasyDelegate OnFailed, UObject* Context, bool bIsSyncLoad, const FString& DirName)
+{
+    if (ImagePath.StartsWith(TEXT("/")))
+    {
+        // 处理UE资产包路径 
+        LoadImageBrushAsset(ImagePath, Context, bIsSyncLoad, OnLoaded, OnFailed);
+        return;
+    }
+
+    if (ImagePath.StartsWith(TEXT("http")) || ImagePath.StartsWith(TEXT("HTTP")))
+    {
+        // 处理网络资源
+        // LoadImageTextureFromURL
+    }
+
+    FString AbsPath = GetAbsoluteJSContentPath(ImagePath, DirName);
+    if (!FPaths::FileExists(*AbsPath))
+    {
+        AbsPath = FReactorUtils::ConvertRelativePathToFullUsingTSConfig(ImagePath, DirName);
+    }
+    if (!FPaths::FileExists(*AbsPath))
+    {
+        UE_LOG(LogReactorUMG, Error, TEXT("Image file( %s ) not exists."), *AbsPath);
+        return; 
+    }
+    // LoadImageTextureFromLocalFile
+    LoadImageTextureFromLocalFile(AbsPath, Context, bIsSyncLoad, OnLoaded, OnFailed);
+}
+
+FString UUMGManager::GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName)
+{
+    if (DirName.IsEmpty() || RelativePath.IsEmpty())
+    {
+        return RelativePath;
+    }
+
+    FString AbsolutePath = RelativePath;
+    if (FPaths::IsRelative(RelativePath))
+    {
+        // 处理相对路径的情况
+        AbsolutePath = FPaths::ConvertRelativePathToFull(DirName / RelativePath);
+    }
+    
+    return AbsolutePath;
+}
+
+void UUMGManager::LoadImageBrushAsset(const FString& AssetPath, UObject* Context,
+    bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed)
+{
+    FSoftObjectPath SoftObjectPath(AssetPath);
+    if (bIsSyncLoad)
+    {
+        UAssetManager::GetStreamableManager().RequestSyncLoad(SoftObjectPath);
+        UObject* LoadedObject = SoftObjectPath.ResolveObject();
+        if (LoadedObject)
+        {
+            LoadedObject->AddToCluster(Context);
+            OnLoaded.ExecuteIfBound(LoadedObject);
+        } else
+        {
+            OnFailed.ExecuteIfBound();
+        }
+    }else
+    {
+        UAssetManager::GetStreamableManager().RequestAsyncLoad(SoftObjectPath,
+            FStreamableDelegate::CreateLambda([SoftObjectPath, OnLoaded, OnFailed]()
+        {
+                UObject* LoadedObject = SoftObjectPath.ResolveObject();
+                if (LoadedObject)
+                {
+                    OnLoaded.ExecuteIfBound(LoadedObject);
+                } else
+                {
+                    OnFailed.ExecuteIfBound();
+                }
+        }));   
+    }
+}
+
+void UUMGManager::LoadImageTextureFromLocalFile(const FString& FilePath, UObject* Context,
+    bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed)
+{
+    if (bIsSyncLoad)
+    {
+        UTexture2D* Texture = UKismetRenderingLibrary::ImportFileAsTexture2D(nullptr, FilePath);
+        if (Texture)
+        {
+            Texture->AddToCluster(Context);
+            OnLoaded.ExecuteIfBound(Texture);
+        } else
+        {
+            OnFailed.ExecuteIfBound();
+        }
+    }else
+    {
+        AsyncTask(ENamedThreads::GameThread, [FilePath, Context, OnLoaded, OnFailed]()
+        {
+            UTexture2D *Texture = UKismetRenderingLibrary::ImportFileAsTexture2D(nullptr, FilePath);
+            if (Texture)
+            {
+                Texture->AddToCluster(Context);
+                OnLoaded.ExecuteIfBound(Texture);
+            } else
+            {
+                OnFailed.ExecuteIfBound();
+            }
+        });
+    }
 }

@@ -82,6 +82,7 @@ export class TextBlockWrapper extends ComponentWrapper {
             default:
                 return fontStyle;
         }
+        
     }
 
     private setupFontSize(textBlock: UE.TextBlock, prop: any) {

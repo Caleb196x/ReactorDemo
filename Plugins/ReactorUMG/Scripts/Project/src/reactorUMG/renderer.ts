@@ -49,16 +49,23 @@ class UMGWidget {
     }
 
     init() {
-        this.converter = createElementConverter(this.typeName, this.props);
-        this.native = this.converter.creatWidget();
+        try {
+            this.converter = createElementConverter(this.typeName, this.props);
+            this.native = this.converter.creatWidget();
+            if (this.native == null) {
+                console.error("Not supported widget: " + this.typeName);
+            }
+        } catch(e) {
+            console.error("Failed to create widget: " + this.typeName + ", error: " + e);
+        }
     }
 
     update(oldProps: any, newProps: any) {
-        this.converter.update(this.native, oldProps, newProps);
+        this.converter.updateWidget(this.native, oldProps, newProps);
     }
 
     appendChild(child: UMGWidget) {
-        this.converter.appendChild(this.native, child.native);
+        this.converter.appendChild(this.native, child.native, child.typeName, child.props);
     }
 
     removeChild(child: UMGWidget) {
@@ -73,7 +80,7 @@ class RootContainer {
     }
 
     appendChild(child: UMGWidget) {
-        let nativeSlot = this.native.AddChild(child.native);
+        this.native.AddChild(child.native);
     }
 
     removeChild(child: UMGWidget) {
@@ -98,7 +105,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     getPublicInstance (instance: UMGWidget) { return instance; },
     prepareForCommit(containerInfo: RootContainer): any {},
     resetAfterCommit (container: RootContainer) {},
-    resetTextContent (instance: UMGWidget) { console.error('resetTextContent not implemented!'); },
+    resetTextContent (instance: UMGWidget) { },
     shouldSetTextContent (type, props) { return false; },
     commitTextUpdate (textInstance: UMGWidget, oldText: string, newText: string) {
         if (oldText != newText) {
@@ -115,6 +122,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
             return true;
         }
     },
+
     commitUpdate (instance: UMGWidget, updatePayload: any, type : string, oldProps : any, newProps: any) {
         try{
             instance.update(oldProps, newProps);
@@ -122,6 +130,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
             console.error("commitUpdate fail!, " + e);
         }
     },
+
     removeChildFromContainer (container: RootContainer, child: UMGWidget) { container.removeChild(child); },
 
     removeChild(parent: UMGWidget, child: UMGWidget) {

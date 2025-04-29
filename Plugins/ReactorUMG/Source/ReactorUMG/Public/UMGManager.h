@@ -18,10 +18,10 @@
 #include "Rive/RiveDescriptor.h"
 #include "UMGManager.generated.h"
 
-/**
- *
- */
-UCLASS()
+DECLARE_DYNAMIC_DELEGATE(FEasyDelegate);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FAssetLoadedDelegate, UObject*, Object);
+
+UCLASS(BlueprintType)
 class REACTORUMG_API UUMGManager : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
@@ -64,4 +64,19 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static UObject* FindFontFamily(const TArray<FString>& Names, UObject* InOuter);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static FVector2D GetWidgetGeometrySize(UWidget* Widget);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static void LoadBrushImageObject(const FString& ImagePath,
+		FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed, UObject* Context = nullptr, bool bIsSyncLoad = true, const FString& DirName = TEXT(""));
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static FString GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName);
+
+private:
+	static void LoadImageBrushAsset(const FString& AssetPath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);
+	static void LoadImageTextureFromLocalFile(const FString& FilePath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);
+	static void LoadImageTextureFromURL(const FString& Url, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);
 };
