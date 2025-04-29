@@ -31,7 +31,7 @@ export class RiveTest extends React.Component {
 
             <Overlay style={{justifySelf: "center", alignSelf: "center", padding: "200px 0 0 0"}}>
                 <Rive fitType="contain" rive={settings} scale={2.0} style={{justifySelf: "center", alignSelf: "center"}}/>
-                <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Settings</p>
+                <p style={{fontSize: "20px", outline: "1px solid red", fontWeight: "bold", fontStyle: 'italic', justifySelf: "center", alignSelf: "center", padding: "0"}}>Settings</p>
             </Overlay>
 
             <Overlay style={{justifySelf: "center", alignSelf: "center", padding: "400px 0 0 0"}}>
@@ -39,7 +39,6 @@ export class RiveTest extends React.Component {
                 <p style={{justifySelf: "center", alignSelf: "center", padding: "0"}}>Rewards</p>
             </Overlay>
             <img onLoad={()=>{console.log("load")}} onError={()=>{console.log("error")}} src='https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png'/>
-
             {/* <button style={{backgroundColor: "transparent"}}>
             </button>
 

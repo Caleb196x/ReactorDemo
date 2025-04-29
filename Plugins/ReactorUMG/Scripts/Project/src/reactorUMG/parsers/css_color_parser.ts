@@ -161,6 +161,10 @@ const namedColors: Record<string, RGBA> = {
  * @returns 标准化 RGBA 对象
  */
 export function parseColor(color: string): RGBA {
+  if (!color) {
+    return { r: 0, g: 0, b: 0, a: 1 };
+  }
+
   const trimmed = color.trim().toLowerCase();
 
   // 1. 处理预定义颜色名称
