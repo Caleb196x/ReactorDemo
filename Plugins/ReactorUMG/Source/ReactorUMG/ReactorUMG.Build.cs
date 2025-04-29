@@ -49,7 +49,11 @@ public class ReactorUMG : ModuleRules
 				"DeveloperSettings",
 				"JsEnv",
 				"SpinePlugin",
-				"Rive"
+				"Rive",
+				"HTTP",
+				"Json",
+				"JsonUtilities",
+				"JsonSerialization"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
