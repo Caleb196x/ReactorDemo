@@ -3,9 +3,9 @@
  */
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
-import { parseBrush } from '../../elements/parser/brush_parser';
+import { parseBrush } from '../../parsers/brush_parser';
 import { parseColor } from '../../parsers/css_color_parser';
-import { convertToUEMMargin } from '../../parsers/css_margin_parser';
+import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class ButtonConverter extends UMGConverter {
     constructor(typeName: string, props: any) {
@@ -55,7 +55,7 @@ export class ButtonConverter extends UMGConverter {
                 button[colorKeyMap[key]].A = rgba.a;
 
             } else if (paddingKeyMap[key]) {
-                button[paddingKeyMap[key]] = convertToUEMMargin({}, value, '', '', '', '');
+                button[paddingKeyMap[key]] = convertToUEMargin({}, value, '', '', '', '');
             } else if (soundKeyMap[key]) {
                 // todo@Caleb196x: 添加sound
             } else if (eventKeyMap[key]) {

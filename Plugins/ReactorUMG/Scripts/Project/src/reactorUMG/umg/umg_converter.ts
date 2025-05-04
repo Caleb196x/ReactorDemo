@@ -2,6 +2,7 @@ import * as UE from 'ue';
 import { ElementConverter } from '../converter';
 import { getAllStyles } from '../parsers/cssstyle_parser';
 import { parseWidgetSelfAlignment } from '../parsers/alignment_parser';
+import { NativeWidgetConverter } from './native_widget_converter';
 
 export class UMGConverter extends ElementConverter {
     private readonly predefinedWidgets: string[];
@@ -48,6 +49,8 @@ export class UMGConverter extends ElementConverter {
                 const ClassName = `${typeName}Converter`;
                 this.proxy = new Module[ClassName](this.typeName, this.props);
             }
+        } else {
+            this.proxy = new NativeWidgetConverter(this.typeName, this.props);
         }
     }
 

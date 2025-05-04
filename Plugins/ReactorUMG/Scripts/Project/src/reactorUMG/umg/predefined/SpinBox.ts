@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
-import { parseColor } from '../../elements/parser/color_parser';
+import { parseColor } from '../../parsers/css_color_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
