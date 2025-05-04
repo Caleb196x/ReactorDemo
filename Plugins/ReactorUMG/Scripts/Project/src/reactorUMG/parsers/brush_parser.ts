@@ -1,8 +1,10 @@
+import { ImageStyle } from 'reactorUMG';
 import * as UE from 'ue';
-import { parseColor } from './color_parser';
-import { convertMargin, loadTextureFromImagePath } from '../common_utils';
+import { parseColor } from './css_color_parser';
+import { ImageLoader } from '../misc/image_loader';
+import { convertMargin, convertPadding } from './css_margin_parser';
 
-export function parseBrush(imageStyle) : UE.SlateBrush {
+export function parseBrush(imageStyle: ImageStyle) : UE.SlateBrush {
     const brush = new UE.SlateBrush();
 
     const tintColor = parseColor(imageStyle.color);
@@ -63,24 +65,24 @@ export function parseBrush(imageStyle) : UE.SlateBrush {
     
     const padding = imageStyle?.padding;
     if (padding) {
-        brush.Margin = convertMargin(padding, imageStyle);
+        brush.Margin = convertPadding(imageStyle);
     }
 
     const margin = imageStyle?.margin;
     if (margin) {
-        brush.Margin = convertMargin(margin, imageStyle);
+        brush.Margin = convertMargin(imageStyle);
     }
 
     // todo@Caleb196x: 处理Image
     const image = imageStyle?.image;
     if (image) {
         if (typeof image === 'string') {
-            const resourceObject = loadTextureFromImagePath(image);
+            const resourceObject = ImageLoader.loadTextureFromImagePath(image);
             if (resourceObject) {
                 brush.ResourceObject = resourceObject;
             }
         } else if (typeof image === 'object') {
-            const resourceObject = image as UE.Texture2D;
+            const resourceObject = image as UE.Object;
             brush.ResourceObject = resourceObject;
         }
         const imageSize = imageStyle?.imageSize;

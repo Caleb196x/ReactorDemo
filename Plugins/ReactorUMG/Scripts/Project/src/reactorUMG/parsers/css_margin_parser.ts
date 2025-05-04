@@ -21,7 +21,7 @@ export function expandPaddingValues(paddingValues: number[]): number[] {
     return paddingValues;
 }
 
-function convertToUEMMargin(style: any, margin: string, top: string, right: string, bottom: string, left: string): UE.Margin {
+export function convertToUEMargin(style: any, margin: string, top: string, right: string, bottom: string, left: string): UE.Margin {
 
     if (!margin && !top && 
         !right && !bottom && !left) {
@@ -60,7 +60,7 @@ export function convertPadding(style: any): UE.Margin {
     const paddingTop = style?.paddingTop;
     const paddingBottom = style?.paddingBottom;
     
-    return convertToUEMMargin(style, padding, paddingTop, paddingRight, paddingBottom, paddingLeft);
+    return convertToUEMargin(style, padding, paddingTop, paddingRight, paddingBottom, paddingLeft);
 }
 
 export function convertMargin(style: any): UE.Margin {
@@ -70,7 +70,7 @@ export function convertMargin(style: any): UE.Margin {
     const marginTop = style?.marginTop;
     const marginBottom = style?.marginBottom;
 
-    return convertToUEMMargin(style, margin, marginTop, marginRight, marginBottom, marginLeft);
+    return convertToUEMargin(style, margin, marginTop, marginRight, marginBottom, marginLeft);
 }
 
 export function convertGap(gap: string, style: any): UE.Vector2D {

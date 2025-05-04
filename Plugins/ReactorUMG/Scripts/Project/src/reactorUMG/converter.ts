@@ -5,6 +5,7 @@ import { parseCursor, parseTransform, parseTransformPivot, parseTranslate, parse
 import { ContainerConverter } from './container/container_converter';
 import * as puerts from 'puerts';
 import { JSXConverter } from './jsx/jsx_converter';
+import { UMGConverter } from './umg/umg_converter';
 export abstract class ElementConverter {
     typeName: string;
     props: any;
@@ -75,8 +76,6 @@ const jsxComponentsKeywords = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress', 'label'
 ];
 
-const systemWidgetsKeywords = ['Radial']
-
 export function createElementConverter(typeName: string, props: any): ElementConverter {
     if (containerKeywords.includes(typeName)) {
         return new ContainerConverter(typeName, props);
@@ -86,11 +85,5 @@ export function createElementConverter(typeName: string, props: any): ElementCon
         return new JSXConverter(typeName, props);
     }
 
-    if (systemWidgetsKeywords.includes(typeName)) {
-
-    }
-
-    // create custom widget converter
-
-    return null;
+    return new UMGConverter(typeName, props);
 }

@@ -125,5 +125,4 @@ export class CanvasConverter extends ContainerConverter {
         const canvasSlot = canvasPanel.AddChildToCanvas(child);
         this.initCanvasSlot(canvasSlot, childProps);
     }
-    
 }

@@ -5,6 +5,7 @@ import { FlexConverter } from "./flex";
 import { CanvasConverter } from "./canvas";
 import { GridConverter } from "./grid";
 import { OverlayConverter } from "./overlay";
+import { UniformGridConverter } from "./uniform_grid";
 import { convertGap, convertMargin, convertPadding } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
 import { parseColor } from "../parsers/css_color_parser";
@@ -38,6 +39,7 @@ export class ContainerConverter extends ElementConverter {
             "grid": GridConverter,
             "canvas": CanvasConverter,
             "overlay": OverlayConverter,
+            "uniformgrid": UniformGridConverter,
         };
 
         if (this.childConverters.includes(this.containerType)) {
