@@ -11,20 +11,15 @@ export class NativeWidgetConverter extends UMGConverter {
     }
 
     private getNativeWidget(): UE.Widget {
-        try {
-            const classPath = exports.lazyloadComponents[this.typeName];
-            let widget: UE.Widget;
-            if (classPath)  {
-                widget = UE.NewObject(UE.Class.Load(classPath)) as UE.Widget;
-            } else {
-                widget = new UE[this.typeName]();
-            }
-
-            return widget;
-        } catch (error) {
-            console.error(`Failed to create native widget, ${this.typeName} not supported: ${error}`);
-            return null;
+        const classPath = exports.lazyloadComponents[this.typeName];
+        let widget: UE.Widget;
+        if (classPath)  {
+            widget = UE.NewObject(UE.Class.Load(classPath)) as UE.Widget;
+        } else {
+            widget = new UE[this.typeName]();
         }
+
+        return widget;
     }
 
     private bindEvents(widget: UE.Widget, eventName: string, callback: Function): void {

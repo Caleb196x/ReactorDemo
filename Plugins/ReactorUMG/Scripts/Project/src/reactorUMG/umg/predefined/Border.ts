@@ -3,7 +3,7 @@ import { UMGConverter } from '../umg_converter';
 import { getAllStyles } from '../../parsers/cssstyle_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 import { parseColor } from '../../parsers/css_color_parser';
-import { convertToUEMMargin } from '../../parsers/css_margin_parser';
+import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class BorderConverter extends UMGConverter {
     constructor(typeName: string, props: any) {
@@ -76,7 +76,7 @@ export class BorderConverter extends UMGConverter {
         const padding = props?.contentPadding || props?.contentMargin;
         if (padding) {
             const style = getAllStyles(this.typeName, props);
-            border.SetPadding(convertToUEMMargin(style, padding, '', '', '', ''));
+            border.SetPadding(convertToUEMargin(style, padding, '', '', '', ''));
         }
     }
 

@@ -107,6 +107,17 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
         return nullptr;
     }
 
+    if (!Context)
+    {
+        UE_LOG(
+            LogReactorUMG,
+            Error,
+            TEXT(
+                "Unable to create the Rive file '%s': the context is null"),
+            *RivePath);
+        return nullptr;
+    }
+
     TArray<uint8> FileBuffer;
     if (!FFileHelper::LoadFileToArray(FileBuffer, *RivePath)) // load entire DNA file into the array
     {

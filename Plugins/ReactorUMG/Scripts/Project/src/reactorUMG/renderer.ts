@@ -46,13 +46,14 @@ class UMGWidget {
         this.props = props;
         this.rootContainer = rootContainer;
         this.hostContext = hostContext;
+        this.init();
     }
 
     init() {
         try {
             this.converter = createElementConverter(this.typeName, this.props);
             this.native = this.converter.creatWidget();
-            if (this.native == null) {
+            if (this.native === null) {
                 console.error("Not supported widget: " + this.typeName);
             }
         } catch(e) {
@@ -61,15 +62,21 @@ class UMGWidget {
     }
 
     update(oldProps: any, newProps: any) {
-        this.converter.updateWidget(this.native, oldProps, newProps);
+        if (this.native !== null) {
+            this.converter.updateWidget(this.native, oldProps, newProps);
+        }
     }
 
     appendChild(child: UMGWidget) {
-        this.converter.appendChild(this.native, child.native, child.typeName, child.props);
+        if (this.native !== null) {
+            this.converter.appendChild(this.native, child.native, child.typeName, child.props);
+        }
     }
 
     removeChild(child: UMGWidget) {
-        this.converter.removeChild(this.native, child.native);
+        if (this.native !== null) {
+            this.converter.removeChild(this.native, child.native);
+        }
     }
 }
 
@@ -99,17 +106,19 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         return new UMGWidget(type, props, rootContainer, hostContext);
     },
     createTextInstance (text: string) {
-        return new UMGWidget("Text", {Text: text}, null, null);
+        // return new UMGWidget("text", {text: text}, null, null);
+        // return new UMGWidget("TextBlock", {Text: text}, null, null);
+        return null;
     },
     finalizeInitialChildren () { return false; },
-    getPublicInstance (instance: UMGWidget) { return instance; },
+    getPublicInstance (instance: UMGWidget) { return instance.native; },
     prepareForCommit(containerInfo: RootContainer): any {},
     resetAfterCommit (container: RootContainer) {},
     resetTextContent (instance: UMGWidget) { },
     shouldSetTextContent (type, props) { return false; },
     commitTextUpdate (textInstance: UMGWidget, oldText: string, newText: string) {
-        if (oldText != newText) {
-            textInstance.update({}, {Text: newText})
+        if (textInstance != null && oldText != newText) {
+            textInstance.update({}, {text: newText})
         }
     },
   

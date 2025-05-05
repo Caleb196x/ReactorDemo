@@ -2,11 +2,10 @@ import * as UE from 'ue';
 import { ElementConverter } from '../converter';
 import { getAllStyles } from '../parsers/cssstyle_parser';
 import { parseWidgetSelfAlignment } from '../parsers/alignment_parser';
-import { NativeWidgetConverter } from './native_widget_converter';
 
 export class UMGConverter extends ElementConverter {
     private readonly predefinedWidgets: string[];
-    private readonly proxy: UMGConverter;
+    private proxy: UMGConverter;
     constructor(typeName: string, props: any) {
         super(typeName, props);
 
@@ -42,16 +41,26 @@ export class UMGConverter extends ElementConverter {
             'WrapBox'
         ]
 
+        this.proxy = null;
+    }
+
+    private createProxy(typeName: string): UMGConverter {
         // create proxy for predefined widgets
+        let proxy: UMGConverter;
         if (this.predefinedWidgets.includes(typeName)) {
             const Module = require(`./predefined/${typeName}`);
             if (Module) {
                 const ClassName = `${typeName}Converter`;
-                this.proxy = new Module[ClassName](this.typeName, this.props);
+                proxy = new Module[ClassName](this.typeName, this.props);
             }
         } else {
-            this.proxy = new NativeWidgetConverter(this.typeName, this.props);
+            const NativeWidgetModule = require('./native_widget_converter');
+            if (NativeWidgetModule) {
+                proxy = new NativeWidgetModule["NativeWidgetConverter"](this.typeName, this.props);
+            }
         }
+
+        return proxy;
     }
 
     initPanelChildSlot(slot: any, childTypeName: string, childProps: any): void {
@@ -83,6 +92,10 @@ export class UMGConverter extends ElementConverter {
      * React控件定义到UWidget的转换规则：
      */
     createNativeWidget(): UE.Widget {
+        if (!this.proxy) {
+            this.proxy = this.createProxy(this.typeName);
+        }
+
         if (this.proxy) {
             return this.proxy.createNativeWidget();
         }

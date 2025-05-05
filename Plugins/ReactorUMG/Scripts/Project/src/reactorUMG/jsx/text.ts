@@ -68,7 +68,7 @@ export class TextConverter extends JSXConverter {
     createNativeWidget() {
         const text = new UE.TextBlock();
         this.setupTextBlockProperties(text, this.props);
-        const content = this.props?.children;
+        const content = this.props?.children || this.props?.text;
         if (content && typeof content === 'string') {
             text.SetText(content);
         }
