@@ -234,12 +234,24 @@ var global = global || (function () { return this; }());
             let sid = addModule(m);
             let isESM = outerIsESM === true || fullPath.endsWith(".mjs") || fullPath.endsWith(".mbc");
             if (fullPath.endsWith(".cjs") || fullPath.endsWith(".cbc")) isESM = false;
-            let script = isESM ? undefined : loadModule(fullPath);
+            
+            const isPictureFile = fullPath.endsWith('.png') || fullPath.endsWith('.jpg') || fullPath.endsWith('.jpeg');
+            const isCssFile = fullPath.endsWith('.css') || fullPath.endsWith('.scss');
+            const isAnimFile = fullPath.endsWith('.atlas') || fullPath.endsWith('.skel') || fullPath.endsWith('.riv');
+            
+            let script = undefined;
             let bytecode = undefined;
-            if (fullPath.endsWith(".mbc") || fullPath.endsWith(".cbc")) {
-                bytecode = script;
-                script = generateEmptyCode(getSourceLengthFromBytecode(bytecode));
+            if (!isPictureFile && !isCssFile && !isAnimFile) {
+                script = isESM ? undefined : loadModule(fullPath);
+                bytecode = undefined;
+                if (fullPath.endsWith(".mbc") || fullPath.endsWith(".cbc")) {
+                    bytecode = script;
+                    script = generateEmptyCode(getSourceLengthFromBytecode(bytecode));
+                }
+            } else {
+                console.log("picture file, css file and anim file will not be loaded");
             }
+
             try {
                 if (fullPath.endsWith(".json") && fullPath.endsWith("package.json")) {
                     let packageConfigure = JSON.parse(script);
@@ -266,17 +278,17 @@ var global = global || (function () { return this; }());
                     } else {
                         m.exports = packageConfigure;
                     }
-                } else if (fullPath.endsWith('.png') || fullPath.endsWith('.jpg') || fullPath.endsWith('.jpeg')) {
+                } else if (isPictureFile) {
                     // support import image
                     console.log("import image: " + fullPath + "debug path: " + debugPath);
                     // todo@Caleb196x: 导入性能优化x10
                     // todo@Caleb196x: 通过hash判断文件内容是否发生改变
                     // let texture = readImageAsTexture(fullPath); 
                     m.exports = {'default': fullPath};
-                } else if (fullPath.endsWith('.css') || fullPath.endsWith('.scss')) {
+                } else if (isCssFile) {
                     // support import css
                     extractStyleClassFromFile(fullPath);
-                } else if (fullPath.endsWith(".json") || fullPath.endsWith('.atlas') || fullPath.endsWith('.skel') || fullPath.endsWith('.riv')) {
+                } else if (isAnimFile) {
                     // support import spine
                     console.log("fullPath: " + fullPath + " script: " + script);
                     m.exports = {'default': fullPath};

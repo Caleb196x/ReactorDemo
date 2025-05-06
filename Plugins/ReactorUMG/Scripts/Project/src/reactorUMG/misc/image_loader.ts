@@ -1,3 +1,4 @@
+import { toDelegate } from 'puerts';
 import * as UE from 'ue';
 
 export class ImageLoader {
@@ -12,10 +13,17 @@ export class ImageLoader {
         return undefined;
     }
 
-    static loadBrushImageObject(imagePath: string, syncLoad?: boolean, onLoad?: ()=>void, onError?: ()=>void) 
-        : UE.Texture2D | UE.MaterialInterface | UE.SlateTextureAtlasInterface | undefined 
+    static loadBrushImageObject(object: UE.Object, imagePath: string, dirName?: string, syncLoad?: boolean, onLoad?: (object: UE.Object)=>void, onError?: ()=>void)
     {
-        
-        return undefined;
+        if (!syncLoad) {
+            syncLoad = false;
+        }
+
+        const OnLoadDelegate = toDelegate(object, onLoad);
+        const OnErrorDelegate = toDelegate(object, onError);
+
+        UE.UMGManager.LoadBrushImageObject(
+            imagePath, OnLoadDelegate, OnErrorDelegate, object ? object : null, syncLoad, dirName ? dirName : ""
+        );
     }
 }

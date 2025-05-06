@@ -1,5 +1,6 @@
 #include "UMGManager.h"
 
+#include "HttpModule.h"
 #include "Components/PanelSlot.h"
 #include "IRiveRendererModule.h"
 #include "LogReactorUMG.h"
@@ -11,6 +12,7 @@
 #include "Rive/RiveFile.h"
 #include "Engine/Font.h"
 #include "Engine/StreamableManager.h"
+#include "Interfaces/IHttpResponse.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -101,6 +103,17 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
             Error,
             TEXT(
                 "Unable to import the Rive file '%s': the file does not exist"),
+            *RivePath);
+        return nullptr;
+    }
+
+    if (!Context)
+    {
+        UE_LOG(
+            LogReactorUMG,
+            Error,
+            TEXT(
+                "Unable to create the Rive file '%s': the context is null"),
             *RivePath);
         return nullptr;
     }
@@ -205,7 +218,8 @@ void UUMGManager::LoadBrushImageObject(const FString& ImagePath, FAssetLoadedDel
     if (ImagePath.StartsWith(TEXT("http")) || ImagePath.StartsWith(TEXT("HTTP")))
     {
         // 处理网络资源
-        // LoadImageTextureFromURL
+        LoadImageTextureFromURL(ImagePath, Context, bIsSyncLoad, OnLoaded, OnFailed);
+        return;
     }
 
     FString AbsPath = GetAbsoluteJSContentPath(ImagePath, DirName);
@@ -218,7 +232,6 @@ void UUMGManager::LoadBrushImageObject(const FString& ImagePath, FAssetLoadedDel
         UE_LOG(LogReactorUMG, Error, TEXT("Image file( %s ) not exists."), *AbsPath);
         return; 
     }
-    // LoadImageTextureFromLocalFile
     LoadImageTextureFromLocalFile(AbsPath, Context, bIsSyncLoad, OnLoaded, OnFailed);
 }
 
@@ -301,4 +314,38 @@ void UUMGManager::LoadImageTextureFromLocalFile(const FString& FilePath, UObject
             }
         });
     }
+}
+
+void UUMGManager::LoadImageTextureFromURL(const FString& Url, UObject* Context,
+    bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed)
+{
+    FHttpModule& HTTP = FHttpModule::Get();
+    TSharedRef<IHttpRequest> HttpRequest = HTTP.CreateRequest();
+    HttpRequest->OnProcessRequestComplete().BindLambda(
+        [Url, Context, OnLoaded, OnFailed](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+        {
+            check(IsInGameThread());
+            if (!bWasSuccessful || !Response.IsValid())
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to download image."));
+                OnFailed.ExecuteIfBound();
+                return;
+            }
+
+            TArray<uint8> ImageData = Response->GetContent();
+            UTexture2D* Texture = UKismetRenderingLibrary::ImportBufferAsTexture2D(nullptr, ImageData);
+            if (Texture)
+            {
+                UE_LOG(LogReactorUMG, Log, TEXT("Download image file successfully for url: %s"), *Url);
+                Texture->AddToCluster(Context);
+                OnLoaded.ExecuteIfBound(Texture);
+            } else
+            {
+                OnFailed.ExecuteIfBound();
+            }
+        });
+    
+    HttpRequest->SetURL(Url);
+    HttpRequest->SetVerb("GET");
+    HttpRequest->ProcessRequest();
 }

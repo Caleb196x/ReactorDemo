@@ -1,6 +1,5 @@
 import * as UE from "ue";
 import { ElementConverter } from "../converter";
-import { ButtonConverter } from "./button";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 
 export class JSXConverter extends ElementConverter {
@@ -11,24 +10,41 @@ export class JSXConverter extends ElementConverter {
     constructor(typeName: string, props: any) {
         super(typeName, props);
 
-        this.proxy = this.createProxy();
+        this.proxy = null;
         this.widgetStyle = getAllStyles(this.typeName, this.props);
     }
 
     private createProxy(): ElementConverter {
         const JsxElementConverters = {
-            "button": ButtonConverter,
+            "button": "ButtonConverter",
+            "input": "InputJSXConverter",
+            "img": "ImageConverter",
+            "textarea": "TextAreaConverter",
+            "text": "TextConverter"
         };
 
-        if (JsxElementConverters.hasOwnProperty(this.typeName)) {
-            return new JsxElementConverters[this.typeName](this.typeName, this.props);
+        let type = this.typeName;
+        const textKeywords = ["text", "span", "label", "p", "h1", "h2", "h3", "h4", "h5", "h6"];
+        if (textKeywords.includes(this.typeName)) {
+            type = "text";
+        }
+
+        if (JsxElementConverters.hasOwnProperty(type)) {
+            const Module = require(`./${type}`);
+            if (Module) {
+                const ClassName = JsxElementConverters[type];
+                return new Module[ClassName](this.typeName, this.props);
+            }
         }
 
         return null;
     }
 
     createNativeWidget() {
-        console.warn("JSXConverter createNativeWidget not implemented, do not use it directly");
+        if (!this.proxy) {
+            this.proxy = this.createProxy();
+        }
+
         if (this.proxy) {
             return this.proxy.createNativeWidget();
         }

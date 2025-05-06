@@ -1,23 +1,20 @@
 import * as UE from "ue";
 import { ElementConverter } from "../converter";
 import { getAllStyles } from "../parsers/cssstyle_parser";
-import { FlexConverter } from "./flex";
-import { CanvasConverter } from "./canvas";
-import { GridConverter } from "./grid";
-import { OverlayConverter } from "./overlay";
 import { convertGap, convertMargin, convertPadding } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
 import { parseColor } from "../parsers/css_color_parser";
 import { convertLengthUnitToSlateUnit, parseScale, parseAspectRatio } from "../parsers/css_length_parser";
 import { safeParseFloat } from "../misc/utils";
 import { parseWidgetSelfAlignment } from "../parsers/alignment_parser";
+
 /**
  * 将容器参数以及布局参数转换中通用的功能实现在这个类中
  */
 export class ContainerConverter extends ElementConverter {
     containerType: string;
     containerStyle: any;
-    proxy: ContainerConverter;
+    proxy: ElementConverter;
     originalWidget: UE.Widget;
     externalSlot: UE.PanelSlot; // 保存外部添加的容器slot
     wrapBoxWidget: UE.Widget; // 保存wrapbox容器
@@ -25,7 +22,7 @@ export class ContainerConverter extends ElementConverter {
     scaleBoxWidget: UE.Widget; // 保存scalebox容器
     borderWidget: UE.Widget; // 保存border容器
 
-    private childConverters: Record<string, any>;
+    private childConverters: Record<string, string>;
 
     constructor(typeName: string, props: any) {
         super(typeName, props);
@@ -34,17 +31,26 @@ export class ContainerConverter extends ElementConverter {
         this.externalSlot = null;
 
         this.childConverters = {
-            "flex": FlexConverter,
-            "grid": GridConverter,
-            "canvas": CanvasConverter,
-            "overlay": OverlayConverter,
+            "flex": "FlexConverter",
+            "grid": "GridConverter",
+            "canvas": "CanvasConverter",
+            "overlay": "OverlayConverter",
+            "uniformgrid": "UniformGridConverter",
         };
-
-        if (this.childConverters.includes(this.containerType)) {
-            this.proxy = new this.childConverters[this.containerType](this.typeName, this.props);
-        }
     }
-    
+
+    private createProxy(): ElementConverter {
+        if (this.childConverters[this.containerType]) {
+            const Module = require(`./${this.containerType}`);
+            if (Module) {
+                const className = this.childConverters[this.containerType];
+                return new Module[className](this.typeName, this.props);
+            }
+        }
+
+        return null;
+    }
+
     private parseContainerType(type: string) {
         if (type === 'div') {
             const display = this.containerStyle?.display || 'flex';
@@ -311,6 +317,10 @@ export class ContainerConverter extends ElementConverter {
 
     createNativeWidget(): UE.Widget {
         let widget: UE.Widget = null;
+        if (!this.proxy) {
+            this.proxy = this.createProxy();
+        }
+
         if (this.proxy) {
             widget = this.proxy.createNativeWidget();
             this.originalWidget = widget;

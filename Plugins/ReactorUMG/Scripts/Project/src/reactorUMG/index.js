@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = require('./reactorumg.js');
+module.exports = require('./renderer.js');
 
 let components = require('components.js');
 
