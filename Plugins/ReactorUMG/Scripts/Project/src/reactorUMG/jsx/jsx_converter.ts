@@ -61,6 +61,7 @@ export class JSXConverter extends ElementConverter {
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any) {
         if (parent instanceof UE.PanelWidget) {
             const nativeSlot = parent.AddChild(child);
+            
             this.nativeSlot = nativeSlot;
         }
     }
