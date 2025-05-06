@@ -68,7 +68,7 @@ class UMGWidget {
     }
 
     appendChild(child: UMGWidget) {
-        if (this.native !== null) {
+        if (this.native !== null && child !== null) {
             this.converter.appendChild(this.native, child.native, child.typeName, child.props);
         }
     }

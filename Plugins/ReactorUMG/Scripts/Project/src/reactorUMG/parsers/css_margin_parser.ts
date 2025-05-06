@@ -14,7 +14,9 @@ export function expandPaddingValues(paddingValues: number[]): number[] {
     } else if (paddingValues.length === 3) {
         // padding: top right bottom
         return [paddingValues[0], paddingValues[1], paddingValues[2], paddingValues[1]];
-    } else {
+    } else if (paddingValues.length === 4) {
+        return paddingValues;
+    } else if (paddingValues.length === 0) {
         return [0, 0, 0, 0];
     }
 

@@ -26,7 +26,7 @@ export class OverlayConverter extends ContainerConverter {
             const alignment = parseWidgetSelfAlignment(style);
             overlaySlot.SetHorizontalAlignment(alignment.horizontal);
             overlaySlot.SetVerticalAlignment(alignment.vertical);
-            overlaySlot.SetPadding(style.padding);
+            overlaySlot.SetPadding(alignment.padding);
         }
     }
 }

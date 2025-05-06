@@ -60,7 +60,7 @@ export abstract class ElementConverter {
             }
         }
 
-        if (styles){
+        if (widgetProps){
             puerts.merge(widget, widgetProps);
             UE.UMGManager.SynchronizeWidgetProperties(widget);
         }
