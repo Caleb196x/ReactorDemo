@@ -58,6 +58,7 @@ class UMGWidget {
             }
         } catch(e) {
             console.error("Failed to create widget: " + this.typeName + ", error: " + e);
+            console.error(e.stack);
         }
     }
 
@@ -74,7 +75,7 @@ class UMGWidget {
     }
 
     removeChild(child: UMGWidget) {
-        if (this.native !== null) {
+        if (this.native !== null && child !== null) {
             this.converter.removeChild(this.native, child.native);
         }
     }

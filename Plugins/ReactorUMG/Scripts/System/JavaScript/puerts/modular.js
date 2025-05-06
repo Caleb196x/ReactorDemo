@@ -190,6 +190,7 @@ var global = global || (function () { return this; }());
     }
     
     function genRequire(requiringDir, outerIsESM) {
+        // module cache
         let localModuleCache = Object.create(null);
         function require(moduleName) {
             if (org_require) {
@@ -197,7 +198,9 @@ var global = global || (function () { return this; }());
                     return org_require(moduleName);
                 } catch (e) {}
             }
+
             moduleName = normalize(moduleName);
+
             let forceReload = false;
             if ((moduleName in localModuleCache)) {
                 let m = localModuleCache[moduleName];
@@ -207,6 +210,7 @@ var global = global || (function () { return this; }());
                     forceReload = true;
                 }
             }
+
             if (moduleName in buildinModule) return buildinModule[moduleName];
             let nativeModule = findModule(moduleName);
             if (nativeModule) {
@@ -215,6 +219,7 @@ var global = global || (function () { return this; }());
             }
             let moduleInfo = searchModule(moduleName, requiringDir);
             if (!moduleInfo) {
+                delete localModuleCache[moduleName];
                 throw new Error(`can not find ${moduleName} in ${requiringDir}`);
             }
             
@@ -228,9 +233,11 @@ var global = global || (function () { return this; }());
                 localModuleCache[moduleName] = moduleCache[key];
                 return localModuleCache[moduleName].exports;
             }
+
             let m = {"exports":{}};
             localModuleCache[moduleName] = m;
             moduleCache[key] = m;
+
             let sid = addModule(m);
             let isESM = outerIsESM === true || fullPath.endsWith(".mjs") || fullPath.endsWith(".mbc");
             if (fullPath.endsWith(".cjs") || fullPath.endsWith(".cbc")) isESM = false;
@@ -280,7 +287,6 @@ var global = global || (function () { return this; }());
                     }
                 } else if (isPictureFile) {
                     // support import image
-                    console.log("import image: " + fullPath + "debug path: " + debugPath);
                     // todo@Caleb196x: 导入性能优化x10
                     // todo@Caleb196x: 通过hash判断文件内容是否发生改变
                     // let texture = readImageAsTexture(fullPath); 
@@ -290,7 +296,6 @@ var global = global || (function () { return this; }());
                     extractStyleClassFromFile(fullPath);
                 } else if (isAnimFile) {
                     // support import spine
-                    console.log("fullPath: " + fullPath + " script: " + script);
                     m.exports = {'default': fullPath};
                 }
                 else {

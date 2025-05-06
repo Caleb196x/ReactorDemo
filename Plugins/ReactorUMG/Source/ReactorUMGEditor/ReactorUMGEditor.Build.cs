@@ -30,7 +30,8 @@ public class ReactorUMGEditor : ModuleRules
                 "DeveloperSettings",
                 "UnrealEd",
                 "Projects",
-                "UMG"
+                "UMG",
+                "UMGEditor"
             }
         );
     }
