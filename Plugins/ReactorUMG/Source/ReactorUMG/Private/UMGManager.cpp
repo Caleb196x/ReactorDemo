@@ -13,6 +13,7 @@
 #include "Engine/Font.h"
 #include "Engine/StreamableManager.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Kismet/GameplayStatics.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -34,21 +35,22 @@ void UUMGManager::SynchronizeSlotProperties(UPanelSlot* Slot)
     Slot->SynchronizeProperties();
 }
 
-USpineAtlasAsset* UUMGManager::LoadSpineAtlas(UObject* Context, const FString& AtlasPath)
+USpineAtlasAsset* UUMGManager::LoadSpineAtlas(UObject* Context, const FString& AtlasPath, const FString& DirName)
 {
     FString RawData;
-    if (!FFileHelper::LoadFileToString(RawData, *AtlasPath))
+    const FString AssetFilePath = ProcessAssetFilePath(AtlasPath, DirName);
+    if (!FFileHelper::LoadFileToString(RawData, *AssetFilePath))
     {
-        UE_LOG(LogReactorUMG, Error, TEXT("Spine atlas asset file( %s ) not exists."), *AtlasPath);
+        UE_LOG(LogReactorUMG, Error, TEXT("Spine atlas asset file( %s ) not exists."), *AssetFilePath);
         return nullptr;
     }
     
     USpineAtlasAsset* SpineAtlasAsset = NewObject<USpineAtlasAsset>(Context, USpineAtlasAsset::StaticClass(),
         NAME_None, RF_Public|RF_Transient);
     SpineAtlasAsset->SetRawData(RawData);
-    SpineAtlasAsset->SetAtlasFileName(FName(*AtlasPath));
+    SpineAtlasAsset->SetAtlasFileName(FName(*AssetFilePath));
 
-    FString BaseFilePath = FPaths::GetPath(AtlasPath);
+    const FString BaseFilePath = FPaths::GetPath(AssetFilePath);
 
     // load textures
     spine::Atlas* Atlas = SpineAtlasAsset->GetAtlas();
@@ -66,25 +68,26 @@ USpineAtlasAsset* UUMGManager::LoadSpineAtlas(UObject* Context, const FString& A
     return SpineAtlasAsset;
 }
 
-USpineSkeletonDataAsset* UUMGManager::LoadSpineSkeleton(UObject* Context, const FString& SkeletonPath)
+USpineSkeletonDataAsset* UUMGManager::LoadSpineSkeleton(UObject* Context, const FString& SkeletonPath, const FString& DirName)
 {
     TArray<uint8> RawData;
-    if (!FFileHelper::LoadFileToArray(RawData, *SkeletonPath, 0))
+    const FString AssetFilePath = ProcessAssetFilePath(SkeletonPath, DirName);
+    if (!FFileHelper::LoadFileToArray(RawData, *AssetFilePath, 0))
     {
-        UE_LOG(LogReactorUMG, Error, TEXT("Spine skeleton asset file( %s ) not exists."), *SkeletonPath);
+        UE_LOG(LogReactorUMG, Error, TEXT("Spine skeleton asset file( %s ) not exists."), *AssetFilePath);
         return nullptr;
     }
 
     USpineSkeletonDataAsset* SkeletonDataAsset = NewObject<USpineSkeletonDataAsset>(Context,
             USpineSkeletonDataAsset::StaticClass(), NAME_None, RF_Transient | RF_Public);
     
-    SkeletonDataAsset->SetSkeletonDataFileName(FName(*SkeletonPath));
+    SkeletonDataAsset->SetSkeletonDataFileName(FName(*AssetFilePath));
     SkeletonDataAsset->SetRawData(RawData);
 
     return SkeletonDataAsset;
 }
 
-URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
+URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName)
 {
     if (!IRiveRendererModule::Get().GetRenderer())
     {
@@ -95,15 +98,16 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
             *RivePath);
         return nullptr;
     }
-    
-    if (!FPaths::FileExists(RivePath))
+
+    const FString RiveAssetFilePath = ProcessAssetFilePath(RivePath, DirName);
+    if (!FPaths::FileExists(RiveAssetFilePath))
     {
         UE_LOG(
             LogReactorUMG,
             Error,
             TEXT(
                 "Unable to import the Rive file '%s': the file does not exist"),
-            *RivePath);
+            *RiveAssetFilePath);
         return nullptr;
     }
 
@@ -114,19 +118,19 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
             Error,
             TEXT(
                 "Unable to create the Rive file '%s': the context is null"),
-            *RivePath);
+            *RiveAssetFilePath);
         return nullptr;
     }
 
     TArray<uint8> FileBuffer;
-    if (!FFileHelper::LoadFileToArray(FileBuffer, *RivePath)) // load entire DNA file into the array
+    if (!FFileHelper::LoadFileToArray(FileBuffer, *RiveAssetFilePath)) // load entire DNA file into the array
     {
         UE_LOG(
             LogReactorUMG,
             Error,
             TEXT(
                 "Unable to import the Rive file '%s': Could not read the file"),
-            *RivePath);
+            *RiveAssetFilePath);
         return nullptr;
     }
     
@@ -134,12 +138,12 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath)
     NewObject<URiveFile>(Context, URiveFile::StaticClass(), NAME_None, RF_Transient | RF_Public);
     check(RiveFile);
 
-    if (!RiveFile->EditorImport(RivePath, FileBuffer))
+    if (!RiveFile->EditorImport(RiveAssetFilePath, FileBuffer))
     {
         UE_LOG(LogReactorUMG, Error,
        TEXT("Failed to import the Rive file '%s': Could not import the "
             "riv file"),
-        *RivePath);
+        *RiveAssetFilePath);
         RiveFile->ConditionalBeginDestroy();
         return nullptr;
     }
@@ -165,7 +169,7 @@ UWorld* UUMGManager::GetWorld()
     {
         return GEngine->GetWorld();
     }
-
+    
     return nullptr;
 }
 
@@ -222,16 +226,13 @@ void UUMGManager::LoadBrushImageObject(const FString& ImagePath, FAssetLoadedDel
         return;
     }
 
-    FString AbsPath = GetAbsoluteJSContentPath(ImagePath, DirName);
-    if (!FPaths::FileExists(*AbsPath))
-    {
-        AbsPath = FReactorUtils::ConvertRelativePathToFullUsingTSConfig(ImagePath, DirName);
-    }
+    const FString AbsPath = ProcessAssetFilePath(ImagePath, DirName);
     if (!FPaths::FileExists(*AbsPath))
     {
         UE_LOG(LogReactorUMG, Error, TEXT("Image file( %s ) not exists."), *AbsPath);
         return; 
     }
+    
     LoadImageTextureFromLocalFile(AbsPath, Context, bIsSyncLoad, OnLoaded, OnFailed);
 }
 
@@ -250,6 +251,22 @@ FString UUMGManager::GetAbsoluteJSContentPath(const FString& RelativePath, const
     }
     
     return AbsolutePath;
+}
+
+FString UUMGManager::ProcessAssetFilePath(const FString& RelativePath, const FString& DirName)
+{
+    if (!FPaths::FileExists(*RelativePath))
+    {
+        FString AbsPath = GetAbsoluteJSContentPath(RelativePath, DirName);
+        if (!FPaths::FileExists(*AbsPath))
+        {
+            AbsPath = FReactorUtils::ConvertRelativePathToFullUsingTSConfig(RelativePath, DirName);
+        }
+
+        return AbsPath;
+    }
+    
+    return RelativePath;
 }
 
 void UUMGManager::LoadImageBrushAsset(const FString& AssetPath, UObject* Context,

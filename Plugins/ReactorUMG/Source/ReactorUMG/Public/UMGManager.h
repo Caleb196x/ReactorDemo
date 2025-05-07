@@ -45,13 +45,13 @@ public:
      * @return 
      */
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|Spine")
-	static USpineSkeletonDataAsset* LoadSpineSkeleton(UObject* Context, const FString& SkeletonPath);
+	static USpineSkeletonDataAsset* LoadSpineSkeleton(UObject* Context, const FString& SkeletonPath, const FString& DirName);
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Spine")
-	static USpineAtlasAsset* LoadSpineAtlas(UObject* Context, const FString& AtlasPath);
+	static USpineAtlasAsset* LoadSpineAtlas(UObject* Context, const FString& AtlasPath, const FString& DirName);
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Rive")
-	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath);
+	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName);
 
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static UWorld* GetWorld();
@@ -76,6 +76,7 @@ public:
 	static FString GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName);
 
 private:
+	static FString ProcessAssetFilePath(const FString& RelativePath, const FString& DirName);
 	static void LoadImageBrushAsset(const FString& AssetPath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);
 	static void LoadImageTextureFromLocalFile(const FString& FilePath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);
 	static void LoadImageTextureFromURL(const FString& Url, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);

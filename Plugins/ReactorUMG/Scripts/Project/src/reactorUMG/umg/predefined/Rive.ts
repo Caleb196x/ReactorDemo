@@ -55,8 +55,11 @@ export class RiveConverter extends UMGConverter {
         }
     }
 
-    private initRiveProps(rive: UE.RiveWidget, props: any): boolean {
-        let propsInit = false;
+    private initRiveProps(rive: UE.RiveWidget, props: any) {
+        if (!rive) {
+            return;
+        }
+
         const artBoard = props?.artBoard || "";
         const artBoardIndex = props?.artBoardIndex || 0;
         const fitType = props?.fitType || "contain";
@@ -73,23 +76,25 @@ export class RiveConverter extends UMGConverter {
             descriptor.ScaleFactor = scale;
             descriptor.Alignment = this.convertAlignment(alignment);
             rive.SetRiveDescriptor(descriptor);
-            propsInit = true;
         }
 
         const RiveReady = props?.onRiveReady;
         if (RiveReady) {
             rive.OnRiveReady.Add(RiveReady);
-            propsInit = true;
         }
 
-        return propsInit;
+        return;
     }
 
     createNativeWidget(): UE.Widget {
-        const World = UE.UMGManager.GetWorld();
-        const Rive = UE.UMGManager.CreateWidget(World, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
-        this.initRiveProps(Rive, this.props);
-        return Rive;
+        const world = UE.UMGManager.GetWorld();
+        if (world) {
+            const Rive = UE.UMGManager.CreateWidget(world, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
+            this.initRiveProps(Rive, this.props);
+            return Rive;
+        }
+
+        return null;
     }
 
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {

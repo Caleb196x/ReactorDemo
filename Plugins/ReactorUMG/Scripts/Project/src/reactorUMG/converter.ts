@@ -1,5 +1,5 @@
 import * as UE from 'ue';
-import { findChangedProps, isKeyOfRecord, safeParseFloat } from './misc/utils';
+import { findChangedProps, isEmpty, isKeyOfRecord, safeParseFloat } from './misc/utils';
 import { getAllStyles } from './parsers/cssstyle_parser';
 import { parseCursor, parseTransform, parseTransformPivot, parseTranslate, parseVisibility } from './parsers/common_props_parser';
 import * as puerts from 'puerts';
@@ -60,7 +60,7 @@ export abstract class ElementConverter {
             }
         }
 
-        if (styles){
+        if (!isEmpty(widgetProps)) {
             puerts.merge(widget, widgetProps);
             UE.UMGManager.SynchronizeWidgetProperties(widget);
         }

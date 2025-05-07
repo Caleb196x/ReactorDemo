@@ -19,14 +19,15 @@ export class OverlayConverter extends ContainerConverter {
     }
 
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
-        const Overlay = parent as UE.Overlay;
-        const overlaySlot = Overlay.AddChildToOverlay(child);
+        const overlay = parent as UE.Overlay;
+        const overlaySlot = overlay.AddChildToOverlay(child);
         const style = getAllStyles(childTypeName, childProps);
-        if (style) {
+        const alignExist = style?.alignSelf || style?.justifySelf || style?.padding;
+        if (alignExist && overlaySlot) {
             const alignment = parseWidgetSelfAlignment(style);
             overlaySlot.SetHorizontalAlignment(alignment.horizontal);
             overlaySlot.SetVerticalAlignment(alignment.vertical);
-            overlaySlot.SetPadding(style.padding);
+            overlaySlot.SetPadding(alignment.padding);
         }
     }
 }

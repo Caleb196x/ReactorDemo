@@ -19,24 +19,27 @@ export function parseTextAlign(textAlign: string): UE.ETextJustify {
 }
 
 export function parseFontFaceName(fontStyle: string, fontWeight: string) {
+    let fontFace = 'Default';
     if (fontWeight === 'bold' || fontWeight === 'bolder') {
-        return 'Bold';
+        fontFace = 'Bold';
     } else if (fontWeight === 'light' || fontWeight === 'lighter') {
-        return 'Light';
+        fontFace = 'Light';
     } else if (fontWeight === 'normal') {
-        return 'Default';
+        fontFace = 'Default';
     }
 
     switch (fontStyle) {
-    case 'italic':
-        return 'Italic';
-    case 'blod italic':
-        return 'Bold Italic';
-    case 'normal':
-        return 'Default';
-    default:
-        return fontStyle;
+        case 'italic':
+            fontFace = fontFace == 'Bold' ? 'Bold Italic' : 'Italic';
+        case 'blod italic':
+            fontFace = 'Bold Italic';
+        case 'normal':
+            fontFace = 'Default';
+        default:
+            fontFace = fontStyle;
     }
+
+    return fontFace;
 }
 
 export function parseFontSkewAmount(fontStyle: string): number {
@@ -182,12 +185,12 @@ export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontSty
         font.LetterSpacing = convertLengthUnitToSlateUnit(fontStyle?.wordSpacing, fontStyle);
     }
     if (fontStyle?.outline) {
-        const {outlineStyle, outlineColor, outlineWidth} = parseOutline(fontStyle?.outline, fontStyle);
-        font.OutlineSettings.OutlineSize = outlineWidth;
-        font.OutlineSettings.OutlineColor.R = outlineColor.r;
-        font.OutlineSettings.OutlineColor.G = outlineColor.g;
-        font.OutlineSettings.OutlineColor.B = outlineColor.b;
-        font.OutlineSettings.OutlineColor.A = outlineColor.a;
+        const outlineResult = parseOutline(fontStyle?.outline, fontStyle);
+        font.OutlineSettings.OutlineSize = outlineResult.width;
+        font.OutlineSettings.OutlineColor.R = outlineResult.color.r;
+        font.OutlineSettings.OutlineColor.G = outlineResult.color.g;
+        font.OutlineSettings.OutlineColor.B = outlineResult.color.b;
+        font.OutlineSettings.OutlineColor.A = outlineResult.color.a;
     }
     if (fontStyle?.outlineColor) {
         const outlineColor = parseColor(fontStyle?.outlineColor);
