@@ -35,11 +35,11 @@ void FReactorUMGBlueprintAssetTypeActions::OpenAssetEditor(const TArray<UObject*
 		auto Blueprint = Cast<UBlueprint>(*ObjIt);
 		if (Blueprint && Blueprint->SkeletonGeneratedClass && Blueprint->GeneratedClass)
 		{
-			TSharedRef<FBlueprintEditor> NewBlueprintEditor(new FWidgetBlueprintEditor());
+			TSharedRef<FWidgetBlueprintEditor> NewBlueprintEditor(new FWidgetBlueprintEditor());
 
 			TArray<UBlueprint*> Blueprints;
 			Blueprints.Add(Blueprint);
-			NewBlueprintEditor->InitBlueprintEditor(Mode, EditWithinLevelEditor, Blueprints, false);
+			NewBlueprintEditor->InitWidgetBlueprintEditor(Mode, EditWithinLevelEditor, Blueprints, false);
 		}
 		else
 		{

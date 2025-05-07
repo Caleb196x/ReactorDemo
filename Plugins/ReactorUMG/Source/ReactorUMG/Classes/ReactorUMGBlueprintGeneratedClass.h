@@ -6,12 +6,13 @@
 #include "UObject/Package.h"
 
 // Engine includes
+#include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Engine/BlueprintGeneratedClass.h"
 
 #include "ReactorUMGBlueprintGeneratedClass.generated.h"
 
 UCLASS()
-class REACTORUMG_API UReactorUMGBlueprintGeneratedClass : public UBlueprintGeneratedClass
+class REACTORUMG_API UReactorUMGBlueprintGeneratedClass : public UWidgetBlueprintGeneratedClass
 {
 	GENERATED_UCLASS_BODY()
 };
