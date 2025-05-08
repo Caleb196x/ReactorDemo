@@ -28,7 +28,11 @@ public:
 	// 在在AssetEditorSubsystem的OnAssetClosedInEditor事件中结束监听模式
 	void SetupMonitorForTsScripts();
 	
-	void CompileTsScripts();
+	void CompileTsScripts(bool bCompileAndReload);
+
+	void ReloadJsScripts();
+
+	void ExecuteJsScripts();
 	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
@@ -44,15 +48,15 @@ protected:
 	FString WidgetName;
 	
 	virtual bool Rename(const TCHAR* NewName = nullptr, UObject* NewOuter = nullptr, ERenameFlags Flags = REN_None) override;
+	virtual UClass* GetBlueprintClass() const override;
+	virtual bool SupportedByDefaultBlueprintFactory() const override;
 	
-	void CopyTemplateScriptFileToHomeDir();
 	void RenameScriptDir(const TCHAR* NewName);
+	
 	void RegisterBlueprintDeleteHandle();
-	UClass* GetBlueprintClass() const;
-	bool SupportedByDefaultBlueprintFactory() const;
-	void ReloadJsScripts();
 	void CheckTsProjectFilesChanged();
-	void RunScriptBuildCommand();
+	bool CheckLaunchJsScriptExist();
+	bool RunScriptBuildCommand(FScopedSlowTask& SlowTask, FString& StdOut, FString& StdErr);
 
 private:
 	FString LaunchJsScriptPath;

@@ -11,12 +11,12 @@ void UJsBridgeCaller::RegisterAllocatedBrideCaller(FString CallerName, UJsBridge
 	}
 }
 
-bool UJsBridgeCaller::ExecuteMainCaller(const FString& CallerName, UReactorUIWidget* CoreWidget)
+bool UJsBridgeCaller::ExecuteMainCaller(const FString& CallerName, UObject* RootContainer)
 {
 	if (SelfHolder.Contains(CallerName))
 	{
 		const UJsBridgeCaller* BridgeCaller = SelfHolder[CallerName];
-		return BridgeCaller->MainCaller.ExecuteIfBound(CoreWidget);
+		return BridgeCaller->MainCaller.ExecuteIfBound(RootContainer);
 	}
 
 	return false;

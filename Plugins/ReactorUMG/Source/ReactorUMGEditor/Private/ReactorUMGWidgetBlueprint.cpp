@@ -1,5 +1,6 @@
 ﻿#include "ReactorUMGWidgetBlueprint.h"
 
+#include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
@@ -19,9 +20,10 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	WidgetName = GetName();
 
 	TsProjectDir = FReactorUtils::GetTypeScriptHomeDir();
-	// todo: add path
+	// TODO@Caleb196x: Widget可能同名的情况，需要加入路径进行区分
 	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);
 	TsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), WidgetName);
+	LaunchJsScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
 
 	RegisterBlueprintDeleteHandle();
 }
@@ -196,21 +198,158 @@ void UReactorUMGWidgetBlueprint::ReleaseJsEnv()
 		JsEnv = nullptr;
 	}
 }
-void UReactorUMGWidgetBlueprint::RunScriptBuildCommand()
+bool UReactorUMGWidgetBlueprint::RunScriptBuildCommand(FScopedSlowTask& SlowTask, FString& StdOut, FString& StdErr)
 {
-	FString Command = TEXT("yarn build");
-	FString Directory = TsProjectDir;  // Assuming TsProjectDir is the path where 'yarn' command is executed
-
-	// Set up pipes for capturing output and error logs
-	FString StdOut, StdErr;
-	FPlatformProcess::ExecProcess(*Command, *Directory, nullptr, &StdOut, &StdErr);
+	SlowTask.MakeDialog();
 	
-	// Log output and error
-	UE_LOG(LogReactorUMG, Log, TEXT("Build Output:\n%s"), *StdOut);
-	if (!StdErr.IsEmpty())
+	const FString Command = TEXT("yarn build");
+	const FString WorkDirectory = TsProjectDir;
+	const int32 TotalAmountOfWorks = 20;
+	
+	FProcHandle ProcessHandle;
+	void* ReadPipe = nullptr;
+	void* WritePipe = nullptr;
+	verify(FPlatformProcess::CreatePipe(ReadPipe, WritePipe));
+	
+	const FString Arguments = TEXT("");
+	uint32 ProcessID;
+	const bool bLaunchDetached = false;
+	const bool bLaunchHidden = true;
+	const bool bLaunchReallyHidden = true;
+	ProcessHandle = FPlatformProcess::CreateProc(*Command, *Arguments, bLaunchDetached,
+		bLaunchHidden, bLaunchReallyHidden, &ProcessID, 0, *WorkDirectory, WritePipe);
+
+	FString LogOutBuffer;
+	while (FPlatformProcess::IsProcRunning(ProcessHandle))
 	{
-		UE_LOG(LogReactorUMG, Error, TEXT("Build Error:\n%s"), *StdErr);
+		if (SlowTask.ShouldCancel() || GEditor->GetMapBuildCancelled())
+		{
+			FPlatformProcess::TerminateProc(ProcessHandle);
+			break;
+		}
+		
+		FString LogString = FPlatformProcess::ReadPipe(ReadPipe);
+		if (!LogString.IsEmpty())
+		{
+			LogOutBuffer += LogString;
+		}
+		
+		// TODO@Caleb196x: 提取出编译日志
+		int NewLineCount = LogString.Len() - LogString.Replace(TEXT("\n"), TEXT("")).Len();
+
+		SlowTask.CompletedWork = NewLineCount;
+		SlowTask.TotalAmountOfWork = TotalAmountOfWorks;
+		// SlowTask.DefaultMessage = FText::FromString(Regex.GetCaptureGroup(3));
+
+		SlowTask.EnterProgressFrame(0);
+		FPlatformProcess::Sleep(0.1);
 	}
+
+	FString RemainingData = FPlatformProcess::ReadPipe(ReadPipe);
+	if (!RemainingData.IsEmpty())
+	{
+		LogOutBuffer += RemainingData;
+	}
+	
+	int32 ReturnCode = 0;
+	FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode);
+	FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
+
+	UE_LOG(LogReactorUMG, Display, TEXT("Log: %s"), *LogOutBuffer);
+	
+	if (ReturnCode == 0)
+	{
+		UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files successfully."));
+		StdOut = LogOutBuffer;
+		return true;
+	}
+
+	StdErr = LogOutBuffer;
+	UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files failed, error: %s."), *StdErr);
+	return false;
+}
+
+void UReactorUMGWidgetBlueprint::CompileTsScripts(bool bCompileAndReload)
+{
+	FScopedSlowTask SlowTask(10);
+	FString CompileOutMessage, CompileErrorMessage;
+	
+	if (CheckLaunchJsScriptExist())
+	{
+		// execute launch.js
+		if (bCompileAndReload)
+		{
+			if (RunScriptBuildCommand(SlowTask, CompileOutMessage, CompileErrorMessage))
+			{
+				ReloadJsScripts();
+			} else
+			{
+				// print error message to editor message log
+			}
+		} else
+		{
+			ExecuteJsScripts();
+		}
+	} else
+	{
+		if (RunScriptBuildCommand(SlowTask, CompileOutMessage, CompileErrorMessage))
+		{
+			ExecuteJsScripts();
+		} else
+		{
+			// print error message to editor message log
+		}
+	}
+
+}
+
+void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
+{
+	if (!WidgetName.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(WidgetName))
+	{
+		TArray<TPair<FString, UObject*>> Arguments;
+		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
+		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
+		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+
+		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
+		if (JsEnv)
+		{
+		
+			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
+			if (!Result)
+			{
+				UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+				ReleaseJsEnv();
+				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchJsScriptPath);
+			}
+		}
+		else
+		{
+			UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+			UE_LOG(LogReactorUMG, Error, TEXT("Can not obtain any valid javascript runtime environment"))
+			return;
+		}
+	}
+	
+	const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(WidgetName, this);
+	if (!DelegateRunResult)
+	{
+		UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+		ReleaseJsEnv();
+		UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *WidgetName);
+	}
+}
+
+void UReactorUMGWidgetBlueprint::ReloadJsScripts()
+{
+	TRACE_CPUPROFILER_EVENT_SCOPE(ReloadJsScripts)
+	TArray<TPair<FString, UObject*>> Arguments;
+	UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
+	Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
+	
+	FJsEnvRuntime::GetInstance().RestartJsScripts(TsScriptHomeFullDir, LaunchJsScriptPath, Arguments);
 }
 
 void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
@@ -218,22 +357,19 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 	
 }
 
-void UReactorUMGWidgetBlueprint::CompileTsScripts()
-{
-	
-}
-
-void UReactorUMGWidgetBlueprint::CopyTemplateScriptFileToHomeDir()
-{
-	
-}
-
-void UReactorUMGWidgetBlueprint::ReloadJsScripts()
-{
-	
-}
 
 void UReactorUMGWidgetBlueprint::CheckTsProjectFilesChanged()
 {
 	
+}
+
+bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
+{
+	if (LaunchJsScriptPath.IsEmpty())
+	{
+		const FString ScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
+		LaunchJsScriptPath = ScriptPath;
+	}
+	
+	return FPaths::FileExists(LaunchJsScriptPath);
 }
