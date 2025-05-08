@@ -14,12 +14,12 @@ export class FlexConverter extends ContainerConverter {
 
     private parseFlexDirection(): boolean[] {
         const style = this.containerStyle || {};
-        let flexDirection = style.flexDirection.trim();
-        const flexFlow = style.flexFlow.trim();
+        let flexDirection = style.flexDirection;
+        const flexFlow = style.flexFlow;
 
         // Check flexFlow first
         if (flexFlow) {
-            const flexFlowArray = flexFlow.split(' ');
+            const flexFlowArray = flexFlow.trim().split(' ');
             if (flexFlowArray.length >= 1) {
                 flexDirection = flexFlowArray[0];
             }
@@ -32,8 +32,8 @@ export class FlexConverter extends ContainerConverter {
 
         // Return [isRow, isReverse]
         return [
-            flexDirection.startsWith('row'),
-            flexDirection.endsWith('-reverse')
+            flexDirection.trim().startsWith('row'),
+            flexDirection.trim().endsWith('-reverse')
         ];
     }
 

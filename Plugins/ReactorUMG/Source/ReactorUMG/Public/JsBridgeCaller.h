@@ -5,7 +5,7 @@
 DECLARE_DYNAMIC_DELEGATE_OneParam(FJavaScriptMainCaller, UReactorUIWidget*, CoreWidget);
 
 UCLASS(BlueprintType)
-class UJsBridgeCaller :  public UObject
+class REACTORUMG_API UJsBridgeCaller :  public UObject
 {
 	GENERATED_BODY() 
 public:

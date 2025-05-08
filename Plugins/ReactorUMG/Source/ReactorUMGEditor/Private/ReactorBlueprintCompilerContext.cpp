@@ -48,3 +48,17 @@ void FReactorUMGBlueprintCompilerContext::CopyTermDefaultsToDefaultObject(UObjec
 		DefaultInstance->WidgetName = SmartUIBlueprint->WidgetName;
 	}*/
 }
+
+void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
+{
+	if (Class)
+	{
+		UE_LOG(LogTemp, Log, TEXT("FinishCompilingClass %s"), *Class->GetName())
+	}
+
+	// 在这里执行脚本并生成WidgetTree
+	// 调用Blueprint的Compile函数执行脚本编译
+	//调用Blueprint的Execute函数执行脚本装填
+	
+	Super::FinishCompilingClass(Class);
+}

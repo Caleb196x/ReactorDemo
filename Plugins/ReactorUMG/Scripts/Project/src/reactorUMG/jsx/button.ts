@@ -140,7 +140,7 @@ export class ButtonConverter extends JSXConverter {
 
     createNativeWidget() {
         const button = new UE.Button();
-        this.setupButtonProps(button);
+        this.setupButtonProps(button, this.props);
         return button;
     }
 

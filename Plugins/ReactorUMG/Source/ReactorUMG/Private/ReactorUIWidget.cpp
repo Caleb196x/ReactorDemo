@@ -13,6 +13,7 @@ UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
 	// 一种思路:
 	// 开发阶段通过脚本文件生成WidgetTree的实际内容；打包Cook阶段，执行脚本生成WidgetTree的内容并将其写入资产Package中，
 	// 随之还会将依赖的UI资产也打包到package中。
+	// 生成的WidgetTree存放在Blueprint中
 	TRACE_CPUPROFILER_EVENT_SCOPE(USmartUICoreWidgetInit)
 	
 	WidgetTree = CreateDefaultSubobject<UWidgetTree>(TEXT("WidgetTree"));

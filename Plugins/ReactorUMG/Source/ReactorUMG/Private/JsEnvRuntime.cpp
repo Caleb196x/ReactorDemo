@@ -16,10 +16,10 @@ FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize, int32 DebugPort)
 
 FJsEnvRuntime::~FJsEnvRuntime()
 {
-	for (auto& Pair : JsRuntimeEnvPool)
+	/*for (auto& Pair : JsRuntimeEnvPool)
 	{
 		Pair.Key.Reset();
-	}
+	}*/
 	
 	JsRuntimeEnvPool.Empty();
 }
