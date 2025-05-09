@@ -1,0 +1,389 @@
+﻿#include "ReactorUMGWidgetBlueprint.h"
+
+#include "DirectoryWatcherModule.h"
+#include "IDirectoryWatcher.h"
+#include "JsBridgeCaller.h"
+#include "JsEnvRuntime.h"
+#include "LogReactorUMG.h"
+#include "ReactorUMGBlueprintGeneratedClass.h"
+#include "ReactorUtils.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Blueprint/WidgetTree.h"
+
+void FDirectoryMonitor::Watch(const FString& InDirectory)
+{
+	CurrentMonitorDirectory = FPaths::IsRelative(InDirectory) ? FPaths::ConvertRelativePathToFull(InDirectory) : InDirectory;
+    // UE_LOG(LogTemp, Warning, TEXT("PEDirectoryWatcher::Watch: %s"), *InDirectory);
+    if (IFileManager::Get().DirectoryExists(*CurrentMonitorDirectory))
+    {
+        auto Changed = IDirectoryWatcher::FDirectoryChanged::CreateLambda(
+            [&](const TArray<FFileChangeData>& FileChanges)
+            {
+                TArray<FString> Added;
+                TArray<FString> Modified;
+                TArray<FString> Removed;
+
+                for (auto Change : FileChanges)
+                {
+                    FPaths::NormalizeFilename(Change.Filename);
+                    Change.Filename = FPaths::ConvertRelativePathToFull(Change.Filename);
+                    switch (Change.Action)
+                    {
+                        case FFileChangeData::FCA_Added:
+                            if (Added.Contains(Change.Filename))
+                                continue;
+                            Added.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Modified:
+                            if (Modified.Contains(Change.Filename))
+                                continue;
+                            Modified.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Removed:
+                            if (Removed.Contains(Change.Filename))
+                                continue;
+                            Removed.Add(Change.Filename);
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            	
+                if (Added.Num() || Modified.Num() || Removed.Num())
+                {
+                    OnChanged.Broadcast(Added, Modified, Removed);
+                }
+            });
+    	
+        FDirectoryWatcherModule& DirectoryWatcherModule =
+            FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+        IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+        DirectoryWatcher->RegisterDirectoryChangedCallback_Handle(
+            CurrentMonitorDirectory, Changed, DelegateHandle, IDirectoryWatcher::IncludeDirectoryChanges);
+    } else
+    {
+	    UE_LOG(LogReactorUMG, Warning, TEXT("PEDirectoryWatcher::Watch: Directory not found: %s"), *InDirectory);
+    }
+}
+
+void FDirectoryMonitor::UnWatch()
+{
+	if (DelegateHandle.IsValid())
+	{
+		FDirectoryWatcherModule& DirectoryWatcherModule =
+			FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+		IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+
+		DirectoryWatcher->UnregisterDirectoryChangedCallback_Handle(CurrentMonitorDirectory, DelegateHandle);
+		CurrentMonitorDirectory = TEXT("");
+	}
+}
+
+UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer), LaunchJsScriptPath(TEXT("")), RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
+{
+	FString WidgetRelativePathName;
+
+	if (GetPackage())
+	{
+		const FString PackageName = GetPackage()->GetName();
+	}
+	WidgetName = GetName();
+
+	TsProjectDir = FReactorUtils::GetTypeScriptHomeDir();
+	// TODO@Caleb196x: Widget可能同名的情况，需要加入路径进行区分
+	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);
+	TsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), WidgetName);
+	LaunchJsScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
+
+	RegisterBlueprintDeleteHandle();
+}
+
+bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
+{
+	bool Res = Super::Rename(NewName, NewOuter, Flags);
+	RenameScriptDir(NewName);
+	WidgetName = FString(NewName);
+	return Res;
+}
+
+void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
+{
+	if (NewName == nullptr)
+	{
+		// do nothing
+		return;
+	}
+
+	if (WidgetName.Equals(NewName))
+	{
+		return;
+	}
+
+	const FString NewTsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), NewName);
+	const FString NewTsScriptHomeFullDir = FPaths::Combine(TsProjectDir, NewTsScriptHomeRelativeDir);
+	
+	FString PluginContentDir = FReactorUtils::GetPluginContentDir();
+	const FString OldTsScriptHomeDirFullPath = TsScriptHomeFullDir;
+	const FString OldJsScriptHomeDirFullPath = FPaths::Combine(PluginContentDir, TEXT("JavaScript"), TsScriptHomeRelativeDir);
+
+	const FString NewTsScriptHomeDirFullPath = NewTsScriptHomeFullDir;
+	const FString NewJsScriptHomeDirFullPath = FPaths::Combine(PluginContentDir, TEXT("JavaScript"), NewTsScriptHomeRelativeDir);
+
+	if (FPaths::DirectoryExists(OldTsScriptHomeDirFullPath))
+	{
+		IFileManager::Get().Move(*NewTsScriptHomeDirFullPath,*OldTsScriptHomeDirFullPath);
+	}
+	else
+	{
+		UE_LOG(LogReactorUMG, Warning, TEXT("Not exist %s rename to %s failed"), *OldTsScriptHomeDirFullPath, *NewTsScriptHomeDirFullPath)
+	}
+
+	if (FPaths::DirectoryExists(OldJsScriptHomeDirFullPath))
+	{
+		IFileManager::Get().Move(*NewJsScriptHomeDirFullPath,*OldJsScriptHomeDirFullPath);
+	}
+	else
+	{
+		UE_LOG(LogReactorUMG, Warning, TEXT("Not exist %s rename to %s failed"), *OldJsScriptHomeDirFullPath, *NewJsScriptHomeDirFullPath)
+	}
+
+	TsScriptHomeFullDir = NewTsScriptHomeFullDir;
+	TsScriptHomeRelativeDir = NewTsScriptHomeRelativeDir;
+}
+
+
+void UReactorUMGWidgetBlueprint::RegisterBlueprintDeleteHandle()
+{
+	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
+	
+	AssetRegistry.OnAssetRemoved().AddLambda([this](const FAssetData& AssetData)
+	{
+		const FName AssetName = AssetData.AssetName;
+		if (this->GetFName() == AssetName)
+		{
+			const FString TsScriptHomeDirFullPath = TsScriptHomeFullDir;
+			if (FPaths::DirectoryExists(TsScriptHomeDirFullPath))
+			{
+				if (!FReactorUtils::DeleteDirectoryRecursive(TsScriptHomeDirFullPath))
+				{
+					UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *TsScriptHomeDirFullPath);
+				}
+				else
+				{
+					UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *TsScriptHomeDirFullPath, *AssetName.ToString());
+				}
+			}
+
+			const FString JsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), TsScriptHomeRelativeDir);
+			if (FPaths::DirectoryExists(JsScriptHomeDirFullPath))
+			{
+				if (!FReactorUtils::DeleteDirectoryRecursive(JsScriptHomeDirFullPath))
+				{
+					UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *JsScriptHomeDirFullPath);
+				}
+				else
+				{
+					UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *JsScriptHomeDirFullPath, *AssetName.ToString());
+				}
+			}
+			
+		}
+	});
+}
+
+UClass* UReactorUMGWidgetBlueprint::GetBlueprintClass() const
+{
+	return UReactorUMGBlueprintGeneratedClass::StaticClass();
+}
+
+bool UReactorUMGWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
+{
+	return false;
+}
+
+UPanelSlot* UReactorUMGWidgetBlueprint::AddChild(UWidget* Content)
+{
+	if (Content == nullptr)
+	{
+		return nullptr;
+	}
+
+	if (RootSlot)
+	{
+		return nullptr;
+	}
+
+	Content->RemoveFromParent();
+
+	EObjectFlags NewObjectFlags = RF_Transactional;
+	if (HasAnyFlags(RF_Transient))
+	{
+		NewObjectFlags |= RF_Transient;
+	}
+
+	UPanelSlot* PanelSlot = NewObject<UPanelSlot>(this, UPanelSlot::StaticClass(), FName("PanelSlot_ReactorUMGWidgetBlueprint"), NewObjectFlags);
+	PanelSlot->Content = Content;
+
+	Content->Slot = PanelSlot;
+	RootSlot = PanelSlot;
+	
+	if (WidgetTree)
+	{
+		WidgetTree->RootWidget = Content;
+	}
+
+	return PanelSlot;
+}
+
+bool UReactorUMGWidgetBlueprint::RemoveChild(UWidget* Content)
+{
+	if (Content == nullptr || RootSlot == nullptr ||
+		Content != RootSlot->Content || !RootSlot->IsValidLowLevel())
+	{
+		return false;
+	}
+	
+	UPanelSlot* PanelSlot = RootSlot;
+	RootSlot = nullptr;
+
+	if (PanelSlot->Content)
+	{
+		PanelSlot->Content->Slot = nullptr;
+	}
+
+	PanelSlot->ReleaseSlateResources(true);
+	PanelSlot->Parent = nullptr;
+	PanelSlot->Content = nullptr;
+
+	WidgetTree->RootWidget = nullptr;
+	return true;
+}
+
+void UReactorUMGWidgetBlueprint::ReleaseJsEnv()
+{
+	if (JsEnv)
+	{
+		UE_LOG(LogReactorUMG, Display, TEXT("Release javascript env in order to excuting other script"))
+		FJsEnvRuntime::GetInstance().ReleaseJsEnv(JsEnv);
+		JsEnv = nullptr;
+	}
+}
+
+
+void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceReload)
+{
+	FScopedSlowTask SlowTask(2);
+	FString CompileOutMessage, CompileErrorMessage;
+	
+	if (CheckLaunchJsScriptExist())
+	{
+		// execute launch.js
+		if (bForceCompile)
+		{
+			if (!FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
+			{
+				// print error message to editor message log
+				UE_LOG(LogReactorUMG, Error, TEXT("%s"), *CompileErrorMessage);
+			}
+		}
+
+		if (bForceReload)
+		{
+			ReloadJsScripts();
+		} else
+		{
+			ExecuteJsScripts();
+		}
+		
+	}
+	else
+	{
+		if (FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
+		{
+			ExecuteJsScripts();
+		} else
+		{
+			// print error message to editor message log
+		}
+	}
+
+}
+
+void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
+{
+	if (!WidgetName.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(WidgetName))
+	{
+		TArray<TPair<FString, UObject*>> Arguments;
+		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
+		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
+		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+		const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
+	}
+}
+
+void UReactorUMGWidgetBlueprint::ReloadJsScripts()
+{
+	TRACE_CPUPROFILER_EVENT_SCOPE(ReloadJsScripts)
+	TArray<TPair<FString, UObject*>> Arguments;
+	UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
+	Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
+	
+	FJsEnvRuntime::GetInstance().RestartJsScripts(TsScriptHomeFullDir, LaunchJsScriptPath, Arguments);
+}
+
+void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
+{
+	// run in editor
+	SetupTsScripts();
+	
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([this](UObject* Asset)
+	{
+		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
+		UClass* AssetClass = Asset->GetClass();
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		{
+			StartTsScriptsMonitor();
+		}
+	});
+
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetClosedInEditor().AddLambda([this](
+		UObject* Asset, IAssetEditorInstance* AssetEditorInstance
+		)
+	{
+		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
+		UClass* AssetClass = Asset->GetClass();
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		{
+			StopTsScriptsMonitor();
+		}
+	});
+}
+
+bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
+{
+	if (LaunchJsScriptPath.IsEmpty())
+	{
+		const FString ScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
+		LaunchJsScriptPath = ScriptPath;
+	}
+	
+	return FPaths::FileExists(LaunchJsScriptPath);
+}
+
+void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
+{
+	TsProjectMonitor.OnDirectoryChanged().AddLambda([this](
+			const TArray<FString>& Added, const TArray<FString>& Modified, const TArray<FString>& Removed
+		)
+	{
+		const bool AnyChange = !Added.IsEmpty() || !Modified.IsEmpty() || !Removed.IsEmpty();
+		if (AnyChange)
+		{
+			SetupTsScripts(true, true);
+		}
+		
+		// TODO@Caleb196x: 优化项：只拷贝变化的非脚本文件，删除OutDir中的文件，做到同步
+	});
+}

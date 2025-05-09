@@ -1,12 +1,12 @@
 #pragma once
 
-#include "KismetCompiler.h"
+#include "WidgetBlueprintCompiler.h"
 
-class FReactorUMGBlueprintCompilerContext : public FKismetCompilerContext
+class FReactorUMGBlueprintCompilerContext : public FWidgetBlueprintCompilerContext
 {
 protected:
 
-	typedef FKismetCompilerContext Super;
+	typedef FWidgetBlueprintCompilerContext Super;
 
 public:
 	FReactorUMGBlueprintCompilerContext(class UReactorUMGBlueprint* SourceBlueprint,
@@ -17,6 +17,7 @@ public:
 	virtual void SpawnNewClass(const FString& NewClassName) override;
 	virtual void EnsureProperGeneratedClass(UClass*& TargetClass) override;
 	virtual void CopyTermDefaultsToDefaultObject(UObject* DefaultObject) override;
+	virtual void FinishCompilingClass(UClass* Class) override;
 	// End of FKismetCompilerContext interface
 };
 

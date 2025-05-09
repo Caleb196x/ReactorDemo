@@ -16,10 +16,10 @@ FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize, int32 DebugPort)
 
 FJsEnvRuntime::~FJsEnvRuntime()
 {
-	for (auto& Pair : JsRuntimeEnvPool)
+	/*for (auto& Pair : JsRuntimeEnvPool)
 	{
 		Pair.Key.Reset();
-	}
+	}*/
 	
 	JsRuntimeEnvPool.Empty();
 }
@@ -123,6 +123,7 @@ void FJsEnvRuntime::RestartJsScripts(const FString& ScriptHomeDir, const FString
 		ModuleNames.Add(RelativePath, SourcePath);
 	}
 
+	// TODO@Caleb196x: 可以记录文件的hash值，通过对比hash值，当文件有修改时，才重新加载文件。
 	for (const auto& ModulePair : ModuleNames)
 	{
 		FString FileContent;

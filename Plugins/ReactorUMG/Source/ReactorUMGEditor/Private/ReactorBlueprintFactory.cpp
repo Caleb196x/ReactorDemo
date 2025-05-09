@@ -16,7 +16,7 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 {
 	const FString LaunchTsxFilePath = FPaths::Combine(ScriptHome, TEXT("launch.tsx"));
 	GeneratedTemplateOutput = {"", ""};
-	GeneratedTemplateOutput << "/** Note: Automatically generate code, Do not modify it */ \n";
+	GeneratedTemplateOutput << "/** Note: Auto-generated code, please do not make any changes */ \n";
 	GeneratedTemplateOutput << "import * as UE from \"ue\";\n";
 	GeneratedTemplateOutput << "import { $Nullable, argv } from \"puerts\";\n";
 	GeneratedTemplateOutput << "import {ReactorUMG, Root} from \"reactorUMG\";\n";

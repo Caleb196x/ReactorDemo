@@ -2,10 +2,10 @@
 #include "ReactorUIWidget.h"
 #include "JsBridgeCaller.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FJavaScriptMainCaller, UReactorUIWidget*, CoreWidget);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FJavaScriptMainCaller, UObject*, CoreWidget);
 
 UCLASS(BlueprintType)
-class UJsBridgeCaller :  public UObject
+class REACTORUMG_API UJsBridgeCaller :  public UObject
 {
 	GENERATED_BODY() 
 public:
@@ -13,7 +13,7 @@ public:
 	static void RegisterAllocatedBrideCaller(FString CallerName, UJsBridgeCaller* Caller);
 
 	UFUNCTION(BlueprintCallable, Category="SmartUIWorks | JsBridgetCaller")
-	static bool ExecuteMainCaller(const FString& CallerName, UReactorUIWidget* CoreWidget);
+	static bool ExecuteMainCaller(const FString& CallerName, UObject* RootContainer);
 	
 	UPROPERTY()
 	FJavaScriptMainCaller MainCaller;

@@ -1,17 +1,19 @@
 ﻿#include "ReactorUMGEditor.h"
 
-#define LOCTEXT_NAMESPACE "FReactorUMGEditorModule"
 #include "ReactorUMGBlueprint.h"
 #include "ReactorBlueprintCompilerContext.h"
 #include "ReactorBlueprintCompiler.h"
 #include "AssetToolsModule.h"
 #include "CodeGenerator.h"
+#include "LogReactorUMG.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "ReactorUtils.h"
 #include "TypeScriptDeclarationGenerator.h"
 #include "ReactorBlueprintAssetTypeActions.h"
 #include "ReactorUMGSetting.h"
+
+#define LOCTEXT_NAMESPACE "FReactorUMGEditorModule"
 
 void ShowGeneratedDialog(const FString& OutDir)
 {
@@ -169,6 +171,26 @@ TSharedPtr<FKismetCompilerContext> GetCompilerForReactorBlueprint(UBlueprint* Bl
 {
 	UReactorUMGBlueprint* NoesisBlueprint = CastChecked<UReactorUMGBlueprint>(Blueprint);
 	return TSharedPtr<FKismetCompilerContext>(new FReactorUMGBlueprintCompilerContext(NoesisBlueprint, Results, CompilerOptions));
+}
+
+void FReactorUMGEditorModule::InstallTsScriptNodeModules()
+{
+	const FString TsProjectDir = FReactorUtils::GetTypeScriptHomeDir();
+	const FString PackageJson = FPaths::Combine(TsProjectDir, TEXT("package.json"));
+
+	if (FPaths::FileExists(PackageJson))
+	{
+		// install dependency node modules
+		FString CommandOut, CommandError;
+		if (!FReactorUtils::RunCommandWithProcess(TEXT("yarn install"), TsProjectDir, nullptr, CommandOut, CommandError))
+		{
+			UE_LOG(LogReactorUMG, Warning, TEXT("Failed to install node modules for TypeScript project, ERROR: %s"), *CommandError);
+		}
+	}
+	else
+	{
+		UE_LOG(LogReactorUMG, Warning, TEXT("package.json not found in %s do not any installing"), *TsProjectDir);
+	}
 }
 
 void FReactorUMGEditorModule::StartupModule()

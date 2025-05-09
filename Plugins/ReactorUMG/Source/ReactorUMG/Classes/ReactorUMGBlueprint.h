@@ -1,14 +1,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BaseWidgetBlueprint.h"
 #include "TypeScriptDeclarationGenerator.h"
+#include "WidgetBlueprint.h"
 #include "ReactorUMGBlueprint.generated.h"
 
 UCLASS()
-class REACTORUMG_API UReactorUMGBlueprint : public UBlueprint
+class REACTORUMG_API UReactorUMGBlueprint : public UWidgetBlueprint
 {
 	GENERATED_UCLASS_BODY()
-
+public:
+	
 	UPROPERTY(BlueprintType, EditAnywhere, Category = "ReactorUMG")
 	FString TsProjectDir;
 	

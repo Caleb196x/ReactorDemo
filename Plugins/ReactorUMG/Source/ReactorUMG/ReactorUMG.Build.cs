@@ -53,7 +53,8 @@ public class ReactorUMG : ModuleRules
 				"HTTP",
 				"Json",
 				"JsonUtilities",
-				"JsonSerialization"
+				"JsonSerialization",
+				"UMGEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
