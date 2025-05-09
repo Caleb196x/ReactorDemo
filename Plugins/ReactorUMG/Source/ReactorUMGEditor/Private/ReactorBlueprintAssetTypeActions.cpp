@@ -3,6 +3,7 @@
 #include "ReactorUMGBlueprint.h"
 #include "Misc/MessageDialog.h"
 #include "BlueprintEditor.h"
+#include "ReactorUMGWidgetBlueprint.h"
 #include "WidgetBlueprintEditor.h"
 
 FReactorUMGBlueprintAssetTypeActions::FReactorUMGBlueprintAssetTypeActions(EAssetTypeCategories::Type InCategories)
@@ -35,10 +36,16 @@ void FReactorUMGBlueprintAssetTypeActions::OpenAssetEditor(const TArray<UObject*
 		auto Blueprint = Cast<UBlueprint>(*ObjIt);
 		if (Blueprint && Blueprint->SkeletonGeneratedClass && Blueprint->GeneratedClass)
 		{
+			if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
+			{
+				WidgetBlueprint->SetupMonitorForTsScripts();
+			}
+			
 			TSharedRef<FWidgetBlueprintEditor> NewBlueprintEditor(new FWidgetBlueprintEditor());
-
+			
 			TArray<UBlueprint*> Blueprints;
 			Blueprints.Add(Blueprint);
+
 			NewBlueprintEditor->InitWidgetBlueprintEditor(Mode, EditWithinLevelEditor, Blueprints, false);
 		}
 		else

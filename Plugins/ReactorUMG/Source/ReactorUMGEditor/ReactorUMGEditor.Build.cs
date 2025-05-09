@@ -31,7 +31,8 @@ public class ReactorUMGEditor : ModuleRules
                 "UnrealEd",
                 "Projects",
                 "UMG",
-                "UMGEditor"
+                "UMGEditor",
+                "DirectoryWatcher"
             }
         );
     }

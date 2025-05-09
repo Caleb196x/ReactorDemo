@@ -1,5 +1,7 @@
 ﻿#include "ReactorUMGWidgetBlueprint.h"
 
+#include "DirectoryWatcherModule.h"
+#include "IDirectoryWatcher.h"
 #include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
@@ -7,6 +9,75 @@
 #include "ReactorUtils.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Blueprint/WidgetTree.h"
+
+void FDirectoryMonitor::Watch(const FString& InDirectory)
+{
+	CurrentMonitorDirectory = FPaths::IsRelative(InDirectory) ? FPaths::ConvertRelativePathToFull(InDirectory) : InDirectory;
+    // UE_LOG(LogTemp, Warning, TEXT("PEDirectoryWatcher::Watch: %s"), *InDirectory);
+    if (IFileManager::Get().DirectoryExists(*CurrentMonitorDirectory))
+    {
+        auto Changed = IDirectoryWatcher::FDirectoryChanged::CreateLambda(
+            [&](const TArray<FFileChangeData>& FileChanges)
+            {
+                TArray<FString> Added;
+                TArray<FString> Modified;
+                TArray<FString> Removed;
+
+                for (auto Change : FileChanges)
+                {
+                    FPaths::NormalizeFilename(Change.Filename);
+                    Change.Filename = FPaths::ConvertRelativePathToFull(Change.Filename);
+                    switch (Change.Action)
+                    {
+                        case FFileChangeData::FCA_Added:
+                            if (Added.Contains(Change.Filename))
+                                continue;
+                            Added.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Modified:
+                            if (Modified.Contains(Change.Filename))
+                                continue;
+                            Modified.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Removed:
+                            if (Removed.Contains(Change.Filename))
+                                continue;
+                            Removed.Add(Change.Filename);
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            	
+                if (Added.Num() || Modified.Num() || Removed.Num())
+                {
+                    OnChanged.Broadcast(Added, Modified, Removed);
+                }
+            });
+    	
+        FDirectoryWatcherModule& DirectoryWatcherModule =
+            FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+        IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+        DirectoryWatcher->RegisterDirectoryChangedCallback_Handle(
+            CurrentMonitorDirectory, Changed, DelegateHandle, IDirectoryWatcher::IncludeDirectoryChanges);
+    } else
+    {
+	    UE_LOG(LogReactorUMG, Warning, TEXT("PEDirectoryWatcher::Watch: Directory not found: %s"), *InDirectory);
+    }
+}
+
+void FDirectoryMonitor::UnWatch()
+{
+	if (DelegateHandle.IsValid())
+	{
+		FDirectoryWatcherModule& DirectoryWatcherModule =
+			FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+		IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+
+		DirectoryWatcher->UnregisterDirectoryChangedCallback_Handle(CurrentMonitorDirectory, DelegateHandle);
+		CurrentMonitorDirectory = TEXT("");
+	}
+}
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer), LaunchJsScriptPath(TEXT("")), RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
@@ -198,101 +269,37 @@ void UReactorUMGWidgetBlueprint::ReleaseJsEnv()
 		JsEnv = nullptr;
 	}
 }
-bool UReactorUMGWidgetBlueprint::RunScriptBuildCommand(FScopedSlowTask& SlowTask, FString& StdOut, FString& StdErr)
+
+
+void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceReload)
 {
-	SlowTask.MakeDialog();
-	
-	const FString Command = TEXT("yarn build");
-	const FString WorkDirectory = TsProjectDir;
-	const int32 TotalAmountOfWorks = 20;
-	
-	FProcHandle ProcessHandle;
-	void* ReadPipe = nullptr;
-	void* WritePipe = nullptr;
-	verify(FPlatformProcess::CreatePipe(ReadPipe, WritePipe));
-	
-	const FString Arguments = TEXT("");
-	uint32 ProcessID;
-	const bool bLaunchDetached = false;
-	const bool bLaunchHidden = true;
-	const bool bLaunchReallyHidden = true;
-	ProcessHandle = FPlatformProcess::CreateProc(*Command, *Arguments, bLaunchDetached,
-		bLaunchHidden, bLaunchReallyHidden, &ProcessID, 0, *WorkDirectory, WritePipe);
-
-	FString LogOutBuffer;
-	while (FPlatformProcess::IsProcRunning(ProcessHandle))
-	{
-		if (SlowTask.ShouldCancel() || GEditor->GetMapBuildCancelled())
-		{
-			FPlatformProcess::TerminateProc(ProcessHandle);
-			break;
-		}
-		
-		FString LogString = FPlatformProcess::ReadPipe(ReadPipe);
-		if (!LogString.IsEmpty())
-		{
-			LogOutBuffer += LogString;
-		}
-		
-		// TODO@Caleb196x: 提取出编译日志
-		int NewLineCount = LogString.Len() - LogString.Replace(TEXT("\n"), TEXT("")).Len();
-
-		SlowTask.CompletedWork = NewLineCount;
-		SlowTask.TotalAmountOfWork = TotalAmountOfWorks;
-		// SlowTask.DefaultMessage = FText::FromString(Regex.GetCaptureGroup(3));
-
-		SlowTask.EnterProgressFrame(0);
-		FPlatformProcess::Sleep(0.1);
-	}
-
-	FString RemainingData = FPlatformProcess::ReadPipe(ReadPipe);
-	if (!RemainingData.IsEmpty())
-	{
-		LogOutBuffer += RemainingData;
-	}
-	
-	int32 ReturnCode = 0;
-	FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode);
-	FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
-
-	UE_LOG(LogReactorUMG, Display, TEXT("Log: %s"), *LogOutBuffer);
-	
-	if (ReturnCode == 0)
-	{
-		UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files successfully."));
-		StdOut = LogOutBuffer;
-		return true;
-	}
-
-	StdErr = LogOutBuffer;
-	UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files failed, error: %s."), *StdErr);
-	return false;
-}
-
-void UReactorUMGWidgetBlueprint::CompileTsScripts(bool bCompileAndReload)
-{
-	FScopedSlowTask SlowTask(10);
+	FScopedSlowTask SlowTask(2);
 	FString CompileOutMessage, CompileErrorMessage;
 	
 	if (CheckLaunchJsScriptExist())
 	{
 		// execute launch.js
-		if (bCompileAndReload)
+		if (bForceCompile)
 		{
-			if (RunScriptBuildCommand(SlowTask, CompileOutMessage, CompileErrorMessage))
-			{
-				ReloadJsScripts();
-			} else
+			if (!FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
 			{
 				// print error message to editor message log
+				UE_LOG(LogReactorUMG, Error, TEXT("%s"), *CompileErrorMessage);
 			}
+		}
+
+		if (bForceReload)
+		{
+			ReloadJsScripts();
 		} else
 		{
 			ExecuteJsScripts();
 		}
-	} else
+		
+	}
+	else
 	{
-		if (RunScriptBuildCommand(SlowTask, CompileOutMessage, CompileErrorMessage))
+		if (FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
 		{
 			ExecuteJsScripts();
 		} else
@@ -311,33 +318,7 @@ void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
 		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
 		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
-
-		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
-		if (JsEnv)
-		{
-		
-			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
-			if (!Result)
-			{
-				UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
-				ReleaseJsEnv();
-				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchJsScriptPath);
-			}
-		}
-		else
-		{
-			UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
-			UE_LOG(LogReactorUMG, Error, TEXT("Can not obtain any valid javascript runtime environment"))
-			return;
-		}
-	}
-	
-	const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(WidgetName, this);
-	if (!DelegateRunResult)
-	{
-		UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
-		ReleaseJsEnv();
-		UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *WidgetName);
+		const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
 	}
 }
 
@@ -354,13 +335,30 @@ void UReactorUMGWidgetBlueprint::ReloadJsScripts()
 
 void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 {
+	// run in editor
+	SetupTsScripts();
 	
-}
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([this](UObject* Asset)
+	{
+		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
+		UClass* AssetClass = Asset->GetClass();
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		{
+			StartTsScriptsMonitor();
+		}
+	});
 
-
-void UReactorUMGWidgetBlueprint::CheckTsProjectFilesChanged()
-{
-	
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetClosedInEditor().AddLambda([this](
+		UObject* Asset, IAssetEditorInstance* AssetEditorInstance
+		)
+	{
+		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
+		UClass* AssetClass = Asset->GetClass();
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		{
+			StopTsScriptsMonitor();
+		}
+	});
 }
 
 bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
@@ -372,4 +370,20 @@ bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
 	}
 	
 	return FPaths::FileExists(LaunchJsScriptPath);
+}
+
+void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
+{
+	TsProjectMonitor.OnDirectoryChanged().AddLambda([this](
+			const TArray<FString>& Added, const TArray<FString>& Modified, const TArray<FString>& Removed
+		)
+	{
+		const bool AnyChange = !Added.IsEmpty() || !Modified.IsEmpty() || !Removed.IsEmpty();
+		if (AnyChange)
+		{
+			SetupTsScripts(true, true);
+		}
+		
+		// TODO@Caleb196x: 优化项：只拷贝变化的非脚本文件，删除OutDir中的文件，做到同步
+	});
 }

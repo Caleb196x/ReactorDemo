@@ -43,4 +43,8 @@ public:
 	static bool ReadFileContent(const FString& FilePath, FString& OutContent);
 
 	static FString ConvertRelativePathToFullUsingTSConfig(const FString& RelativePath, const FString& DirName);
+
+	static bool RunCommandWithProcess(const FString& Command, const FString& WorkDir, FScopedSlowTask* SlowTask, FString& StdOut, FString& StdErr);
+
+	static FString GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir);
 };

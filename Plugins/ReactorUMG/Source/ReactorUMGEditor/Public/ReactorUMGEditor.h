@@ -8,6 +8,8 @@ class FReactorUMGEditorModule : public IModuleInterface
 public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
+
+    void InstallTsScriptNodeModules();
     
     TSharedPtr<class FReactorUMGBlueprintAssetTypeActions> TestBlueprintAssetTypeActions;
     TSharedPtr<class FReactorUMGBlueprintCompiler> ReactorUMGBlueprintCompiler;

@@ -160,23 +160,143 @@ FString FReactorUtils::ConvertRelativePathToFullUsingTSConfig(const FString& Rel
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileBuffer);
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
 	{
-		const TSharedPtr<FJsonObject>* PathsObject;
-		if (JsonObject->TryGetObjectField(TEXT("paths"), PathsObject))
+		const TSharedPtr<FJsonObject>* CompileOptObject;
+		if (JsonObject->TryGetObjectField(TEXT("compilerOptions"), CompileOptObject))
 		{
-			for (const auto& Pair : PathsObject->Get()->Values)
+			const TSharedPtr<FJsonObject>* PathsObject;
+			if (JsonObject->TryGetObjectField(TEXT("paths"), PathsObject))
 			{
-				FString Key = Pair.Key.TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
-				const TArray<TSharedPtr<FJsonValue>>& ValueArray = Pair.Value->AsArray();
-				for (const auto& Value : ValueArray)
+				for (const auto& Pair : PathsObject->Get()->Values)
 				{
-					FString ValueString = Value->AsString().TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
-					if (RelativePath.StartsWith(Key))
+					FString Key = Pair.Key.TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
+					const TArray<TSharedPtr<FJsonValue>>& ValueArray = Pair.Value->AsArray();
+					for (const auto& Value : ValueArray)
 					{
-						FString RelativePathToTSConfig = RelativePath.Replace(*Key, *ValueString);
-						Result = FPaths::Combine(FPaths::GetPath(TSConfigPath), RelativePathToTSConfig);
-						break;
+						FString ValueString = Value->AsString().TrimStartAndEnd().Replace(TEXT("*"), TEXT(""));
+						if (RelativePath.StartsWith(Key))
+						{
+							FString RelativePathToTSConfig = RelativePath.Replace(*Key, *ValueString);
+							Result = FPaths::Combine(FPaths::GetPath(TSConfigPath), RelativePathToTSConfig);
+							break;
+						}
 					}
 				}
+			}
+		}
+	}
+	
+	return Result;
+}
+
+bool FReactorUtils::RunCommandWithProcess(const FString& Command, const FString& WorkDir, FScopedSlowTask* SlowTask, FString& StdOut, FString& StdErr)
+{
+	bool bAllocSlowTask = false;
+	if (!SlowTask)
+	{
+		SlowTask = new FScopedSlowTask(1);
+	}
+	
+	SlowTask->MakeDialog();
+	const FString WorkDirectory = WorkDir;
+	const int32 TotalAmountOfWorks = 20;
+	
+	FProcHandle ProcessHandle;
+	void* ReadPipe = nullptr;
+	void* WritePipe = nullptr;
+	verify(FPlatformProcess::CreatePipe(ReadPipe, WritePipe));
+	
+	const FString Arguments = TEXT("");
+	uint32 ProcessID;
+	const bool bLaunchDetached = false;
+	const bool bLaunchHidden = true;
+	const bool bLaunchReallyHidden = true;
+	ProcessHandle = FPlatformProcess::CreateProc(*Command, *Arguments, bLaunchDetached,
+		bLaunchHidden, bLaunchReallyHidden, &ProcessID, 0, *WorkDirectory, WritePipe);
+
+	FString LogOutBuffer;
+	while (FPlatformProcess::IsProcRunning(ProcessHandle))
+	{
+		if (SlowTask->ShouldCancel() || GEditor->GetMapBuildCancelled())
+		{
+			FPlatformProcess::TerminateProc(ProcessHandle);
+			break;
+		}
+		
+		FString LogString = FPlatformProcess::ReadPipe(ReadPipe);
+		if (!LogString.IsEmpty())
+		{
+			LogOutBuffer += LogString;
+		}
+		
+		// TODO@Caleb196x: 提取出编译日志
+		int NewLineCount = LogString.Len() - LogString.Replace(TEXT("\n"), TEXT("")).Len();
+
+		SlowTask->CompletedWork = NewLineCount;
+		SlowTask->TotalAmountOfWork = TotalAmountOfWorks;
+		// SlowTask.DefaultMessage = FText::FromString(Regex.GetCaptureGroup(3));
+
+		SlowTask->EnterProgressFrame(0);
+		FPlatformProcess::Sleep(0.1);
+	}
+
+	FString RemainingData = FPlatformProcess::ReadPipe(ReadPipe);
+	if (!RemainingData.IsEmpty())
+	{
+		LogOutBuffer += RemainingData;
+	}
+	
+	int32 ReturnCode = 0;
+	FPlatformProcess::GetProcReturnCode(ProcessHandle, &ReturnCode);
+	FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
+
+	UE_LOG(LogReactorUMG, Display, TEXT("Log: %s"), *LogOutBuffer);
+	
+	if (ReturnCode == 0)
+	{
+		UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files successfully."));
+		StdOut = LogOutBuffer;
+		if (bAllocSlowTask)
+		{
+			delete SlowTask;
+		}
+		
+		return true;
+	}
+
+	StdErr = LogOutBuffer;
+	UE_LOG(LogReactorUMG, Display, TEXT("Compile TypeScript files failed, error: %s."), *StdErr);
+	if (bAllocSlowTask)
+	{
+		delete SlowTask;
+	}
+	
+	return false;
+}
+
+FString FReactorUtils::GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir)
+{
+	const FString TSConfigPath = FPaths::Combine(ProjectDir, TEXT("tsconfig.json"));
+	
+	FString FileBuffer;
+	if (!FFileHelper::LoadFileToString(FileBuffer, *TSConfigPath))
+	{
+		UE_LOG(LogReactorUMG, Error, TEXT("Failed to load tsconfig.json file: %s"), *TSConfigPath);
+		return FString();
+	}
+	
+	FString Result;
+	
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(FileBuffer);
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
+	{
+		const TSharedPtr<FJsonObject>* CompileOptObject;
+		if (JsonObject->TryGetObjectField(TEXT("compilerOptions"), CompileOptObject))
+		{
+			const TSharedPtr<FJsonValue> OutDirValue = JsonObject->TryGetField(TEXT("outDir"));
+			if (OutDirValue)
+			{
+				Result = OutDirValue->AsString();
 			}
 		}
 	}

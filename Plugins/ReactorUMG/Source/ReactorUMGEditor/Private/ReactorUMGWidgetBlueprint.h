@@ -3,7 +3,35 @@
 #include "JsEnv.h"
 #include "WidgetBlueprint.h"
 #include "Components/PanelSlot.h"
+
+#include "HAL/PlatformFilemanager.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "Async/TaskGraphInterfaces.h"
+#include "Tickable.h"
 #include "ReactorUMGWidgetBlueprint.generated.h"
+
+DECLARE_MULTICAST_DELEGATE_ThreeParams(
+	FDirectoryMonitorCallback, const TArray<FString>&, const TArray<FString>&, const TArray<FString>&);
+
+class FDirectoryMonitor
+{
+public:
+	FDirectoryMonitor() {}
+	~FDirectoryMonitor() {}
+
+	FDirectoryMonitorCallback& OnDirectoryChanged() { return OnChanged; }
+
+	void Watch(const FString& InDirectory);
+	void UnWatch();
+	
+private:
+	FDelegateHandle DelegateHandle;
+
+	FDirectoryMonitorCallback OnChanged;
+
+	FString CurrentMonitorDirectory;
+};
 
 UCLASS(BlueprintType)
 class REACTORUMGEDITOR_API UReactorUMGWidgetBlueprint : public UWidgetBlueprint
@@ -28,7 +56,7 @@ public:
 	// 在在AssetEditorSubsystem的OnAssetClosedInEditor事件中结束监听模式
 	void SetupMonitorForTsScripts();
 	
-	void CompileTsScripts(bool bCompileAndReload);
+	void SetupTsScripts(bool bForceCompile = false, bool bForceReload = false);
 
 	void ReloadJsScripts();
 
@@ -54,9 +82,15 @@ protected:
 	void RenameScriptDir(const TCHAR* NewName);
 	
 	void RegisterBlueprintDeleteHandle();
-	void CheckTsProjectFilesChanged();
 	bool CheckLaunchJsScriptExist();
-	bool RunScriptBuildCommand(FScopedSlowTask& SlowTask, FString& StdOut, FString& StdErr);
+	void StartTsScriptsMonitor();
+	
+	void StopTsScriptsMonitor()
+	{
+		TsProjectMonitor.UnWatch();
+	}
+	
+	FDirectoryMonitor TsProjectMonitor;
 
 private:
 	FString LaunchJsScriptPath;
