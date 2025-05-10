@@ -1,6 +1,5 @@
 #include "ReactorBlueprintAssetTypeActions.h"
 // Core includes
-#include "ReactorUMGBlueprint.h"
 #include "Misc/MessageDialog.h"
 #include "BlueprintEditor.h"
 #include "ReactorUMGWidgetBlueprint.h"
@@ -18,7 +17,7 @@ FText FReactorUMGBlueprintAssetTypeActions::GetName() const
 
 UClass* FReactorUMGBlueprintAssetTypeActions::GetSupportedClass() const
 {
-	return UReactorUMGBlueprint::StaticClass();
+	return UReactorUMGWidgetBlueprint::StaticClass();
 }
 
 FColor FReactorUMGBlueprintAssetTypeActions::GetTypeColor() const

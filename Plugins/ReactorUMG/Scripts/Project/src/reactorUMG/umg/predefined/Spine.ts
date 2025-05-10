@@ -27,17 +27,17 @@ export class SpineConverter extends UMGConverter {
         let atlasLoaded = false;
         const atlas = props?.atlas;
         if (atlas) {
-            spine.Atlas = UE.UMGManager.LoadSpineAtlas(spine, atlas);
+            spine.Atlas = UE.UMGManager.LoadSpineAtlas(spine, atlas, __dirname);
             atlasLoaded = true;
             propsInit = true;
         }
 
         const skel = props?.skel;
         if (skel) {
-            spine.SkeletonData = UE.UMGManager.LoadSpineSkeleton(spine, skel);
+            spine.SkeletonData = UE.UMGManager.LoadSpineSkeleton(spine, skel, __dirname);
             if (!atlasLoaded) {
                 const atlasPath = skel.replace('.json', '.atlas').replace('.skel', '.atlas');
-                spine.Atlas = UE.UMGManager.LoadSpineAtlas(spine, atlasPath);
+                spine.Atlas = UE.UMGManager.LoadSpineAtlas(spine, atlasPath, __dirname);
                 atlasLoaded = true;
                 propsInit = true;
             }

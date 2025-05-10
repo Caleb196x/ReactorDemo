@@ -17,7 +17,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(
 class FDirectoryMonitor
 {
 public:
-	FDirectoryMonitor() {}
+	FDirectoryMonitor() : bIsWatching(false) {}
 	~FDirectoryMonitor() {}
 
 	FDirectoryMonitorCallback& OnDirectoryChanged() { return OnChanged; }
@@ -31,6 +31,8 @@ private:
 	FDirectoryMonitorCallback OnChanged;
 
 	FString CurrentMonitorDirectory;
+	
+	bool bIsWatching;
 };
 
 UCLASS(BlueprintType)
@@ -84,10 +86,12 @@ protected:
 	void RegisterBlueprintDeleteHandle();
 	bool CheckLaunchJsScriptExist();
 	void StartTsScriptsMonitor();
+	FString GetLaunchJsScriptPath();
 	
 	void StopTsScriptsMonitor()
 	{
 		TsProjectMonitor.UnWatch();
+		TsProjectMonitor.OnDirectoryChanged().Remove(TsMonitorDelegateHandle);
 	}
 	
 	FDirectoryMonitor TsProjectMonitor;
@@ -98,6 +102,8 @@ private:
 	TObjectPtr<UPanelSlot> RootSlot;
 	
 	TSharedPtr<puerts::FJsEnv> JsEnv;
+
+	FDelegateHandle TsMonitorDelegateHandle;
 	
 	bool bTsScriptsChanged;
 };

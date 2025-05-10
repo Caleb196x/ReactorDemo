@@ -2,43 +2,17 @@
 #include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
-#include "ReactorUMGBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 
 UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	// todo@Caleb196x: 使用这种方式，每次创建出一个ReactorUIWidget都会执行一遍Widget的构造逻辑
-	// 这对性能来说是一段极大的开销，有什么方法可以进行优化吗？
-	// 一种思路:
-	// 开发阶段通过脚本文件生成WidgetTree的实际内容；打包Cook阶段，执行脚本生成WidgetTree的内容并将其写入资产Package中，
-	// 随之还会将依赖的UI资产也打包到package中。
-	// 生成的WidgetTree存放在Blueprint中
-	TRACE_CPUPROFILER_EVENT_SCOPE(USmartUICoreWidgetInit)
-	
-	WidgetTree = CreateDefaultSubobject<UWidgetTree>(TEXT("WidgetTree"));
-	WidgetTree->SetFlags(RF_Transactional);
-	
-	UClass* Class = GetClass();
-	if (UReactorUMGBlueprint* Blueprint = Cast<UReactorUMGBlueprint>(Class->ClassGeneratedBy))
-	{
-		WidgetName = Blueprint->WidgetName;
-		ScriptHomeDir = Blueprint->TsScriptHomeRelativeDir;
-	}
-	
-	LaunchJsScriptPath = FPaths::Combine(ScriptHomeDir, TEXT("launch"));
 
-	if (!WidgetName.IsEmpty())
-	{
-		init();
-	}
 }
 
 void UReactorUIWidget::BeginDestroy()
 {
 	Super::BeginDestroy();
-	ReleaseJsEnv(); // Releasing the environment as a fallback has already been done in the launch script
-	UE_LOG(LogReactorUMG, Display, TEXT("Release javascript environment when BeginDestroy of Object"))
 }
 
 #if WITH_EDITOR

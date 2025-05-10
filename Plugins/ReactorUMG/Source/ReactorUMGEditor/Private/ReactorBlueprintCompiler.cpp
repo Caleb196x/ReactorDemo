@@ -1,12 +1,12 @@
 #include "ReactorBlueprintCompiler.h"
-#include "ReactorUMGBlueprint.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
 #include "ReactorUIWidget.h"
 #include "ReactorBlueprintCompilerContext.h"
+#include "ReactorUMGWidgetBlueprint.h"
 
 bool FReactorUMGBlueprintCompiler::CanCompile(const UBlueprint* Blueprint)
 {
-	return Blueprint->IsA(UReactorUMGBlueprint::StaticClass());
+	return Blueprint->IsA(UReactorUMGWidgetBlueprint::StaticClass());
 }
 
 void FReactorUMGBlueprintCompiler::PostCompile(UBlueprint* Blueprint)
@@ -22,9 +22,9 @@ void FReactorUMGBlueprintCompiler::PreCompile(UBlueprint* Blueprint)
 void FReactorUMGBlueprintCompiler::Compile(UBlueprint* Blueprint, const FKismetCompilerOptions& CompilerOptions, FCompilerResultsLog& Results)
 {
 	// todo: convert typescript to javascript: run tsc command
-	if (UReactorUMGBlueprint* SmartUIBlueprint = Cast<UReactorUMGBlueprint>(Blueprint))
+	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
 	{
-		FReactorUMGBlueprintCompilerContext Compiler(SmartUIBlueprint, Results, CompilerOptions);
+		FReactorUMGBlueprintCompilerContext Compiler(WidgetBlueprint, Results, CompilerOptions);
 		Compiler.Compile();
 		check(Compiler.NewClass);
 	}
@@ -34,7 +34,7 @@ bool FReactorUMGBlueprintCompiler::GetBlueprintTypesForClass(UClass* ParentClass
 {
 	if (ParentClass->IsChildOf<UReactorUIWidget>())
 	{
-		OutBlueprintClass = UReactorUMGBlueprint::StaticClass();
+		OutBlueprintClass = UReactorUMGWidgetBlueprint::StaticClass();
 		OutBlueprintGeneratedClass = UReactorUMGBlueprintGeneratedClass::StaticClass();
 		return true;
 	}

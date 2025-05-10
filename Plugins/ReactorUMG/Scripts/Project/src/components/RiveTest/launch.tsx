@@ -5,13 +5,12 @@ import {ReactorUMG, Root} from "reactorUMG";
 import * as React from "react";
 import { RiveTest } from "./RiveTest"
 
-let bridgeCaller = (argv.getByName("BridgeCaller") as UE.JsBridgeCaller);
-let coreWidget = (argv.getByName("CoreWidget") as UE.ReactorUIWidget);
-bridgeCaller.MainCaller.Bind(Launch);
-coreWidget.ReleaseJsEnv();
-function Launch(coreWidget: $Nullable<UE.ReactorUIWidget>) : Root {
-    ReactorUMG.init(coreWidget);
+let rootBlueprint = (argv.getByName("WidgetBlueprint") as UE.ReactorUMGWidgetBlueprint);
+function Launch(rootBlueprint: $Nullable<UE.ReactorUMGWidgetBlueprint>) : Root {
+    ReactorUMG.init(rootBlueprint);
     return ReactorUMG.render(
-       <RiveTest/> 
+        <RiveTest/>  
     );
 }
+Launch(rootBlueprint);
+rootBlueprint.ReleaseJsEnv_EditorOnly();

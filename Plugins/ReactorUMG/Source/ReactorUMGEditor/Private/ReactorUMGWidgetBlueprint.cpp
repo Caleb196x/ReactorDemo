@@ -9,9 +9,15 @@
 #include "ReactorUtils.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 void FDirectoryMonitor::Watch(const FString& InDirectory)
 {
+	if (bIsWatching)
+	{
+		return;
+	}
+	
 	CurrentMonitorDirectory = FPaths::IsRelative(InDirectory) ? FPaths::ConvertRelativePathToFull(InDirectory) : InDirectory;
     // UE_LOG(LogTemp, Warning, TEXT("PEDirectoryWatcher::Watch: %s"), *InDirectory);
     if (IFileManager::Get().DirectoryExists(*CurrentMonitorDirectory))
@@ -60,6 +66,7 @@ void FDirectoryMonitor::Watch(const FString& InDirectory)
         IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
         DirectoryWatcher->RegisterDirectoryChangedCallback_Handle(
             CurrentMonitorDirectory, Changed, DelegateHandle, IDirectoryWatcher::IncludeDirectoryChanges);
+    	bIsWatching = true;
     } else
     {
 	    UE_LOG(LogReactorUMG, Warning, TEXT("PEDirectoryWatcher::Watch: Directory not found: %s"), *InDirectory);
@@ -77,6 +84,8 @@ void FDirectoryMonitor::UnWatch()
 		DirectoryWatcher->UnregisterDirectoryChangedCallback_Handle(CurrentMonitorDirectory, DelegateHandle);
 		CurrentMonitorDirectory = TEXT("");
 	}
+
+	bIsWatching = false;
 }
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
@@ -94,9 +103,10 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	// TODO@Caleb196x: Widget可能同名的情况，需要加入路径进行区分
 	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);
 	TsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), WidgetName);
-	LaunchJsScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
+	LaunchJsScriptPath = GetLaunchJsScriptPath();
 
 	RegisterBlueprintDeleteHandle();
+	// SetupTsScripts();
 }
 
 bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
@@ -305,6 +315,7 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 		} else
 		{
 			// print error message to editor message log
+			UE_LOG(LogReactorUMG, Error, TEXT("%s"), *CompileErrorMessage);
 		}
 	}
 
@@ -312,24 +323,16 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 
 void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 {
-	if (!WidgetName.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(WidgetName))
-	{
-		TArray<TPair<FString, UObject*>> Arguments;
-		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
-		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
-		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
-		const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
-	}
+	TArray<TPair<FString, UObject*>> Arguments;
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
 }
 
 void UReactorUMGWidgetBlueprint::ReloadJsScripts()
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(ReloadJsScripts)
 	TArray<TPair<FString, UObject*>> Arguments;
-	UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
-	Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
-	Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
-	
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
 	FJsEnvRuntime::GetInstance().RestartJsScripts(TsScriptHomeFullDir, LaunchJsScriptPath, Arguments);
 }
 
@@ -342,7 +345,7 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 	{
 		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
 		UClass* AssetClass = Asset->GetClass();
-		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = Cast<UReactorUMGWidgetBlueprint>(Asset))
 		{
 			StartTsScriptsMonitor();
 		}
@@ -354,7 +357,7 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 	{
 		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
 		UClass* AssetClass = Asset->GetClass();
-		if (UReactorUMGWidgetBlueprint* MyBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Asset))
+		if (UReactorUMGWidgetBlueprint* MyBlueprint = Cast<UReactorUMGWidgetBlueprint>(Asset))
 		{
 			StopTsScriptsMonitor();
 		}
@@ -365,8 +368,7 @@ bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
 {
 	if (LaunchJsScriptPath.IsEmpty())
 	{
-		const FString ScriptPath = FPaths::Combine(TsScriptHomeFullDir, TEXT("launch.js"));
-		LaunchJsScriptPath = ScriptPath;
+		LaunchJsScriptPath = GetLaunchJsScriptPath();
 	}
 	
 	return FPaths::FileExists(LaunchJsScriptPath);
@@ -374,16 +376,34 @@ bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
 
 void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 {
-	TsProjectMonitor.OnDirectoryChanged().AddLambda([this](
+	TsProjectMonitor.Watch(TsScriptHomeFullDir);
+	TsMonitorDelegateHandle = TsProjectMonitor.OnDirectoryChanged().AddLambda([this](
 			const TArray<FString>& Added, const TArray<FString>& Modified, const TArray<FString>& Removed
 		)
 	{
 		const bool AnyChange = !Added.IsEmpty() || !Modified.IsEmpty() || !Removed.IsEmpty();
 		if (AnyChange)
 		{
-			SetupTsScripts(true, true);
+			// SetupTsScripts(true, true);
+			if (this->MarkPackageDirty())
+			{
+				FBlueprintEditorUtils::MarkBlueprintAsModified(this);
+				UE_LOG(LogReactorUMG, Log, TEXT("Set package blueprint dirty"))
+			}
 		}
-		
+				
 		// TODO@Caleb196x: 优化项：只拷贝变化的非脚本文件，删除OutDir中的文件，做到同步
 	});
+}
+
+FString UReactorUMGWidgetBlueprint::GetLaunchJsScriptPath()
+{
+	const FString JsOutDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
+	if (!JsOutDir.IsEmpty())
+	{
+		const FString ScriptPath = FPaths::Combine(JsOutDir, TsScriptHomeRelativeDir, TEXT("launch.js"));
+		return ScriptPath;
+	}
+
+	return TEXT("");
 }
