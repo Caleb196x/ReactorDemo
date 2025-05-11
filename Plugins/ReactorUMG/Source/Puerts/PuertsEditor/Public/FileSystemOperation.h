@@ -40,12 +40,15 @@ class PUERTSEDITOR_API UFileSystemOperation : public UBlueprintFunctionLibrary
 
     UFUNCTION(BlueprintCallable, Category = "File")
     static TArray<FString> GetFiles(FString Path);
-
+	
     UFUNCTION(BlueprintCallable, Category = "File")
     static void PuertsNotifyChange(FString Path, FString Source);
 
     UFUNCTION(BlueprintCallable, Category = "File")
     static FString FileMD5Hash(FString Path);
+
+	UFUNCTION(BlueprintCallable, Category = "File")
+	static void CopyDirectory(FString Source, FString Dest, bool bOverride = true);
 
     // UFUNCTION(BlueprintCallable, Category = "File")
     // static TArray<FString> ReadDirectory(FString Path, TArray<FString> Extensions, TArray<FString> exclude, int32 Depth);

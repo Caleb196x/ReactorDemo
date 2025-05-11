@@ -12,7 +12,7 @@ public:
 
 	~FJsEnvRuntime();
 
-	TSharedPtr<puerts::FJsEnv> GetFreeJsEnv();
+	REACTORUMG_API TSharedPtr<puerts::FJsEnv> GetFreeJsEnv();
 		
 	REACTORUMG_API bool StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, const FString& Script, const TArray<TPair<FString, UObject*>>& Arguments) const;
 

@@ -59,6 +59,31 @@ bool FReactorUtils::CopyDirectoryRecursive(const FString& SrcDir, const FString&
 	return true;
 }
 
+void FReactorUtils::CopyFile(const FString& SrcFile, const FString& DestFile)
+{
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	const FString DestDir = FPaths::GetPath(DestFile);
+	if (!PlatformFile.DirectoryExists(*DestDir))
+	{
+		PlatformFile.CreateDirectoryTree(*DestDir);
+	}
+
+	if (!PlatformFile.CopyFile(*DestFile, *SrcFile))
+	{ 
+		UE_LOG(LogReactorUMG, Warning, TEXT("Failed to copy file: %s"), *SrcFile);
+	}
+}
+
+void FReactorUtils::DeleteFile(const FString& FilePath)
+{
+	if (FPaths::FileExists(FilePath))
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		PlatformFile.DeleteFile(*FilePath);
+	}
+}
+
 bool FReactorUtils::DeleteDirectoryRecursive(const FString& DirPath)
 {
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();

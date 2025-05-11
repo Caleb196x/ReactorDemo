@@ -107,6 +107,13 @@ FString UFileSystemOperation::FileMD5Hash(FString Path)
     return LexToString(Hash);
 }
 
+void UFileSystemOperation::CopyDirectory(FString Source, FString Dest, bool bOverride)
+{
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    PlatformFile.CopyDirectoryTree(*Dest, *Source, bOverride);
+}
+
+
 // TArray<FString> UFileSystemOperation::ReadDirectory(FString Path, TArray<FString> Extensions, TArray<FString> exclude, int32
 // Depth)
 //{

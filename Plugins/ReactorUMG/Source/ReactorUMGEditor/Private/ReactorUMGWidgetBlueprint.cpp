@@ -285,17 +285,15 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 {
 	FScopedSlowTask SlowTask(2);
 	FString CompileOutMessage, CompileErrorMessage;
+
+	// TODO@Caleb196x: 使用JS脚本执行编译TS脚本的工作
 	
 	if (CheckLaunchJsScriptExist())
 	{
 		// execute launch.js
 		if (bForceCompile)
 		{
-			if (!FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
-			{
-				// print error message to editor message log
-				UE_LOG(LogReactorUMG, Error, TEXT("%s"), *CompileErrorMessage);
-			}
+			CompileTsScript();
 		}
 
 		if (bForceReload)
@@ -305,18 +303,11 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 		{
 			ExecuteJsScripts();
 		}
-		
 	}
 	else
 	{
-		if (FReactorUtils::RunCommandWithProcess(TEXT("yarn build"), TsProjectDir, &SlowTask, CompileOutMessage, CompileErrorMessage))
-		{
-			ExecuteJsScripts();
-		} else
-		{
-			// print error message to editor message log
-			UE_LOG(LogReactorUMG, Error, TEXT("%s"), *CompileErrorMessage);
-		}
+		CompileTsScript();
+		ExecuteJsScripts();
 	}
 
 }
@@ -325,6 +316,7 @@ void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 {
 	TArray<TPair<FString, UObject*>> Arguments;
 	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+	JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
 }
 
@@ -334,6 +326,17 @@ void UReactorUMGWidgetBlueprint::ReloadJsScripts()
 	TArray<TPair<FString, UObject*>> Arguments;
 	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
 	FJsEnvRuntime::GetInstance().RestartJsScripts(TsScriptHomeFullDir, LaunchJsScriptPath, Arguments);
+}
+
+void UReactorUMGWidgetBlueprint::CompileTsScript()
+{
+	JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
+	TArray<TPair<FString, UObject*>> Arguments;
+	
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+	const FString compileScript = TEXT("utils/compile");
+	JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
+	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, compileScript, Arguments);
 }
 
 void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
@@ -381,8 +384,8 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 			const TArray<FString>& Added, const TArray<FString>& Modified, const TArray<FString>& Removed
 		)
 	{
-		const bool AnyChange = !Added.IsEmpty() || !Modified.IsEmpty() || !Removed.IsEmpty();
-		if (AnyChange)
+		const bool bAnyChange = !Added.IsEmpty() || !Modified.IsEmpty() || !Removed.IsEmpty();
+		if (bAnyChange)
 		{
 			// SetupTsScripts(true, true);
 			if (this->MarkPackageDirty())
@@ -390,9 +393,40 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 				FBlueprintEditorUtils::MarkBlueprintAsModified(this);
 				UE_LOG(LogReactorUMG, Log, TEXT("Set package blueprint dirty"))
 			}
+
+			const FString JsContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
+			auto GetDestFilePath = [this, JsContentDir](const FString& SourceFilePath) -> FString
+			{
+				FString LeftDirs, RelativeFileName;
+				if (SourceFilePath.Split(TsScriptHomeRelativeDir, &LeftDirs, &RelativeFileName))
+				{
+					return FPaths::Combine(JsContentDir, TsScriptHomeRelativeDir, RelativeFileName);
+				}
+
+				return SourceFilePath;
+			};
+
+			// TODO@Caleb196x: 拷贝变化的非脚本文件，删除编译结果目录下的同名文件
+			for (const auto& AddFile : Added)
+			{
+				FString DestFilePath = GetDestFilePath(AddFile);
+				FReactorUtils::CopyFile(AddFile, DestFilePath);
+			}
+
+			for (const auto& ModifiedFile : Modified)
+			{
+				FString DestFilePath = GetDestFilePath(ModifiedFile);
+				FReactorUtils::CopyFile(ModifiedFile, DestFilePath);
+			}
+
+			for (const auto& RemovedFile : Removed)
+			{
+				FString DestFilePath = GetDestFilePath(RemovedFile);
+				FReactorUtils::DeleteFile(DestFilePath);
+			}
 		}
-				
-		// TODO@Caleb196x: 优化项：只拷贝变化的非脚本文件，删除OutDir中的文件，做到同步
+
+		// TODO@Caleb196x: 此回调函数可能会被执行多次
 	});
 }
 

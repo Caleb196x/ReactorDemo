@@ -63,6 +63,8 @@ public:
 	void ReloadJsScripts();
 
 	void ExecuteJsScripts();
+
+	void CompileTsScript();
 	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")

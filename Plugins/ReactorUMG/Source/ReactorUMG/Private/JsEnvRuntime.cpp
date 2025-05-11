@@ -60,10 +60,10 @@ bool FJsEnvRuntime::StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, con
 
 bool FJsEnvRuntime::CheckScriptLegal(const FString& Script) const
 {
-	const FString JSContentDir = FPaths::ProjectContentDir() / TEXT("JavaScript");
-	FString FullPath = JSContentDir / Script;
+	// const FString JSContentDir = FPaths::ProjectContentDir() / TEXT("JavaScript");
+	const FString FullPath = Script.EndsWith(TEXT(".js")) ? Script : Script + TEXT(".js");
 	
-	if (!FPaths::FileExists(FullPath + TEXT(".js")))
+	if (!FPaths::FileExists(FullPath))
 	{
 		UE_LOG(LogReactorUMG, Error, TEXT("can't find script: %s"), *Script);
 		return false;

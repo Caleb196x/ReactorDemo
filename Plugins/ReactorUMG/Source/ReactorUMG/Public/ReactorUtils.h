@@ -14,6 +14,10 @@ public:
 	 * @return 
 	 */
 	static bool CopyDirectoryRecursive(const FString& SrcDir, const FString& DestDir, const TArray<FString>& SkipExistFiles = {});
+
+	static void CopyFile(const FString& SrcFile, const FString& DestFile);
+
+	static void DeleteFile(const FString& FilePath);
 	
 	FORCEINLINE static FString GetPluginContentDir()
 	{
