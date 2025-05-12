@@ -5,9 +5,9 @@ const puerts_1 = require("puerts");
 const ts = require("typescript");
 const tsi = require("../PuertsEditor/TypeScriptInternal");
 
-let callObject = puerts_1.argv.getByName("callObject");
+let bridgeCaller = puerts_1.argv.getByName("BridgeCaller");
 
-function getFileOptionSystem() {
+function getFileOptionSystem(callObject) {
     const customSystem = {
         args: [],
         newLine: '\n',
@@ -53,7 +53,7 @@ function getFileOptionSystem() {
         throw new Error("exit with code:" + exitCode);
     }
     function getExecutingFilePath() {
-        return getCurrentDirectory() + "node_modules/typescript/lib/tsc.js";
+        return getCurrentDirectory() + "/node_modules/typescript/lib/tsc.js";
     }
     function getCurrentDirectory() {
         return callObject.TsProjectDir;
@@ -69,12 +69,6 @@ function getFileOptionSystem() {
     return customSystem;
 }
 
-let customSystem = getFileOptionSystem();
-if (!ts.sys) {
-    let t = ts;
-    t.sys = customSystem;
-}
-
 function logErrors(allDiagnostics) {
     allDiagnostics.forEach(diagnostic => {
         let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
@@ -88,7 +82,7 @@ function logErrors(allDiagnostics) {
     });
 }
 
-function readAndParseConfigFile(configFilePath) {
+function readAndParseConfigFile(customSystem, configFilePath) {
     let readResult = ts.readConfigFile(configFilePath, customSystem.readFile);
     return ts.parseJsonConfigFileContent(readResult.config, {
         useCaseSensitiveFileNames: true,
@@ -99,20 +93,7 @@ function readAndParseConfigFile(configFilePath) {
     }, customSystem.getCurrentDirectory());
 }
 
-function getClassPathInfo(sourceFilePath) {
-    let modulePath = undefined;
-    let moduleFileName = undefined;
-    if (sourceFilePath.endsWith(".ts")) {
-        if (options.baseUrl && sourceFilePath.startsWith(options.baseUrl)) {
-            moduleFileName = sourceFilePath.substr(options.baseUrl.length + 1);
-            modulePath = tsi.getDirectoryPath(moduleFileName);
-            moduleFileName = tsi.removeExtension(moduleFileName, ".ts");
-        }
-    }
-    return { moduleFileName, modulePath };
-}
-
-function compileInternal(sourceFilePath, program) {
+function compileInternal(service, sourceFilePath, program) {
     if (!program) {
         let beginTime = new Date().getTime();
         program = getProgramFromService();
@@ -130,35 +111,44 @@ function compileInternal(sourceFilePath, program) {
             if (!sourceFile.isDeclarationFile) {
                 let emitOutput = service.getEmitOutput(sourceFilePath);
                 if (!emitOutput.emitSkipped) {
-                    let modulePath = undefined;
-                    let moduleFileName = undefined;
-                    let jsSource = undefined;
                     emitOutput.outputFiles.forEach(output => {
-                        console.log(`write ${output.name} ...`);
+                        console.log(`compileInternal: write ${output.name} ...`);
                         UE.FileSystemOperation.WriteFile(output.name, output.text);
-
-                        if (output.name.endsWith(".js") || output.name.endsWith(".mjs")) {
-                            jsSource = output.text;
-                            if (options.outDir && output.name.startsWith(options.outDir)) {
-                                moduleFileName = output.name.substr(options.outDir.length + 1);
-                                modulePath = tsi.getDirectoryPath(moduleFileName);
-                                moduleFileName = tsi.removeExtension(moduleFileName, output.name.endsWith(".js") ? ".js" : ".mjs");
-                            }
-                        }
                     });
                 }
             }
         }
     }
-
 }
 
-function compile() {
-    const configFilePath = tsi.combinePaths(projectDir, "tsconfig.json");
-    let { filesFromConfig, options } = readAndParseConfigFile(configFilePath);
-    const scriptDir = callObject.TsScriptHomeFullDir;
-    let fileNames = UE.FileSystemOperation.GetFiles(scriptDir);
+function convertTArrayToJSArray(array) {
+    if (array.length === 0) {
+        return [];
+    }
+    let jsArray = [];
+    for (let i = 0; i < array.Num(); i++) {
+        jsArray.push(array.Get(i));
+    }
+    
+    return jsArray;
+}
 
+function compile(callObject) {
+    if (!callObject) {
+        console.error("callObject is null");
+        return;
+    }
+
+    let customSystem = getFileOptionSystem(callObject);
+
+    const configFilePath = tsi.combinePaths(callObject.TsProjectDir, "tsconfig.json");
+    let { filesFromConfig, options } = readAndParseConfigFile(customSystem, configFilePath);
+    const scriptDir = callObject.TsScriptHomeFullDir;
+    let fileNames = UE.FileSystemOperation.GetFilesRecursively(scriptDir);
+    fileNames = convertTArrayToJSArray(fileNames);
+    if (fileNames.length === 0) {
+        console.warn("Not found any script file, give up compiling")
+    }
     console.log("start compile..", JSON.stringify({ fileNames: fileNames, options: options }));
     const fileVersions = {};
     let beginTime = new Date().getTime();
@@ -168,6 +158,10 @@ function compile() {
     console.log("calc md5 using " + (new Date().getTime() - beginTime) + "ms");
 
     const scriptSnapshotsCache = new Map();
+
+    function getDefaultLibLocation() {
+        return tsi.getDirectoryPath(tsi.normalizePath(customSystem.getExecutingFilePath()));
+    }
 
     const servicesHost = {
         getScriptFileNames: () => fileNames,
@@ -216,14 +210,15 @@ function compile() {
         getCurrentDirectory: customSystem.getCurrentDirectory,
         getCompilationSettings: () => options,
         getDefaultLibFileName: options => tsi.combinePaths(getDefaultLibLocation(), ts.getDefaultLibFileName(options)),
-        fileExists: ts.sys.fileExists,
-        readFile: ts.sys.readFile,
-        readDirectory: ts.sys.readDirectory,
-        directoryExists: ts.sys.directoryExists,
-        getDirectories: ts.sys.getDirectories,
+        fileExists: customSystem.fileExists,
+        readFile: customSystem.readFile,
+        readDirectory: customSystem.readDirectory,
+        directoryExists: customSystem.directoryExists,
+        getDirectories: customSystem.getDirectories,
     }
 
     let service = ts.createLanguageService(servicesHost, ts.createDocumentRegistry());
+    let getProgramErrorCount = 0;
     function getProgramFromService() {
         while (true) {
             try {
@@ -231,9 +226,22 @@ function compile() {
             }
             catch (e) {
                 console.error(e);
+                // Add a mechanism to exit after exceeding maximum error count
+                if (!getProgramErrorCount) {
+                    getProgramErrorCount = 1;
+                } else {
+                    getProgramErrorCount++;
+                }
+                
+                // Exit after 5 consecutive errors
+                if (getProgramErrorCount >= 10) {
+                    console.error("Exceeded maximum error count (5). Exiting compilation process.");
+                    throw new Error("Maximum error count exceeded during compilation");
+                }
             }
             //异常了重新创建Language Service，有可能不断失败,UE的文件读取偶尔会失败，失败后ts增量编译会不断的在tryReuseStructureFromOldProgram那断言失败
             service = ts.createLanguageService(servicesHost, ts.createDocumentRegistry());
+
         }
     }
 
@@ -242,10 +250,9 @@ function compile() {
     console.log("full compile using " + (new Date().getTime() - beginTime) + "ms");
     fileNames.forEach(fileName => {
         if (fileName.endsWith(".ts") || fileName.endsWith(".tsx")) {
-            compileInternal(fileName, program);
+            compileInternal(service, fileName, program);
         }
     });
 }
 
-compile();
-callObject.ReleaseJsEnv_EditorOnly();
+bridgeCaller.MainCaller.Bind(compile);

@@ -96,6 +96,27 @@ TArray<FString> UFileSystemOperation::GetFiles(FString Path)
     return Dirs;
 }
 
+TArray<FString> UFileSystemOperation::GetFilesRecursively(FString Dir)
+{
+    TArray<FString> Files;
+    if (!FPaths::DirectoryExists(Dir))
+    {
+        return Files;
+    }
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+    PlatformFile.FindFilesRecursively(Files, *Dir, TEXT(""));
+    
+    TArray<FString> OutFiles;
+    for (const FString& FileName : Files)
+    {
+        const FString AbsFilePath = FPaths::ConvertRelativePathToFull(FileName);
+        OutFiles.Add(AbsFilePath);
+    }
+    return OutFiles;
+}
+
+
 void UFileSystemOperation::PuertsNotifyChange(FString Path, FString Source)
 {
     IPuertsModule::Get().ReloadModule(*Path, Source);

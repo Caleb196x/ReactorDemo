@@ -40,6 +40,9 @@ class PUERTSEDITOR_API UFileSystemOperation : public UBlueprintFunctionLibrary
 
     UFUNCTION(BlueprintCallable, Category = "File")
     static TArray<FString> GetFiles(FString Path);
+
+	UFUNCTION(BlueprintCallable, Category = "File")
+	static TArray<FString> GetFilesRecursively(FString Dir);
 	
     UFUNCTION(BlueprintCallable, Category = "File")
     static void PuertsNotifyChange(FString Path, FString Source);

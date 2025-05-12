@@ -89,6 +89,12 @@ protected:
 	bool CheckLaunchJsScriptExist();
 	void StartTsScriptsMonitor();
 	FString GetLaunchJsScriptPath();
+	/**
+	 * Repeat the script function via the bridge caller,
+	 * You need to bind the function to the bridge caller in the script.
+	 * @param ScriptPath 
+	 */
+	void ExecuteScriptFunctionViaBridgeCaller(const FString& BindName, const FString& ScriptPath);
 	
 	void StopTsScriptsMonitor()
 	{
@@ -100,6 +106,8 @@ protected:
 
 private:
 	FString LaunchJsScriptPath;
+
+	FString JSScriptContentDir;
 	
 	TObjectPtr<UPanelSlot> RootSlot;
 	

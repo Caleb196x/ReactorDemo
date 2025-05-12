@@ -2,7 +2,7 @@
 #include "ReactorUIWidget.h"
 #include "JsBridgeCaller.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FJavaScriptMainCaller, UObject*, CoreWidget);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FJavaScriptMainCaller, UObject*, CoreObject);
 
 UCLASS(BlueprintType)
 class REACTORUMG_API UJsBridgeCaller :  public UObject

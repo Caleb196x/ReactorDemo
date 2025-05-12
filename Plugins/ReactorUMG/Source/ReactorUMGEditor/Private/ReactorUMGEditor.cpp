@@ -111,9 +111,11 @@ void CopyPredefinedTSProject()
 	if (FPaths::DirectoryExists(PredefineDir))
 	{
 		const FString TSProjectDir = FReactorUtils::GetTypeScriptHomeDir();
-		FReactorUtils::CreateDirectoryRecursive(TSProjectDir);
-
-		FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, false);
+		if (!FPaths::DirectoryExists(TSProjectDir))
+		{
+			FReactorUtils::CreateDirectoryRecursive(TSProjectDir);
+			FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, false);
+		}
 	}
 }
 

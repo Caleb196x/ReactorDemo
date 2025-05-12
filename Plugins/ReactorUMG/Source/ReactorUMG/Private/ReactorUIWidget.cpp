@@ -137,11 +137,4 @@ FString UReactorUIWidget::GetWidgetName()
 
 void UReactorUIWidget::RestartJsScript()
 {
-	TRACE_CPUPROFILER_EVENT_SCOPE(RestartJsScript)
-	TArray<TPair<FString, UObject*>> Arguments;
-	UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
-	Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
-	Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
-	
-	FJsEnvRuntime::GetInstance().RestartJsScripts(ScriptHomeDir, LaunchJsScriptPath, Arguments);
 }
