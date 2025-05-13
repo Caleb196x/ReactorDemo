@@ -1,5 +1,5 @@
 import { parseColor } from '../parsers/css_color_parser';
-import { parseFont, setupFontStyles } from '../parsers/css_font_parser';
+import { hasFontStyles, parseFont, setupFontStyles } from '../parsers/css_font_parser';
 import { convertLengthUnitToSlateUnit } from '../parsers/css_length_parser';
 import { getAllStyles } from '../parsers/cssstyle_parser';
 import { JSXConverter } from './jsx_converter';
@@ -11,6 +11,7 @@ export class TextConverter extends JSXConverter {
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
         this.textFontSetupHandlers = {
+            'color': this.setupFontColor,
             'fontColor': this.setupFontColor,
             'textAlign': this.setupTextAlignment,
             'textTransform': this.setupTextTransform,
@@ -54,19 +55,26 @@ export class TextConverter extends JSXConverter {
 
     private setupTextBlockProperties(textBlock: UE.TextBlock, props: any) {
         const styles = getAllStyles(this.typeName, props);
-        if (styles) {
-            setupFontStyles(textBlock, textBlock.Font, styles);
+        if (hasFontStyles(styles)) {
+            if (!textBlock.Font) {
+                const fontStyles = new UE.SlateFontInfo();
+                setupFontStyles(textBlock, fontStyles, styles);
+                textBlock.SetFont(fontStyles);
+            } else {
+                setupFontStyles(textBlock, textBlock.Font, styles);
+            }
+        }
 
-            for (const key in styles) {
-                if (this.textFontSetupHandlers[key]) {
-                    this.textFontSetupHandlers[key](textBlock, styles);
-                }
+        
+        for (const key in styles) {
+            if (this.textFontSetupHandlers[key]) {
+                this.textFontSetupHandlers[key](textBlock, styles);
             }
         }
     }
 
     createNativeWidget() {
-        const text = new UE.TextBlock();
+        const text = new UE.TextBlock(this.outer);
         this.setupTextBlockProperties(text, this.props);
         const content = this.props?.children || this.props?.text;
         if (content && typeof content === 'string') {

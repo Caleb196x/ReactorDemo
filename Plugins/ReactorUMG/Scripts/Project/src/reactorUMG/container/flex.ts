@@ -82,7 +82,7 @@ export class FlexConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const widget = this.isRow ? new UE.HorizontalBox() : new UE.VerticalBox();
+        const widget = this.isRow ? new UE.HorizontalBox(this.outer) : new UE.VerticalBox(this.outer);
         if (this.isReverse) {
             widget.FlowDirectionPreference = UE.EFlowDirectionPreference.RightToLeft;
             UE.UMGManager.SynchronizeWidgetProperties(widget);

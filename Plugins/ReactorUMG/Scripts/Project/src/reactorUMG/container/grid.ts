@@ -159,7 +159,7 @@ export class GridConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const widget = new UE.GridPanel();
+        const widget = new UE.GridPanel(this.outer);
         // todo@Caleb196x: 目前只处理gridTemplateColumns和gridTemplateRows两个参数，后续还需支持gridTemplate, gridTemplateAreas
         this.initGridShape(widget, this.containerStyle?.gridTemplateColumns, this.containerStyle?.gridTemplateRows);
         return widget;

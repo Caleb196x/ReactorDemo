@@ -10,7 +10,7 @@ export class OverlayConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const widget = new UE.Overlay();
+        const widget = new UE.Overlay(this.outer);
         return widget;
     }
 

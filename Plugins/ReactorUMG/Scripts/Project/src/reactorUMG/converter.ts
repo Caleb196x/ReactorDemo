@@ -42,7 +42,7 @@ export abstract class ElementConverter {
             "RenderTransformPivot": () => {return parseTransformPivot(styles?.transformOrigin)},
             "Translate": () => {return parseTranslate(styles?.translate)},
             "RenderOpacity": () => {if (styles?.opacity) return safeParseFloat(styles?.opacity); else return null;},
-            "Visibility": () => {return parseVisibility(styles?.visibility, changeProps?.hitTest)},
+            "Visibility": () => {return parseVisibility(styles?.visible || styles?.visibility, changeProps?.hitTest)},
             "ToolTipText": () => {return changeProps?.toolTip ? changeProps.toolTip : changeProps?.title ? changeProps.title : null},
             "bIsEnabled": () => {return changeProps?.disable ? !changeProps.disable : true},
             "bIsVolatile": () => {return changeProps?.volatil ? changeProps.volatil : false},

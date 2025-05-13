@@ -87,14 +87,9 @@ export class RiveConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const world = UE.UMGManager.GetWorld();
-        if (world) {
-            const Rive = UE.UMGManager.CreateWidget(world, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
-            this.initRiveProps(Rive, this.props);
-            return Rive;
-        }
-
-        return null;
+        const Rive = UE.UMGManager.CreateWidget(this.outer, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
+        this.initRiveProps(Rive, this.props);
+        return Rive;
     }
 
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {

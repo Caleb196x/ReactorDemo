@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
-import { convertMargin } from '../../parsers/css_margin_parser';
+import { convertMargin, convertToUEMargin } from '../../parsers/css_margin_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 import { parseColor } from '../../parsers/css_color_parser';
 
@@ -60,13 +60,15 @@ export class ComboBoxConverter extends UMGConverter {
                 comboBox.WidgetStyle[soundMap[key]] = {};
                 styleInit = true;
             } else if (paddingMap[key]) {
-                comboBox.WidgetStyle[paddingMap[key]] = convertMargin(comboBoxStyle);
+                const paddingVal = value as string;
+                comboBox.WidgetStyle[paddingMap[key]] = convertToUEMargin(comboBoxStyle, paddingVal, '', '', '', '');
                 styleInit = true;
             } else if (key === 'downArrowBackground') {
                 comboBox.WidgetStyle.ComboButtonStyle.DownArrowImage = parseBrush(value);
                 styleInit = true;
             } else if (key === 'downArrowPadding') {
-                comboBox.WidgetStyle.ComboButtonStyle.DownArrowPadding = convertMargin(comboBoxStyle);
+                const paddingVal = value as string;
+                comboBox.WidgetStyle.ComboButtonStyle.DownArrowPadding = convertToUEMargin(comboBoxStyle, paddingVal, '', '', '', '');
                 styleInit = true;
             } else if (key === 'downArrowAlign') {
                 switch (value) {
@@ -172,7 +174,7 @@ export class ComboBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const comboBox = new UE.ComboBoxString();
+        const comboBox = new UE.ComboBoxString(this.outer);
         const propsInit = this.setupProps(comboBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(comboBox);

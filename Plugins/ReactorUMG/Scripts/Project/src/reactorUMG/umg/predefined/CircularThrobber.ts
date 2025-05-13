@@ -30,7 +30,7 @@ export class CircularThrobberConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const circularThrobber = new UE.CircularThrobber();
+        const circularThrobber = new UE.CircularThrobber(this.outer);
 
         const propsInit = this.setupProps(circularThrobber, this.props);
         if (propsInit) {

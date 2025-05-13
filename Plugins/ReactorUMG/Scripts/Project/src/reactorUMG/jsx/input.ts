@@ -1,7 +1,7 @@
 import * as UE from 'ue';
 import { JSXConverter } from './jsx_converter';
 import { getAllStyles } from '../parsers/cssstyle_parser';
-import { setupFontStyles } from '../parsers/css_font_parser';
+import { hasFontStyles, parseFont, setupFontStyles } from '../parsers/css_font_parser';
 
 export class InputJSXConverter extends JSXConverter {
     private isCheckbox: boolean;
@@ -49,10 +49,14 @@ export class InputJSXConverter extends JSXConverter {
         
         // set editable text style for font, color, etc.
         const styles = getAllStyles(this.typeName, props);
-        if (styles) {
-            const fontStyles = new UE.SlateFontInfo();
-            setupFontStyles(widget, fontStyles, styles);
-            widget.SetFont(fontStyles);
+        if (hasFontStyles(styles)) {
+            if (!widget.WidgetStyle || !widget.WidgetStyle.Font) {
+                const fontStyles = new UE.SlateFontInfo();
+                setupFontStyles(widget, fontStyles, styles);
+                widget.SetFont(fontStyles);
+            } else {
+                setupFontStyles(widget, widget.WidgetStyle.Font, styles);
+            }
         }
     }
 
@@ -61,11 +65,11 @@ export class InputJSXConverter extends JSXConverter {
         let widget: UE.Widget;
 
         if (inputType === 'checkbox') {
-            widget = new UE.CheckBox();
+            widget = new UE.CheckBox(this.outer);
             this.setupCheckbox(widget as UE.CheckBox, this.props);
             this.isCheckbox = true;
         } else {
-            widget = new UE.EditableText();
+            widget = new UE.EditableText(this.outer);
             if (inputType === 'password') {
                 (widget as UE.EditableText).SetIsPassword(true);
             }

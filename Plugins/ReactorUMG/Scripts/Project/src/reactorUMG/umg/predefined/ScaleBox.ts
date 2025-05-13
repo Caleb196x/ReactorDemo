@@ -55,7 +55,7 @@ export class ScaleBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const scaleBox = new UE.ScaleBox();
+        const scaleBox = new UE.ScaleBox(this.outer);
         this.initScaleBoxProps(scaleBox, this.props);
         return scaleBox;
     }   

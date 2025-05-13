@@ -94,7 +94,7 @@ export class CheckBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const checkBox = new UE.CheckBox();
+        const checkBox = new UE.CheckBox(this.outer);
         const propsInit = this.setupProps(checkBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(checkBox);

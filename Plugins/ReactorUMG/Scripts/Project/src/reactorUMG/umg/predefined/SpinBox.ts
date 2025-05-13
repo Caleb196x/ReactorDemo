@@ -121,7 +121,7 @@ export class SpinBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const spinBox = new UE.SpinBox();
+        const spinBox = new UE.SpinBox(this.outer);
         const propsInit = this.initSpinBoxProps(spinBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(spinBox);

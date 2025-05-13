@@ -228,7 +228,7 @@ UPanelSlot* UReactorUMGWidgetBlueprint::AddChild(UWidget* Content)
 		NewObjectFlags |= RF_Transient;
 	}
 
-	UPanelSlot* PanelSlot = NewObject<UPanelSlot>(this, UPanelSlot::StaticClass(), FName("PanelSlot_ReactorUMGWidgetBlueprint"), NewObjectFlags);
+	UPanelSlot* PanelSlot = NewObject<UPanelSlot>(this->WidgetTree, UPanelSlot::StaticClass(), FName("PanelSlot_ReactorUMGWidgetBlueprint"), NewObjectFlags);
 	PanelSlot->Content = Content;
 
 	if (RootSlot)
@@ -386,17 +386,17 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 	// run in editor
 	SetupTsScripts();
 	
-	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([this](UObject* Asset)
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([](UObject* Asset)
 	{
 		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
 		UClass* AssetClass = Asset->GetClass();
 		if (UReactorUMGWidgetBlueprint* MyBlueprint = Cast<UReactorUMGWidgetBlueprint>(Asset))
 		{
-			StartTsScriptsMonitor();
+			MyBlueprint->StartTsScriptsMonitor();
 		}
 	});
 
-	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetClosedInEditor().AddLambda([this](
+	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetClosedInEditor().AddLambda([](
 		UObject* Asset, IAssetEditorInstance* AssetEditorInstance
 		)
 	{
@@ -404,7 +404,7 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 		UClass* AssetClass = Asset->GetClass();
 		if (UReactorUMGWidgetBlueprint* MyBlueprint = Cast<UReactorUMGWidgetBlueprint>(Asset))
 		{
-			StopTsScriptsMonitor();
+			MyBlueprint->StopTsScriptsMonitor();
 		}
 	});
 }

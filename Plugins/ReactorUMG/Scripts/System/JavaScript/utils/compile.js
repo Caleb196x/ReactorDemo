@@ -204,7 +204,7 @@ function compile(callObject) {
                 scriptSnapshotsInfo.version = fileVersions[fileName].version;
                 scriptSnapshotsInfo.scriptSnapshot = ts.ScriptSnapshot.fromString(sourceFile);
             }
-            console.log("getScriptSnapshot:"+ fileName + ",in:" + new Error().stack)
+            console.log("getScriptSnapshot:"+ fileName)
             return scriptSnapshotsInfo.scriptSnapshot;
         },
         getCurrentDirectory: customSystem.getCurrentDirectory,

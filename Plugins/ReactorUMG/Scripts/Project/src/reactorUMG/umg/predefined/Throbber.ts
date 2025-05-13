@@ -30,7 +30,7 @@ export class ThrobberConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const throbber = new UE.Throbber();
+        const throbber = new UE.Throbber(this.outer);
         const propsInit = this.initProps(throbber, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(throbber);

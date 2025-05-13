@@ -39,7 +39,7 @@ export class RidialSliderConverter extends SliderConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const radialSlider = new UE.RadialSlider();
+        const radialSlider = new UE.RadialSlider(this.outer);
         const propsInit = this.initRadialSliderProps(radialSlider, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(radialSlider);

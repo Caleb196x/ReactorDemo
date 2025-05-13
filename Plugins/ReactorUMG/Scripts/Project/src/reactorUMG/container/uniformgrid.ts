@@ -38,6 +38,7 @@ export class UniformGridConverter extends ContainerConverter {
         const alignment = parseWidgetSelfAlignment(childStyle);
         slot.SetHorizontalAlignment(alignment.horizontal);
         slot.SetVerticalAlignment(alignment.vertical);
+        this.initChildPadding(slot, childStyle);
 
         const row = childStyle?.gridRow || 0;
         const column = childStyle?.gridColumn || 0;
@@ -61,7 +62,7 @@ export class UniformGridConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const uniformGrid = new UE.UniformGridPanel();
+        const uniformGrid = new UE.UniformGridPanel(this.outer);
         this.initUniformGridProps(uniformGrid, this.props);
         return uniformGrid;
     }

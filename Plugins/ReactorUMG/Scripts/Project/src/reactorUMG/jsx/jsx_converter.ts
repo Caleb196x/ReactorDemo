@@ -34,7 +34,7 @@ export class JSXConverter extends ElementConverter {
             const Module = require(`./${type}`);
             if (Module) {
                 const ClassName = JsxElementConverters[type];
-                return new Module[ClassName](this.typeName, this.props);
+                return new Module[ClassName](this.typeName, this.props, this.outer);
             }
         }
 

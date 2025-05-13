@@ -67,7 +67,7 @@ export class ButtonConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const button = new UE.Button();
+        const button = new UE.Button(this.outer);
         this.setupButtonProps(button, this.props);
         return button;
     }

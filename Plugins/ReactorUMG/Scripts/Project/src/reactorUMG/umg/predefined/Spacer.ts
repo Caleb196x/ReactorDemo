@@ -7,7 +7,7 @@ export class SpacerConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const spacer = new UE.Spacer();
+        const spacer = new UE.Spacer(this.outer);
         const size = this.props?.size;
         if (size) {
             spacer.Size.X = size.x;

@@ -42,7 +42,7 @@ export class RetainerBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const retainerBox = new UE.RetainerBox();
+        const retainerBox = new UE.RetainerBox(this.outer);
         const propsInit = this.initRetainerBoxProps(retainerBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(retainerBox);

@@ -202,6 +202,7 @@ var global = global || (function () { return this; }());
             moduleName = normalize(moduleName);
 
             let forceReload = false;
+            // find the module from the local module cache
             if ((moduleName in localModuleCache)) {
                 let m = localModuleCache[moduleName];
                 if (m && !m.__forceReload) {
@@ -229,9 +230,13 @@ var global = global || (function () { return this; }());
             }
             
             let key = fullPath;
+            // find the module information from the global module cache
             if ((key in moduleCache) && !forceReload) {
-                localModuleCache[moduleName] = moduleCache[key];
-                return localModuleCache[moduleName].exports;
+                const module = moduleCache[key];
+                if (module && !module.__forceReload) {
+                    localModuleCache[moduleName] = module;
+                    return module.exports;
+                }
             }
 
             let m = {"exports":{}};
@@ -336,7 +341,7 @@ var global = global || (function () { return this; }());
             }
         }
         if (!reloaded && reloadModuleKey) {
-            console.warn(`reload not loaded module: ${reloadModuleKey}!`);
+            console.warn(`can not reload the unloaded module: ${reloadModuleKey}!`);
         }
     }
     

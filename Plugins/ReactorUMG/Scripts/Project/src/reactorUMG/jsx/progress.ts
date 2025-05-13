@@ -40,7 +40,7 @@ export class ProgressConverter extends JSXConverter {
     }
 
     createNativeWidget() {
-        const progress = new UE.ProgressBar();
+        const progress = new UE.ProgressBar(this.outer);
         this.initProgressBarStyle(progress);
 
         const value = this.props?.value || 0;

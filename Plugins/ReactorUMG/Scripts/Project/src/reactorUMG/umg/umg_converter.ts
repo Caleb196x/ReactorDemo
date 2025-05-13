@@ -51,12 +51,12 @@ export class UMGConverter extends ElementConverter {
             const Module = require(`./predefined/${typeName}`);
             if (Module) {
                 const ClassName = `${typeName}Converter`;
-                proxy = new Module[ClassName](this.typeName, this.props);
+                proxy = new Module[ClassName](this.typeName, this.props, this.outer);
             }
         } else {
             const NativeWidgetModule = require('./native_widget_converter');
             if (NativeWidgetModule) {
-                proxy = new NativeWidgetModule["NativeWidgetConverter"](this.typeName, this.props);
+                proxy = new NativeWidgetModule["NativeWidgetConverter"](this.typeName, this.props, this.outer);
             }
         }
 

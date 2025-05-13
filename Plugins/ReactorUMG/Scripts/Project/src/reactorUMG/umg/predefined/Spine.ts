@@ -70,7 +70,7 @@ export class SpineConverter extends UMGConverter {
     }
     
     createNativeWidget(): UE.Widget {
-        const spine = new UE.SpineWidget();
+        const spine = new UE.SpineWidget(this.outer);
         const propsInit = this.initSpineProps(spine, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(spine);

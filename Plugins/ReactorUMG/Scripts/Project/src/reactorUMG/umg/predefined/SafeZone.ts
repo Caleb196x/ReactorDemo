@@ -37,7 +37,7 @@ export class SafeZoneConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const safeZone = new UE.SafeZone();
+        const safeZone = new UE.SafeZone(this.outer);
         const propsInit = this.initSafeZoneProps(safeZone, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(safeZone);

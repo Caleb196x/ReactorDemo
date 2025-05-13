@@ -7,7 +7,7 @@ export class InvalidationBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const invalidationBox = new UE.InvalidationBox();
+        const invalidationBox = new UE.InvalidationBox(this.outer);
         const cache = this.props?.cache;
         if (cache) {
             invalidationBox.SetCanCache(cache);

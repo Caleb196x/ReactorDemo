@@ -84,7 +84,7 @@ export class TextAreaConverter extends JSXConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const textArea = new UE.MultiLineEditableText();
+        const textArea = new UE.MultiLineEditableText(this.outer);
         const propsInit = this.initTextAreaProps(textArea, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(textArea);

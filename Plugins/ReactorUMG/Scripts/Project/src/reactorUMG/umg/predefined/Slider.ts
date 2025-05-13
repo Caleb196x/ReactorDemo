@@ -123,7 +123,7 @@ export class SliderConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const slider = new UE.Slider();
+        const slider = new UE.Slider(this.outer);
         const propsInit = this.initProps(slider, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(slider);

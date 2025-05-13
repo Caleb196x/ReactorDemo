@@ -42,7 +42,7 @@ export class SizeBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const sizeBox = new UE.SizeBox();
+        const sizeBox = new UE.SizeBox(this.outer);
         const propsInit = this.initSizeBoxProps(sizeBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(sizeBox);

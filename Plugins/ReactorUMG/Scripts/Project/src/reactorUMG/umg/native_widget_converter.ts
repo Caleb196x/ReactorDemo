@@ -14,9 +14,9 @@ export class NativeWidgetConverter extends UMGConverter {
         const classPath = exports.lazyloadComponents[this.typeName];
         let widget: UE.Widget;
         if (classPath)  {
-            widget = UE.NewObject(UE.Class.Load(classPath)) as UE.Widget;
+            widget = UE.NewObject(UE.Class.Load(classPath), this.outer) as UE.Widget;
         } else {
-            widget = new UE[this.typeName]();
+            widget = new UE[this.typeName](this.outer);
         }
 
         return widget;

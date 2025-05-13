@@ -88,7 +88,7 @@ export class ProgressBarConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const progressBar = new UE.ProgressBar();
+        const progressBar = new UE.ProgressBar(this.outer);
         const propsInit = this.initProps(progressBar, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(progressBar);

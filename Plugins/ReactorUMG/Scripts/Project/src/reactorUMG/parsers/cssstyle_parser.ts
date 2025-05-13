@@ -53,7 +53,7 @@ export function getAllStyles(type: string, props: any): Record<string, any> {
     const classNameStyles = getStylesFromClassSelector(props?.className);
     const idStyle = getStyleFromIdSelector(props?.id);
     const typeStyle = getStyleFromTypeSelector(type);
-    const inlineStyles = props?.style;
+    const inlineStyles = props?.style || {};
     // When merging styles, properties from objects later in the spread order
     // will override properties from earlier objects if they have the same key.
     // This follows CSS specificity rules where:

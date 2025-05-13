@@ -46,11 +46,11 @@ export class ImageConverter extends JSXConverter {
     }
 
     createNativeWidget() {
-        const image = new UE.Image();
+        this.image = new UE.Image(this.outer);
 
         if (this.source) {
             ImageLoader.loadBrushImageObject(
-                image, this.source, __dirname, false, this.onLoad, this.onError
+                this.outer, this.source, __dirname, false, this.onLoad, this.onError
             );
         }
 
@@ -58,22 +58,22 @@ export class ImageConverter extends JSXConverter {
         if (this.width || this.height) {
             const actualWidth = this.width ? this.width : this.height;
             const actualHeight = this.height ? this.height : this.width;
-            image.Brush.ImageSize.X = actualWidth;
-            image.Brush.ImageSize.Y = actualHeight;
+            this.image.Brush.ImageSize.X = actualWidth;
+            this.image.Brush.ImageSize.Y = actualHeight;
             setupProps = true;
         }
 
         if (this.color) {
             const rgba = parseColor(this.color);
-            image.ColorAndOpacity.R = rgba.r;
-            image.ColorAndOpacity.G = rgba.g;
-            image.ColorAndOpacity.B = rgba.b;
-            image.ColorAndOpacity.A = rgba.a;
+            this.image.ColorAndOpacity.R = rgba.r;
+            this.image.ColorAndOpacity.G = rgba.g;
+            this.image.ColorAndOpacity.B = rgba.b;
+            this.image.ColorAndOpacity.A = rgba.a;
             setupProps = true;
         }
         
         if (this.onClick) {
-            image.OnMouseButtonDownEvent.Bind((MyGeometry, MouseEvent) => {
+            this.image.OnMouseButtonDownEvent.Bind((MyGeometry, MouseEvent) => {
                 this.onClick();
                 return new UE.EventReply();
             });
@@ -82,10 +82,10 @@ export class ImageConverter extends JSXConverter {
         }
 
         if (setupProps) {
-            UE.UMGManager.SynchronizeWidgetProperties(image);
+            UE.UMGManager.SynchronizeWidgetProperties(this.image);
         }
 
-        return image;
+        return this.image;
     }
     
     update(widget: UE.Widget, oldProps: any, changedProps: any) {

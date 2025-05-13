@@ -20,9 +20,9 @@ UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
     return ::CreateWidget<UReactorUIWidget>(World);
 }
 
-UUserWidget* UUMGManager::CreateWidget(UWorld* World, UClass* Class)
+UUserWidget* UUMGManager::CreateWidget(UWidgetTree* Outer, UClass* Class)
 {
-    return ::CreateWidget<UUserWidget>(World, Class);
+    return ::CreateWidget<UUserWidget>(Outer, Class);
 }
 
 void UUMGManager::SynchronizeWidgetProperties(UWidget* Widget)
