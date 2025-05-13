@@ -7,8 +7,8 @@ import { parseColor } from '../parsers/css_color_parser';
 export class ProgressConverter extends JSXConverter {
     private styles: any;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.styles = getAllStyles(typeName, props);
     }
 

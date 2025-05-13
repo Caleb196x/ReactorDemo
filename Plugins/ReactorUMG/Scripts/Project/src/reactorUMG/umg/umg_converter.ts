@@ -6,8 +6,8 @@ import { parseWidgetSelfAlignment } from '../parsers/alignment_parser';
 export class UMGConverter extends ElementConverter {
     private readonly predefinedWidgets: string[];
     private proxy: UMGConverter;
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
 
         this.predefinedWidgets = [
             'Button',

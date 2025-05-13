@@ -2,8 +2,8 @@ import { UMGConverter } from '../umg_converter';
 import * as UE from 'ue';
 
 export class SafeZoneConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private initSafeZoneProps(safeZone: UE.SafeZone, props: any): boolean {

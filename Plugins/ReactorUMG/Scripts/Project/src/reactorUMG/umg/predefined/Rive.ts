@@ -3,8 +3,8 @@ import { UMGConverter } from '../umg_converter';
 import { Rive } from 'reactorUMG';
 
 export class RiveConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private convertFitType(fitType: string) {

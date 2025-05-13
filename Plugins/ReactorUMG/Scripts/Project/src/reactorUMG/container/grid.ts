@@ -7,8 +7,8 @@ export class GridConverter extends ContainerConverter {
     private totalColumns: number = 0;
     private totalRows: number = 0;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
     // Helper method to parse grid template values
     private parseGridTemplate(template: string): Array<{type: string, value: number}> {

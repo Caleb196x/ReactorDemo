@@ -8,8 +8,8 @@ export class InputJSXConverter extends JSXConverter {
     private checkboxChangeCallback: (isChecked: boolean) => void;
     private textChangeCallback: (text: string) => void;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.isCheckbox = false;
     }
 

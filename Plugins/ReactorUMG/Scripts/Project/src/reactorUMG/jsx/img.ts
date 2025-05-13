@@ -16,8 +16,8 @@ export class ImageConverter extends JSXConverter {
     private onClick: ()=>void;
     private image: UE.Image | undefined;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.source = props?.src;
         this.width = props?.width;
         this.height = props?.height;

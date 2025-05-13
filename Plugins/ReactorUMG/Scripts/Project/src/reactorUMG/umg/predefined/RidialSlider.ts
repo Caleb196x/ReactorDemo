@@ -3,8 +3,8 @@ import { SliderConverter } from './Slider';
 import { parseColor } from '../../parsers/css_color_parser';
 
 export class RidialSliderConverter extends SliderConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private readonly valueConvertKeyMap: Record<string, string> = {

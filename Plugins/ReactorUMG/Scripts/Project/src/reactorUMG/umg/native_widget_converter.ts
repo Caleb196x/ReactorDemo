@@ -5,8 +5,8 @@ import * as puerts from 'puerts';
 export class NativeWidgetConverter extends UMGConverter {
     private callbackRecords: {[key: string] : () => void};
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.callbackRecords = {};
     }
 

@@ -7,8 +7,8 @@ export class FlexConverter extends ContainerConverter {
 
     private isRow: boolean;
     private isReverse: boolean;
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         [this.isRow, this.isReverse] = this.parseFlexDirection();
     }
 

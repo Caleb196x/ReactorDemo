@@ -8,8 +8,8 @@ import * as UE from 'ue';
 export class TextConverter extends JSXConverter {
     private readonly textFontSetupHandlers: Record<string, (textBlock: UE.TextBlock, prop: any) => void> = {};
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.textFontSetupHandlers = {
             'fontColor': this.setupFontColor,
             'textAlign': this.setupTextAlignment,

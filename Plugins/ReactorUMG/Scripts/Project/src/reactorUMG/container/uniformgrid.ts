@@ -5,8 +5,8 @@ import { ContainerConverter } from "./container_converter";
 import * as UE from "ue";
 
 export class UniformGridConverter extends ContainerConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private initUniformGridProps(uniformGrid: UE.UniformGridPanel, props: any) {

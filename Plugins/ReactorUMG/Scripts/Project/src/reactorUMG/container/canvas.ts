@@ -5,8 +5,8 @@ import * as UE from "ue";
 
 export class CanvasConverter extends ContainerConverter {
     private predefinedAnchors: Record<string, any>;
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.predefinedAnchors = {
             // 预设16种锚点
             'top left': {min_x: 0, min_y: 0, max_x: 0, max_y: 0},

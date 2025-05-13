@@ -5,8 +5,8 @@ import { parseBrush } from '../../parsers/brush_parser';
 import { parseColor } from '../../parsers/css_color_parser';
 
 export class ComboBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setupOptions(comboBox: UE.ComboBoxString, props: any) {

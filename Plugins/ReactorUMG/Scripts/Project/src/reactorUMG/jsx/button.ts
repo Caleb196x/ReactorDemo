@@ -26,8 +26,8 @@ export class ButtonConverter extends JSXConverter {
         onBlur: {event: 'OnUnhovered', handler: 'onBlur'}
     };
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setButtonTextColor(button: UE.Button, style: any) {

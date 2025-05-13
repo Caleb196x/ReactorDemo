@@ -6,10 +6,12 @@ import * as puerts from 'puerts';
 export abstract class ElementConverter {
     typeName: string;
     props: any;
+    outer: any;
 
-    constructor(typeName: string, props: any) {
+    constructor(typeName: string, props: any, outer: any) {
         this.typeName = typeName;
         this.props = props;
+        this.outer = outer;
     }
 
     abstract createNativeWidget(): UE.Widget;
@@ -73,23 +75,23 @@ const jsxComponentsKeywords = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'
 ];
 
-export function createElementConverter(typeName: string, props: any): ElementConverter {
+export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
     if (containerKeywords.includes(typeName)) {
         const Module = require(`./container/container_converter`);
         if (Module) {
-            return new Module["ContainerConverter"](typeName, props);
+            return new Module["ContainerConverter"](typeName, props, outer);
         }
     }
 
     if (jsxComponentsKeywords.includes(typeName)) {
         const Module = require(`./jsx/jsx_converter`);
         if (Module) {
-            return new Module["JSXConverter"](typeName, props);
+            return new Module["JSXConverter"](typeName, props, outer);
         }
     }
 
     const Module = require(`./umg/umg_converter`);
     if (Module) {
-        return new Module["UMGConverter"](typeName, props);
+        return new Module["UMGConverter"](typeName, props, outer);
     }
 }

@@ -2,8 +2,8 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 
 export class InvalidationBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     createNativeWidget(): UE.Widget {

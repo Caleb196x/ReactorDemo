@@ -24,8 +24,8 @@ export class ContainerConverter extends ElementConverter {
 
     private childConverters: Record<string, string>;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.containerStyle = getAllStyles(this.typeName, this.props);
         this.containerType = this.parseContainerType(this.typeName);
         this.externalSlot = null;

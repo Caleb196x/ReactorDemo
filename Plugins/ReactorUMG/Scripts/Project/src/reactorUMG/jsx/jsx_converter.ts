@@ -7,8 +7,8 @@ export class JSXConverter extends ElementConverter {
     private proxy: ElementConverter;
     widgetStyle: any;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
 
         this.proxy = null;
         this.widgetStyle = getAllStyles(this.typeName, this.props);
@@ -20,7 +20,8 @@ export class JSXConverter extends ElementConverter {
             "input": "InputJSXConverter",
             "img": "ImageConverter",
             "textarea": "TextAreaConverter",
-            "text": "TextConverter"
+            "text": "TextConverter",
+            "progress": "ProgressConverter"
         };
 
         let type = this.typeName;

@@ -4,8 +4,8 @@ import { parseColor } from '../../parsers/css_color_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 
 export class SliderConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     initSliderCommonProps(slider: UE.Slider | UE.RadialSlider, props: any): boolean {

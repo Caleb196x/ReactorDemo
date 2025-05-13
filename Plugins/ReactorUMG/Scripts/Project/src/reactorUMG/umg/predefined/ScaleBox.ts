@@ -2,8 +2,8 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 
 export class ScaleBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private parseStretch(stretch: string, scale: number) {

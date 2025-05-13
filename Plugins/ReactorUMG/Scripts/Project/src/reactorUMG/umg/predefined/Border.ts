@@ -6,8 +6,8 @@ import { parseColor } from '../../parsers/css_color_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class BorderConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setupProps(border: UE.Border, props: any): void {

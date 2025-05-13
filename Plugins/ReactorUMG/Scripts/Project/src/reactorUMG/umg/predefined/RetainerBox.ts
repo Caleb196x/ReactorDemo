@@ -2,8 +2,8 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 
 export class RetainerBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private initRetainerBoxProps(retainerBox: UE.RetainerBox, props: any): boolean {

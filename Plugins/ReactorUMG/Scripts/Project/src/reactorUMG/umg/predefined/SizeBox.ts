@@ -4,8 +4,8 @@ import { parseAspectRatio } from '../../parsers/css_length_parser';
 import { safeParseFloat } from "../../misc/utils";
 
 export class SizeBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private readonly keyMap: Record<string, string> = {
