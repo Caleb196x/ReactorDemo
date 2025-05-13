@@ -82,17 +82,17 @@ class UMGWidget {
 }
 
 class RootContainer {
-    public native: UE.ReactorUIWidget;
-    constructor(nativePtr: UE.ReactorUIWidget) {
+    public native: UE.ReactorUMGWidgetBlueprint;
+    constructor(nativePtr: UE.ReactorUMGWidgetBlueprint) {
         this.native = nativePtr;
     }
 
     appendChild(child: UMGWidget) {
-        this.native.AddChild(child.native);
+        this.native.AddChild_EditorOnly(child.native);
     }
 
     removeChild(child: UMGWidget) {
-        this.native.RemoveChild(child.native);
+        this.native.RemoveChild_EditorOnly(child.native);
     }
 }
 
@@ -107,9 +107,9 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         return new UMGWidget(type, props, rootContainer, hostContext);
     },
     createTextInstance (text: string) {
-        // return new UMGWidget("text", {text: text}, null, null);
+        return new UMGWidget("text", {text: text}, null, null);
         // return new UMGWidget("TextBlock", {Text: text}, null, null);
-        return null;
+        // return null;
     },
     finalizeInitialChildren () { return false; },
     getPublicInstance (instance: UMGWidget) { return instance.native; },
@@ -173,7 +173,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
 }
 
 const reconciler = Reconciler(hostConfig);
-let coreWidget: UE.ReactorUIWidget;
+let coreWidget: UE.ReactorUMGWidgetBlueprint;
 
 export const ReactorUMG = {
     render: function(reactElement: React.ReactNode) {
@@ -185,11 +185,11 @@ export const ReactorUMG = {
         reconciler.updateContainer(reactElement, container, null, null);
         return root;
     },
-    init: function(inCoreWidget: UE.ReactorUIWidget) {
+    init: function(inCoreWidget: UE.ReactorUMGWidgetBlueprint) {
         coreWidget = inCoreWidget;
     },
     release: function() {
-        coreWidget.ReleaseJsEnv()
+        coreWidget.ReleaseJsEnv_EditorOnly()
     }
 
 }

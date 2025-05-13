@@ -17,7 +17,7 @@
 #include "PEBlueprintAsset.generated.h"
 
 USTRUCT(BlueprintType)
-struct FPEGraphTerminalType
+struct FPEGraphTerminalType 
 {
     GENERATED_USTRUCT_BODY()
     FPEGraphTerminalType() : PinSubCategoryObject(nullptr)

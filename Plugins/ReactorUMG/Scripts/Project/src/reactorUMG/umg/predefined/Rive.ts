@@ -69,7 +69,7 @@ export class RiveConverter extends UMGConverter {
         const riveFile = props?.rive;
         if (riveFile) {
             const descriptor = new UE.RiveDescriptor();
-            descriptor.RiveFile = UE.UMGManager.LoadRiveFile(rive, riveFile);
+            descriptor.RiveFile = UE.UMGManager.LoadRiveFile(rive, riveFile, __dirname);
             descriptor.ArtboardName = artBoard;
             descriptor.ArtboardIndex = artBoardIndex;
             descriptor.FitType = this.convertFitType(fitType);

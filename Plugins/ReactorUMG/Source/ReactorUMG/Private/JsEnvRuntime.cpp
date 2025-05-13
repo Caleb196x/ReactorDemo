@@ -60,10 +60,10 @@ bool FJsEnvRuntime::StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, con
 
 bool FJsEnvRuntime::CheckScriptLegal(const FString& Script) const
 {
-	const FString JSContentDir = FPaths::ProjectContentDir() / TEXT("JavaScript");
-	FString FullPath = JSContentDir / Script;
+	// const FString JSContentDir = FPaths::ProjectContentDir() / TEXT("JavaScript");
+	const FString FullPath = Script.EndsWith(TEXT(".js")) ? Script : Script + TEXT(".js");
 	
-	if (!FPaths::FileExists(FullPath + TEXT(".js")))
+	if (!FPaths::FileExists(FullPath))
 	{
 		UE_LOG(LogReactorUMG, Error, TEXT("can't find script: %s"), *Script);
 		return false;
@@ -86,13 +86,13 @@ void FJsEnvRuntime::ReleaseJsEnv(TSharedPtr<puerts::FJsEnv> JsEnv)
 	}
 }
 
-void FJsEnvRuntime::RestartJsScripts(const FString& ScriptHomeDir, const FString& MainJsScript,  const TArray<TPair<FString, UObject*>>& Arguments)
+void FJsEnvRuntime::RestartJsScripts(
+	const FString& JSContentDir, const FString& ScriptHomeDir,
+	const FString& MainJsScript,  const TArray<TPair<FString, UObject*>>& Arguments
+	)
 {
-	const FString ProjectContentDir = FPaths::ProjectContentDir();
-	FString JSContentDir = FPaths::Combine(ProjectContentDir, TEXT("JavaScript"));
-	FString JsHomeDir = FPaths::Combine(ProjectContentDir, TEXT("JavaScript"), ScriptHomeDir);
-
-	if (ScriptHomeDir.IsEmpty() || !FPaths::DirectoryExists(JsHomeDir))
+	const FString JsScriptHomeDir = FPaths::Combine(JSContentDir, ScriptHomeDir);
+	if (JsScriptHomeDir.IsEmpty() || !FPaths::DirectoryExists(JsScriptHomeDir))
 	{
 		UE_LOG(LogReactorUMG, Warning, TEXT("Script home directory not exists."))
 		return;
@@ -100,7 +100,7 @@ void FJsEnvRuntime::RestartJsScripts(const FString& ScriptHomeDir, const FString
 
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 	TArray<FString> FileNames;
-	PlatformFile.FindFilesRecursively(FileNames, *JsHomeDir, TEXT(""));
+	PlatformFile.FindFilesRecursively(FileNames, *JsScriptHomeDir, TEXT(""));
 
 	TMap<FString, FString> ModuleNames;
 	for (FString& SourcePath : FileNames)
@@ -136,12 +136,30 @@ void FJsEnvRuntime::RestartJsScripts(const FString& ScriptHomeDir, const FString
 			}
 		}
 	}
-
+	
 	for (auto& Pair : JsRuntimeEnvPool)
 	{
 		auto Env = Pair.Key;
 		Env->Release();
 		Env->ForceReloadJsFile(MainJsScript);
 		Env->Start(MainJsScript, Arguments);
+		
+		/*
+		if (UWorld* World = GEditor->GetEditorWorldContext().World())
+		{
+			FTimerDelegate TimerDel;
+			FTimerHandle TimerHandle;
+			auto StartAfterSeconds = [Env, MainJsScript, Arguments]()
+			{
+				Env->Start(MainJsScript, Arguments);
+				Env->Release();
+			};
+			TimerDel.BindLambda(StartAfterSeconds);
+			World->GetTimerManager().SetTimer(TimerHandle, TimerDel, 1.0f, false);
+		}else
+		{
+			Env->Start(MainJsScript, Arguments);
+		}*/
+		
 	}
 }

@@ -1,6 +1,6 @@
 ﻿#include "ReactorUMGEditor.h"
 
-#include "ReactorUMGBlueprint.h"
+#include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorBlueprintCompilerContext.h"
 #include "ReactorBlueprintCompiler.h"
 #include "AssetToolsModule.h"
@@ -111,9 +111,11 @@ void CopyPredefinedTSProject()
 	if (FPaths::DirectoryExists(PredefineDir))
 	{
 		const FString TSProjectDir = FReactorUtils::GetTypeScriptHomeDir();
-		FReactorUtils::CreateDirectoryRecursive(TSProjectDir);
-
-		FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, false);
+		if (!FPaths::DirectoryExists(TSProjectDir))
+		{
+			FReactorUtils::CreateDirectoryRecursive(TSProjectDir);
+			FReactorUtils::CopyDirectoryTree(PredefineDir, TSProjectDir, false);
+		}
 	}
 }
 
@@ -169,7 +171,7 @@ void SetupAutoExecGenDTSCommand()
 
 TSharedPtr<FKismetCompilerContext> GetCompilerForReactorBlueprint(UBlueprint* Blueprint, FCompilerResultsLog& Results, const FKismetCompilerOptions& CompilerOptions)
 {
-	UReactorUMGBlueprint* NoesisBlueprint = CastChecked<UReactorUMGBlueprint>(Blueprint);
+	UReactorUMGWidgetBlueprint* NoesisBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Blueprint);
 	return TSharedPtr<FKismetCompilerContext>(new FReactorUMGBlueprintCompilerContext(NoesisBlueprint, Results, CompilerOptions));
 }
 
@@ -206,7 +208,7 @@ void FReactorUMGEditorModule::StartupModule()
 	ReactorUMGBlueprintCompiler = MakeShareable(new FReactorUMGBlueprintCompiler());
 	IKismetCompilerInterface& KismetCompilerModule = FModuleManager::LoadModuleChecked<IKismetCompilerInterface>("KismetCompiler");
 	KismetCompilerModule.GetCompilers().Insert(ReactorUMGBlueprintCompiler.Get(), 0); // Make sure our compiler goes before the WidgetBlueprint compiler
-	FKismetCompilerContext::RegisterCompilerForBP(UReactorUMGBlueprint::StaticClass(), &GetCompilerForReactorBlueprint);
+	FKismetCompilerContext::RegisterCompilerForBP(UReactorUMGWidgetBlueprint::StaticClass(), &GetCompilerForReactorBlueprint);
 	
 	CopyPredefinedSystemJSFiles();
 	ConsoleCommand = RegisterConsoleCommand();

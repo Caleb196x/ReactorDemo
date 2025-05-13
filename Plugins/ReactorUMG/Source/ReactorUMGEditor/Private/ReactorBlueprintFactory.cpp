@@ -1,6 +1,6 @@
 #include "ReactorBlueprintFactory.h"
 #include "Kismet2/KismetEditorUtilities.h"
-#include "ReactorUMGBlueprint.h"
+#include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorUIWidget.h"
 #include "ReactorUtils.h"
 
@@ -24,18 +24,17 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 
 	const FString ImportWidget = FString::Printf(TEXT("import { %s } from \"./%s\"\n"), *WidgetName, *WidgetName);
 	GeneratedTemplateOutput << ImportWidget << "\n";
-	GeneratedTemplateOutput << "let bridgeCaller = (argv.getByName(\"BridgeCaller\") as UE.JsBridgeCaller);\n";
-	GeneratedTemplateOutput << "let coreWidget = (argv.getByName(\"CoreWidget\") as UE.ReactorUIWidget);\n";
-	GeneratedTemplateOutput << "bridgeCaller.MainCaller.Bind(Launch);\n";
-	GeneratedTemplateOutput << "coreWidget.ReleaseJsEnv();\n";
-	GeneratedTemplateOutput << "function Launch(coreWidget: $Nullable<UE.ReactorUIWidget>) : Root {\n";
-	GeneratedTemplateOutput << "    ReactorUMG.init(coreWidget);\n";
+	GeneratedTemplateOutput << "let rootBlueprint = (argv.getByName(\"WidgetBlueprint\") as UE.ReactorUMGWidgetBlueprint);\n";
+	GeneratedTemplateOutput << "function Launch(rootBlueprint: $Nullable<UE.ReactorUMGWidgetBlueprint>) : Root {\n";
+	GeneratedTemplateOutput << "    ReactorUMG.init(rootBlueprint);\n";
 	GeneratedTemplateOutput << "    return ReactorUMG.render(\n";
 
 	const FString ComponentName = FString::Printf(TEXT("<%s/> \n"), *WidgetName);
 	GeneratedTemplateOutput << "       " << ComponentName;
 	GeneratedTemplateOutput << "    );\n";
 	GeneratedTemplateOutput << "}\n";
+	GeneratedTemplateOutput << "Launch(rootBlueprint);\n";
+	GeneratedTemplateOutput << "rootBlueprint.ReleaseJsEnv_EditorOnly();\n";
 	GeneratedTemplateOutput.Indent(4);
 	
 	GeneratedTemplateOutput.Prefix = TEXT(".tsx");
@@ -78,12 +77,14 @@ UReactorBlueprintFactory::UReactorBlueprintFactory(const FObjectInitializer& Obj
 	: Super(ObjectInitializer)
 {
 	bCreateNew = true;
-	SupportedClass = UReactorUMGBlueprint::StaticClass();
+	SupportedClass = UReactorUMGWidgetBlueprint::StaticClass();
 	ParentClass = UReactorUIWidget::StaticClass();
 }
 
 UObject* UReactorBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* Parent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
 {
+	// TODO@Caleb196x: 检查用于是否安装yarn, tsc, npm等必须依赖环境，否则禁止创建ReactorUMG蓝图类，并给出安装提示
+	
 	if ((ParentClass == NULL) || !FKismetEditorUtilities::CanCreateBlueprintOfClass(ParentClass) || !ParentClass->IsChildOf(UReactorUIWidget::StaticClass()))
 	{
 		FFormatNamedArguments Args;
@@ -100,7 +101,7 @@ UObject* UReactorBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* Pare
 	TemplateScriptCreator Generator(TsScriptHomeFullDir, WidgetName);
 	Generator.GenerateTemplateLaunchScripts();
 	
-	return CastChecked<UReactorUMGBlueprint>(FKismetEditorUtilities::CreateBlueprint(ParentClass, Parent, Name, BPTYPE_Normal,
-		UReactorUMGBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(),
+	return CastChecked<UReactorUMGWidgetBlueprint>(FKismetEditorUtilities::CreateBlueprint(ParentClass, Parent, Name, BPTYPE_Normal,
+		UReactorUMGWidgetBlueprint::StaticClass(), UBlueprintGeneratedClass::StaticClass(),
 		"ReactorBlueprintFactory"));
 }

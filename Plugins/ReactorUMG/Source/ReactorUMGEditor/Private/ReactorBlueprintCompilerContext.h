@@ -9,7 +9,7 @@ protected:
 	typedef FWidgetBlueprintCompilerContext Super;
 
 public:
-	FReactorUMGBlueprintCompilerContext(class UReactorUMGBlueprint* SourceBlueprint,
+	FReactorUMGBlueprintCompilerContext(class UReactorUMGWidgetBlueprint* SourceBlueprint,
 		FCompilerResultsLog& InMessageLog, const FKismetCompilerOptions& InCompilerOptions);
 	virtual ~FReactorUMGBlueprintCompilerContext();
 

@@ -17,7 +17,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(
 class FDirectoryMonitor
 {
 public:
-	FDirectoryMonitor() {}
+	FDirectoryMonitor() : bIsWatching(false) {}
 	~FDirectoryMonitor() {}
 
 	FDirectoryMonitorCallback& OnDirectoryChanged() { return OnChanged; }
@@ -31,6 +31,8 @@ private:
 	FDirectoryMonitorCallback OnChanged;
 
 	FString CurrentMonitorDirectory;
+	
+	bool bIsWatching;
 };
 
 UCLASS(BlueprintType)
@@ -61,6 +63,8 @@ public:
 	void ReloadJsScripts();
 
 	void ExecuteJsScripts();
+
+	void CompileTsScript();
 	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
@@ -84,20 +88,32 @@ protected:
 	void RegisterBlueprintDeleteHandle();
 	bool CheckLaunchJsScriptExist();
 	void StartTsScriptsMonitor();
+	FString GetLaunchJsScriptPath();
+	/**
+	 * Repeat the script function via the bridge caller,
+	 * You need to bind the function to the bridge caller in the script.
+	 * @param ScriptPath 
+	 */
+	void ExecuteScriptFunctionViaBridgeCaller(const FString& BindName, const FString& ScriptPath);
 	
 	void StopTsScriptsMonitor()
 	{
 		TsProjectMonitor.UnWatch();
+		TsProjectMonitor.OnDirectoryChanged().Remove(TsMonitorDelegateHandle);
 	}
 	
 	FDirectoryMonitor TsProjectMonitor;
 
 private:
 	FString LaunchJsScriptPath;
+
+	FString JSScriptContentDir;
 	
 	TObjectPtr<UPanelSlot> RootSlot;
 	
 	TSharedPtr<puerts::FJsEnv> JsEnv;
+
+	FDelegateHandle TsMonitorDelegateHandle;
 	
 	bool bTsScriptsChanged;
 };

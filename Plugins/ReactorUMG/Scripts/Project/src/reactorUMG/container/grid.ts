@@ -72,7 +72,7 @@ export class GridConverter extends ContainerConverter {
                     replacedValues.push({...values[nextNonAutoIndex]});
                 } else {
                     // No non-auto values ahead, use the previous non-auto value
-                    const prevNonAuto = replacedValues.findLast(v => v.type !== 'auto');
+                    const prevNonAuto = replacedValues.find(v => v.type !== 'auto');
                     if (prevNonAuto) {
                         replacedValues.push({...prevNonAuto});
                     } else {

@@ -12,7 +12,7 @@ public:
 
 	~FJsEnvRuntime();
 
-	TSharedPtr<puerts::FJsEnv> GetFreeJsEnv();
+	REACTORUMG_API TSharedPtr<puerts::FJsEnv> GetFreeJsEnv();
 		
 	REACTORUMG_API bool StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, const FString& Script, const TArray<TPair<FString, UObject*>>& Arguments) const;
 
@@ -24,7 +24,7 @@ public:
 	 * reload all javascript files under ScriptHomeDir
 	 * @param ScriptHomeDir Relative path to the plugin content directory
 	 */
-	REACTORUMG_API void RestartJsScripts(const FString& ScriptHomeDir, const FString& MainJsScript, const TArray<TPair<FString, UObject*>>& Arguments);
+	REACTORUMG_API void RestartJsScripts(const FString& JSContentDir, const FString& ScriptHomeDir, const FString& MainJsScript, const TArray<TPair<FString, UObject*>>& Arguments);
 
 private:
 	FJsEnvRuntime(int32 EnvPoolSize = 1, int32 DebugPort = 8086);

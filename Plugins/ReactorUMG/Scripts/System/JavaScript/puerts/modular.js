@@ -204,7 +204,7 @@ var global = global || (function () { return this; }());
             let forceReload = false;
             if ((moduleName in localModuleCache)) {
                 let m = localModuleCache[moduleName];
-                if (!m.__forceReload) {
+                if (m && !m.__forceReload) {
                     return localModuleCache[moduleName].exports;
                 } else {
                     forceReload = true;

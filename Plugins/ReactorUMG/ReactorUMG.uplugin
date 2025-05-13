@@ -23,7 +23,7 @@
 		{
 			"Name": "ReactorUMGEditor",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostDefault"
 		},
 		{
 			"Name": "WasmCore",

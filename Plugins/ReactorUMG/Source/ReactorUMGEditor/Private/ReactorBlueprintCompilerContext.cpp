@@ -1,9 +1,10 @@
 #include "ReactorBlueprintCompilerContext.h"
-#include "ReactorUMGBlueprint.h"
+
+#include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
 #include "Kismet2/KismetReinstanceUtilities.h"
 
-FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UReactorUMGBlueprint* SourceBlueprint,
+FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UReactorUMGWidgetBlueprint* SourceBlueprint,
 	FCompilerResultsLog& InMessageLog, const FKismetCompilerOptions& InCompilerOptions)
 	: Super(SourceBlueprint, InMessageLog, InCompilerOptions)
 {
@@ -54,6 +55,11 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 	if (Class)
 	{
 		UE_LOG(LogTemp, Log, TEXT("FinishCompilingClass %s"), *Class->GetName())
+	}
+
+	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
+	{
+		WidgetBlueprint->SetupTsScripts(true, true);
 	}
 
 	// 在这里执行脚本并生成WidgetTree

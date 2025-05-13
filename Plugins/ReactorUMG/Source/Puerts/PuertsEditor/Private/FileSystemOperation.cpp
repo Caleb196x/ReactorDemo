@@ -96,6 +96,27 @@ TArray<FString> UFileSystemOperation::GetFiles(FString Path)
     return Dirs;
 }
 
+TArray<FString> UFileSystemOperation::GetFilesRecursively(FString Dir)
+{
+    TArray<FString> Files;
+    if (!FPaths::DirectoryExists(Dir))
+    {
+        return Files;
+    }
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+    PlatformFile.FindFilesRecursively(Files, *Dir, TEXT(""));
+    
+    TArray<FString> OutFiles;
+    for (const FString& FileName : Files)
+    {
+        const FString AbsFilePath = FPaths::ConvertRelativePathToFull(FileName);
+        OutFiles.Add(AbsFilePath);
+    }
+    return OutFiles;
+}
+
+
 void UFileSystemOperation::PuertsNotifyChange(FString Path, FString Source)
 {
     IPuertsModule::Get().ReloadModule(*Path, Source);
@@ -106,6 +127,13 @@ FString UFileSystemOperation::FileMD5Hash(FString Path)
     FMD5Hash Hash = FMD5Hash::HashFile(*Path);
     return LexToString(Hash);
 }
+
+void UFileSystemOperation::CopyDirectory(FString Source, FString Dest, bool bOverride)
+{
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    PlatformFile.CopyDirectoryTree(*Dest, *Source, bOverride);
+}
+
 
 // TArray<FString> UFileSystemOperation::ReadDirectory(FString Path, TArray<FString> Extensions, TArray<FString> exclude, int32
 // Depth)

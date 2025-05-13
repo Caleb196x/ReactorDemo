@@ -5,6 +5,14 @@
 #include "HAL/PlatformFilemanager.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Misc/Paths.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
+	#include <shellapi.h>
+	#include <ShlObj.h>
+	#include <LM.h>
+	#include <Psapi.h>
+	#include <TlHelp32.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#include "Windows/WindowsPlatformMisc.h"
 
 bool FReactorUtils::CopyDirectoryRecursive(const FString& SrcDir, const FString& DestDir, const TArray<FString>& SkipExistFiles)
 {
@@ -49,6 +57,31 @@ bool FReactorUtils::CopyDirectoryRecursive(const FString& SrcDir, const FString&
 	}
 
 	return true;
+}
+
+void FReactorUtils::CopyFile(const FString& SrcFile, const FString& DestFile)
+{
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	const FString DestDir = FPaths::GetPath(DestFile);
+	if (!PlatformFile.DirectoryExists(*DestDir))
+	{
+		PlatformFile.CreateDirectoryTree(*DestDir);
+	}
+
+	if (!PlatformFile.CopyFile(*DestFile, *SrcFile))
+	{ 
+		UE_LOG(LogReactorUMG, Warning, TEXT("Failed to copy file: %s"), *SrcFile);
+	}
+}
+
+void FReactorUtils::DeleteFile(const FString& FilePath)
+{
+	if (FPaths::FileExists(FilePath))
+	{
+		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+		PlatformFile.DeleteFile(*FilePath);
+	}
 }
 
 bool FReactorUtils::DeleteDirectoryRecursive(const FString& DirPath)
@@ -197,27 +230,37 @@ bool FReactorUtils::RunCommandWithProcess(const FString& Command, const FString&
 	}
 	
 	SlowTask->MakeDialog();
-	const FString WorkDirectory = WorkDir;
+	const FString WorkDirectory = FPaths::ConvertRelativePathToFull(WorkDir);
 	const int32 TotalAmountOfWorks = 20;
 	
-	FProcHandle ProcessHandle;
 	void* ReadPipe = nullptr;
 	void* WritePipe = nullptr;
 	verify(FPlatformProcess::CreatePipe(ReadPipe, WritePipe));
+
+	FString CommandLine = Command;
+#if PLATFORM_WINDOWS
+	CommandLine = TEXT("C:/Users/liumi/AppData/Roaming/npm/yarn.cmd build");
+#else
+	CommandLine = TEXT("/bin/bash -c ") + Command;
+#endif
 	
 	const FString Arguments = TEXT("");
 	uint32 ProcessID;
-	const bool bLaunchDetached = false;
-	const bool bLaunchHidden = true;
-	const bool bLaunchReallyHidden = true;
-	ProcessHandle = FPlatformProcess::CreateProc(*Command, *Arguments, bLaunchDetached,
-		bLaunchHidden, bLaunchReallyHidden, &ProcessID, 0, *WorkDirectory, WritePipe);
+	FProcHandle ProcessHandle = FPlatformProcess::CreateProc(*CommandLine, *Arguments, false,
+		false, false, &ProcessID, 0, *WorkDirectory, WritePipe);
+
+	if (!ProcessHandle.Get() || ProcessID == 0)
+	{
+		UE_LOG(LogReactorUMG, Error, TEXT("Create process failed: %s"), *Command);
+		FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
+		return false;
+	}
 
 	FString LogOutBuffer;
 	while (FPlatformProcess::IsProcRunning(ProcessHandle))
 	{
 		if (SlowTask->ShouldCancel() || GEditor->GetMapBuildCancelled())
-		{
+		{ 
 			FPlatformProcess::TerminateProc(ProcessHandle);
 			break;
 		}
@@ -293,11 +336,16 @@ FString FReactorUtils::GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir)
 		const TSharedPtr<FJsonObject>* CompileOptObject;
 		if (JsonObject->TryGetObjectField(TEXT("compilerOptions"), CompileOptObject))
 		{
-			const TSharedPtr<FJsonValue> OutDirValue = JsonObject->TryGetField(TEXT("outDir"));
-			if (OutDirValue)
+			if (*CompileOptObject)
 			{
-				Result = OutDirValue->AsString();
+				const TSharedPtr<FJsonValue> OutDirValue = (*CompileOptObject)->TryGetField(TEXT("outDir"));
+				if (OutDirValue)
+				{
+					FString OutDir = OutDirValue->AsString();
+					Result = FPaths::ConvertRelativePathToFull(FPaths::Combine(ProjectDir, OutDir));
+				}
 			}
+
 		}
 	}
 	
