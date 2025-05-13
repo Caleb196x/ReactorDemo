@@ -89,7 +89,7 @@ export function findChangedProps(oldProps: any, newProps: any): any {
         // If both values are objects, recursively find changes
         if (typeof oldValue === 'object' && oldValue !== null && 
             typeof newValue === 'object' && newValue !== null) {
-            const nestedChanges = this.findChangedProps(oldValue, newValue);
+            const nestedChanges = findChangedProps(oldValue, newValue);
             
             // Only add to result if there are changes
             if (Object.keys(nestedChanges).length > 0) {
