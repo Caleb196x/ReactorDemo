@@ -3,8 +3,8 @@ import { UMGConverter } from '../umg_converter';
 import { Rive } from 'reactorUMG';
 
 export class RiveConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private convertFitType(fitType: string) {
@@ -87,14 +87,9 @@ export class RiveConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const world = UE.UMGManager.GetWorld();
-        if (world) {
-            const Rive = UE.UMGManager.CreateWidget(world, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
-            this.initRiveProps(Rive, this.props);
-            return Rive;
-        }
-
-        return null;
+        const Rive = UE.UMGManager.CreateWidget(this.outer, UE.RiveWidget.StaticClass()) as UE.RiveWidget;
+        this.initRiveProps(Rive, this.props);
+        return Rive;
     }
 
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {

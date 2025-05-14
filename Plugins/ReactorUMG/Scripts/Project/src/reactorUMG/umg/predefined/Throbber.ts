@@ -3,8 +3,8 @@ import { UMGConverter } from '../umg_converter';
 import { parseBrush } from '../../parsers/brush_parser';
 
 export class ThrobberConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
     private readonly valueConvertKeyMap: Record<string, string> = {
         'pieces': 'NumberOfPieces',
@@ -30,7 +30,7 @@ export class ThrobberConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const throbber = new UE.Throbber();
+        const throbber = new UE.Throbber(this.outer);
         const propsInit = this.initProps(throbber, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(throbber);

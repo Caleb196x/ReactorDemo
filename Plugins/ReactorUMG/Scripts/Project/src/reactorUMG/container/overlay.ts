@@ -5,12 +5,12 @@ import * as UE from "ue";
 
 export class OverlayConverter extends ContainerConverter {
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     createNativeWidget(): UE.Widget {
-        const widget = new UE.Overlay();
+        const widget = new UE.Overlay(this.outer);
         return widget;
     }
 

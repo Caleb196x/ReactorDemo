@@ -6,8 +6,8 @@ import { parseColor } from '../../parsers/css_color_parser';
 import { getAllStyles } from '../../parsers/cssstyle_parser';
 
 export class CheckBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setupCheckboxStyle(checkbox: UE.CheckBox, props: any): boolean {
@@ -94,7 +94,7 @@ export class CheckBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const checkBox = new UE.CheckBox();
+        const checkBox = new UE.CheckBox(this.outer);
         const propsInit = this.setupProps(checkBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(checkBox);

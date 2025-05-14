@@ -2,8 +2,8 @@ import * as UE from 'ue';
 import { JSXConverter } from './jsx_converter';
 
 export class TextAreaConverter extends JSXConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private readonly propertySetters: Record<string, (widget: UE.MultiLineEditableText, value: any) => void> = {
@@ -84,7 +84,7 @@ export class TextAreaConverter extends JSXConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const textArea = new UE.MultiLineEditableText();
+        const textArea = new UE.MultiLineEditableText(this.outer);
         const propsInit = this.initTextAreaProps(textArea, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(textArea);

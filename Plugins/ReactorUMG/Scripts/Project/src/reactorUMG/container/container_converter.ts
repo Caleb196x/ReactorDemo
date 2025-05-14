@@ -24,8 +24,8 @@ export class ContainerConverter extends ElementConverter {
 
     private childConverters: Record<string, string>;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.containerStyle = getAllStyles(this.typeName, this.props);
         this.containerType = this.parseContainerType(this.typeName);
         this.externalSlot = null;
@@ -44,7 +44,7 @@ export class ContainerConverter extends ElementConverter {
             const Module = require(`./${this.containerType}`);
             if (Module) {
                 const className = this.childConverters[this.containerType];
-                return new Module[className](this.typeName, this.props);
+                return new Module[className](this.typeName, this.props, this.outer);
             }
         }
 
@@ -76,7 +76,7 @@ export class ContainerConverter extends ElementConverter {
         }
 
         if (!wrapBoxWidget) {
-            wrapBoxWidget = new UE.WrapBox();
+            wrapBoxWidget = new UE.WrapBox(this.outer);
         }
         const wrapBox = wrapBoxWidget as UE.WrapBox;
         const flexDirection = style?.flexDirection;
@@ -138,7 +138,7 @@ export class ContainerConverter extends ElementConverter {
             
             let useBorder = false;  
             if (!borderWidget) {
-                borderWidget = new UE.Border();
+                borderWidget = new UE.Border(this.outer);
             }
             const border = borderWidget as UE.Border;
             if (parsedBackgroundProps?.image) {
@@ -190,7 +190,7 @@ export class ContainerConverter extends ElementConverter {
             return Widget;
         } else {
             if (!sizeBoxWidget) {
-                sizeBoxWidget = new UE.SizeBox();
+                sizeBoxWidget = new UE.SizeBox(this.outer);
             }
             const sizeBox = sizeBoxWidget as UE.SizeBox;
             if (width !== 'auto') {
@@ -244,7 +244,7 @@ export class ContainerConverter extends ElementConverter {
         const objectFit = style?.objectFit;
         if (objectFit) {
             if (!scaleBoxWidget) {
-                scaleBoxWidget = new UE.ScaleBox();
+                scaleBoxWidget = new UE.ScaleBox(this.outer);
             }
             const scaleBox = scaleBoxWidget as UE.ScaleBox;
             if (objectFit === 'contain') {

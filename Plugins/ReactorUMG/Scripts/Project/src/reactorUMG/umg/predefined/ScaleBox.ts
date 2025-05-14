@@ -2,8 +2,8 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 
 export class ScaleBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private parseStretch(stretch: string, scale: number) {
@@ -55,7 +55,7 @@ export class ScaleBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const scaleBox = new UE.ScaleBox();
+        const scaleBox = new UE.ScaleBox(this.outer);
         this.initScaleBoxProps(scaleBox, this.props);
         return scaleBox;
     }   

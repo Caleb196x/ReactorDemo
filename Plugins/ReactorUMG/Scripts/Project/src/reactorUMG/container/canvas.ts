@@ -1,12 +1,13 @@
 import { parseAspectRatio } from "../parsers/css_length_parser";
 import { convertLengthUnitToSlateUnit } from "../parsers/css_length_parser";
+import { getAllStyles } from "../parsers/cssstyle_parser";
 import { ContainerConverter } from "./container_converter";
 import * as UE from "ue";
 
 export class CanvasConverter extends ContainerConverter {
     private predefinedAnchors: Record<string, any>;
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.predefinedAnchors = {
             // 预设16种锚点
             'top left': {min_x: 0, min_y: 0, max_x: 0, max_y: 0},
@@ -42,7 +43,7 @@ export class CanvasConverter extends ContainerConverter {
     }
     
     createNativeWidget(): UE.Widget {
-        const widget = new UE.CanvasPanel();
+        const widget = new UE.CanvasPanel(this.outer);
         return widget;
     }
 
@@ -119,10 +120,12 @@ export class CanvasConverter extends ContainerConverter {
             canvasSlot.SetAutoSize(true);
         }
 
+        this.initChildPadding(canvasSlot, childStyle);
     }
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
         let canvasPanel = parent as UE.CanvasPanel;
         const canvasSlot = canvasPanel.AddChildToCanvas(child);
-        this.initCanvasSlot(canvasSlot, childProps);
+        const childStyle = getAllStyles(childTypeName, childProps);
+        this.initCanvasSlot(canvasSlot, childStyle);
     }
 }

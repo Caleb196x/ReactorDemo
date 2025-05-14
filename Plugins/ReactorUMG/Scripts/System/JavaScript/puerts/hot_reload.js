@@ -19,8 +19,17 @@ var global = global || (function () { return this; }());
     function messageHandler(str) {
         let msg = JSON.parse(str);
         if (msg.method === "Debugger.scriptParsed") {
-            parsedScript.set(msg.params.scriptId, msg.params.url);
-            parsedScript.set(msg.params.url, msg.params.scriptId);
+            if (parsedScript.has(msg.params.url)) { 
+                const scriptId = parsedScript.get(msg.params.url);
+                if (scriptId) {
+                    parsedScript.delete(scriptId);
+                }
+            }
+
+            if (msg.params.url) {
+                parsedScript.set(msg.params.scriptId, msg.params.url);
+                parsedScript.set(msg.params.url, msg.params.scriptId);
+            }
         } else if ( msg.method === "Runtime.executionContextCreated") {
             contextInfo = msg.params.context;
         } else if (typeof msg.id === "number") {

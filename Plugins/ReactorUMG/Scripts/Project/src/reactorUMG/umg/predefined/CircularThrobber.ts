@@ -3,8 +3,8 @@ import { UMGConverter } from '../umg_converter';
 import { parseBrush } from '../../parsers/brush_parser';
 
 export class CircularThrobberConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private valueConvertKeyMap: Record<string, string> = {
@@ -30,7 +30,7 @@ export class CircularThrobberConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const circularThrobber = new UE.CircularThrobber();
+        const circularThrobber = new UE.CircularThrobber(this.outer);
 
         const propsInit = this.setupProps(circularThrobber, this.props);
         if (propsInit) {

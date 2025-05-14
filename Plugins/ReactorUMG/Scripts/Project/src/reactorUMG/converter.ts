@@ -6,10 +6,47 @@ import * as puerts from 'puerts';
 export abstract class ElementConverter {
     typeName: string;
     props: any;
+    outer: any;
+    readonly PropMaps : Record<string, string>
+    readonly translators: Record<string, (styles: any, changeProps: any)=>any>
 
-    constructor(typeName: string, props: any) {
+    constructor(typeName: string, props: any, outer: any) {
         this.typeName = typeName;
         this.props = props;
+        this.outer = outer;
+
+        
+        this.PropMaps = {
+            "Cursor": "cursor",
+            "RenderTransform": "transform",
+            "RenderTransformPivot": "transformOrigin",
+            "Translate": "translate",
+            "RenderOpacity": "opacity",
+            "Visibility": "visibility",
+            "ToolTipText": "toolTip",
+            "bIsEnabled": "disable",
+            "bIsVolatile": "volatil",
+            "PixelSnapping": "pixelSnapping",
+            "bIsEnabledDelegate": "disableBinding",
+            "ToolTipTextDelegate": "toolTipBinding",
+            "VisibilityDelegate": "visibilityBinding",
+        }
+
+        this.translators = {
+            "Cursor": (styles: any, changeProps: any) => {return parseCursor(styles?.cursor)},
+            "RenderTransform": (styles: any, changeProps: any) => {return parseTransform(styles?.transform)},
+            "RenderTransformPivot": (styles: any, changeProps: any) => {return parseTransformPivot(styles?.transformOrigin)},
+            "Translate": (styles: any, changeProps: any) => {return parseTranslate(styles?.translate)},
+            "RenderOpacity": (styles: any, changeProps: any) => {if (styles?.opacity) return safeParseFloat(styles?.opacity); else return null;},
+            "Visibility": (styles: any, changeProps: any) => {return parseVisibility(styles?.visible || styles?.visibility, changeProps?.hitTest)},
+            "ToolTipText": (changeProps: any) => {return changeProps?.toolTip || changeProps?.title || null},
+            "bIsEnabled": (changeProps: any) => {return changeProps?.disable ? !changeProps.disable : true},
+            "bIsVolatile": (changeProps: any) => {return changeProps?.volatil ? changeProps.volatil : false},
+            "PixelSnapping": (changeProps: any) => {return changeProps?.pixelSnapping ? (changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled) : null},
+            "bIsEnabledDelegate": (changeProps: any) => {return changeProps?.disableBinding ? () => {return !changeProps.disableBinding()} : null},
+            "ToolTipTextDelegate": (changeProps: any) => {return changeProps?.toolTipBinding ? changeProps.toolTipBinding : null},
+            "VisibilityDelegate": (changeProps: any) => {return changeProps?.visibilityBinding ? () => {return parseVisibility(changeProps.visibilityBinding())} : null},
+        }
     }
 
     abstract createNativeWidget(): UE.Widget;
@@ -34,26 +71,11 @@ export abstract class ElementConverter {
     private initOrUpdateCommonProperties(widget: UE.Widget, changeProps: any) {
         const styles = getAllStyles(this.typeName, changeProps);
 
-        const translators: Record<string, ()=>any> = {
-            "Cursor": () => {return parseCursor(styles?.cursor)},
-            "RenderTransform": () => {return parseTransform(styles?.transform)},
-            "RenderTransformPivot": () => {return parseTransformPivot(styles?.transformOrigin)},
-            "Translate": () => {return parseTranslate(styles?.translate)},
-            "RenderOpacity": () => {if (styles?.opacity) return safeParseFloat(styles?.opacity); else return null;},
-            "Visibility": () => {return parseVisibility(styles?.visibility, changeProps?.hitTest)},
-            "ToolTipText": () => {return changeProps?.toolTip ? changeProps.toolTip : changeProps?.title ? changeProps.title : null},
-            "bIsEnabled": () => {return changeProps?.disable ? !changeProps.disable : true},
-            "bIsVolatile": () => {return changeProps?.volatil ? changeProps.volatil : false},
-            "PixelSnapping": () => {return changeProps?.pixelSnapping ? (changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled) : null},
-            "bIsEnabledDelegate": () => {return changeProps?.disableBinding ? () => {return !changeProps.disableBinding()} : null},
-            "ToolTipTextDelegate": () => {return changeProps?.toolTipBinding ? changeProps.toolTipBinding : null},
-            "VisibilityDelegate": () => {return changeProps?.visibilityBinding ? () => {return parseVisibility(changeProps.visibilityBinding())} : null},
-        }
-
         const widgetProps = {};
-        for (const key in translators) {
-            if (isKeyOfRecord(key, changeProps)) {
-                const value = translators[key]();
+        for (const key in this.translators) {
+            const propName = this.PropMaps[key];
+            if (isKeyOfRecord(propName, changeProps)) {
+                const value = this.translators[key](styles, changeProps);
                 if (value) {
                     widgetProps[key] = value;
                 }
@@ -73,23 +95,23 @@ const jsxComponentsKeywords = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'
 ];
 
-export function createElementConverter(typeName: string, props: any): ElementConverter {
+export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
     if (containerKeywords.includes(typeName)) {
         const Module = require(`./container/container_converter`);
         if (Module) {
-            return new Module["ContainerConverter"](typeName, props);
+            return new Module["ContainerConverter"](typeName, props, outer);
         }
     }
 
     if (jsxComponentsKeywords.includes(typeName)) {
         const Module = require(`./jsx/jsx_converter`);
         if (Module) {
-            return new Module["JSXConverter"](typeName, props);
+            return new Module["JSXConverter"](typeName, props, outer);
         }
     }
 
     const Module = require(`./umg/umg_converter`);
     if (Module) {
-        return new Module["UMGConverter"](typeName, props);
+        return new Module["UMGConverter"](typeName, props, outer);
     }
 }

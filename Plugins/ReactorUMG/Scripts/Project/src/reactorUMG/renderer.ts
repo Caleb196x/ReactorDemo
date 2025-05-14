@@ -51,7 +51,8 @@ class UMGWidget {
 
     init() {
         try {
-            this.converter = createElementConverter(this.typeName, this.props);
+            const WidgetTreeOuter = this.rootContainer.native.WidgetTree_EditorOnly;
+            this.converter = createElementConverter(this.typeName, this.props, WidgetTreeOuter);
             this.native = this.converter.creatWidget();
             if (this.native === null) {
                 console.error("Not supported widget: " + this.typeName);
@@ -106,10 +107,8 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     createInstance (type: string, props: any, rootContainer: RootContainer, hostContext: any, internalHandle: Reconciler.OpaqueHandle) { 
         return new UMGWidget(type, props, rootContainer, hostContext);
     },
-    createTextInstance (text: string) {
-        return new UMGWidget("text", {text: text}, null, null);
-        // return new UMGWidget("TextBlock", {Text: text}, null, null);
-        // return null;
+    createTextInstance (text: string, rootContainer: RootContainer, hostContext: any) {
+        return new UMGWidget("text", {text: text}, rootContainer, hostContext);
     },
     finalizeInitialChildren () { return false; },
     getPublicInstance (instance: UMGWidget) { return instance.native; },

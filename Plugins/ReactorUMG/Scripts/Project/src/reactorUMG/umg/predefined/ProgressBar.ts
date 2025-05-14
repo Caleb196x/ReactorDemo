@@ -4,8 +4,8 @@ import { parseBrush } from '../../parsers/brush_parser';
 import { parseColor } from '../../parsers/css_color_parser';
 
 export class ProgressBarConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private initProps(progressBar: UE.ProgressBar, props: any): boolean {
@@ -88,7 +88,7 @@ export class ProgressBarConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const progressBar = new UE.ProgressBar();
+        const progressBar = new UE.ProgressBar(this.outer);
         const propsInit = this.initProps(progressBar, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(progressBar);

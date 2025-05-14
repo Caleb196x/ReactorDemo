@@ -27,7 +27,12 @@ export function convertToUEMargin(style: any, margin: string, top: string, right
 
     if (!margin && !top && 
         !right && !bottom && !left) {
-        return new UE.Margin(0, 0, 0, 0);
+        return null;
+    }
+
+    // make sure margin is not a undefined
+    if (!margin) {
+        margin = "";
     }
 
     const marginValues = margin.split(' ').map(v => {

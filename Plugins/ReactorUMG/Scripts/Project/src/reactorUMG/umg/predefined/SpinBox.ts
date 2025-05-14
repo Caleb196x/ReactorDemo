@@ -5,8 +5,8 @@ import { parseBrush } from '../../parsers/brush_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class SpinBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private readonly valueConvertKeyMap: Record<string, string> = {
@@ -121,7 +121,7 @@ export class SpinBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const spinBox = new UE.SpinBox();
+        const spinBox = new UE.SpinBox(this.outer);
         const propsInit = this.initSpinBoxProps(spinBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(spinBox);

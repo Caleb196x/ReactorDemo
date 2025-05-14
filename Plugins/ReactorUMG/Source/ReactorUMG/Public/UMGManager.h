@@ -30,7 +30,7 @@ public:
     static UReactorUIWidget* CreateReactWidget(UWorld* World);
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
-    static UUserWidget* CreateWidget(UWorld* World, UClass* Class);
+    static UUserWidget* CreateWidget(UWidgetTree* Outer, UClass* Class);
 
     UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget|ReactorUMG")
     static void SynchronizeWidgetProperties(UWidget* Widget);

@@ -7,8 +7,8 @@ export class GridConverter extends ContainerConverter {
     private totalColumns: number = 0;
     private totalRows: number = 0;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
     // Helper method to parse grid template values
     private parseGridTemplate(template: string): Array<{type: string, value: number}> {
@@ -159,7 +159,7 @@ export class GridConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const widget = new UE.GridPanel();
+        const widget = new UE.GridPanel(this.outer);
         // todo@Caleb196x: 目前只处理gridTemplateColumns和gridTemplateRows两个参数，后续还需支持gridTemplate, gridTemplateAreas
         this.initGridShape(widget, this.containerStyle?.gridTemplateColumns, this.containerStyle?.gridTemplateRows);
         return widget;

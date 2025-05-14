@@ -7,8 +7,8 @@ import { parseColor } from '../parsers/css_color_parser';
 export class ProgressConverter extends JSXConverter {
     private styles: any;
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
         this.styles = getAllStyles(typeName, props);
     }
 
@@ -40,7 +40,7 @@ export class ProgressConverter extends JSXConverter {
     }
 
     createNativeWidget() {
-        const progress = new UE.ProgressBar();
+        const progress = new UE.ProgressBar(this.outer);
         this.initProgressBarStyle(progress);
 
         const value = this.props?.value || 0;

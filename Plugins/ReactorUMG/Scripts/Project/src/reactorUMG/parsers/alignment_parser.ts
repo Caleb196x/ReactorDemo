@@ -63,7 +63,10 @@ export function parseWidgetSelfAlignment(style: any) {
         }
     }
 
-    alignment.padding = convertPadding(style);
+    const padding = convertPadding(style);
+    if (padding) {
+        alignment.padding = padding;
+    }
 
     return alignment;
 }

@@ -4,8 +4,8 @@ import { parseAspectRatio } from '../../parsers/css_length_parser';
 import { safeParseFloat } from "../../misc/utils";
 
 export class SizeBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private readonly keyMap: Record<string, string> = {
@@ -42,7 +42,7 @@ export class SizeBoxConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const sizeBox = new UE.SizeBox();
+        const sizeBox = new UE.SizeBox(this.outer);
         const propsInit = this.initSizeBoxProps(sizeBox, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(sizeBox);

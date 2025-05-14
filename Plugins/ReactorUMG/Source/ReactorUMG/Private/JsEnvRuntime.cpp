@@ -133,6 +133,7 @@ void FJsEnvRuntime::RestartJsScripts(
 			{
 				auto Env = Pair.Key;
 				Env->ReloadModule(FName(*ModulePair.Key), FileContent);
+				Env->ForceReloadJsFile(ModulePair.Value);
 			}
 		}
 	}
@@ -143,23 +144,5 @@ void FJsEnvRuntime::RestartJsScripts(
 		Env->Release();
 		Env->ForceReloadJsFile(MainJsScript);
 		Env->Start(MainJsScript, Arguments);
-		
-		/*
-		if (UWorld* World = GEditor->GetEditorWorldContext().World())
-		{
-			FTimerDelegate TimerDel;
-			FTimerHandle TimerHandle;
-			auto StartAfterSeconds = [Env, MainJsScript, Arguments]()
-			{
-				Env->Start(MainJsScript, Arguments);
-				Env->Release();
-			};
-			TimerDel.BindLambda(StartAfterSeconds);
-			World->GetTimerManager().SetTimer(TimerHandle, TimerDel, 1.0f, false);
-		}else
-		{
-			Env->Start(MainJsScript, Arguments);
-		}*/
-		
 	}
 }

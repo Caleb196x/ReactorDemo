@@ -1,3 +1,4 @@
+import { isKeyOfRecord } from "../misc/utils";
 import { parseColor } from "./css_color_parser";
 import { convertLengthUnitToSlateUnit } from "./css_length_parser";
 import * as UE from 'ue';
@@ -14,8 +15,13 @@ export function parseFontSize(fontSize: any, style: any): number {
 }
 
 export function parseTextAlign(textAlign: string): UE.ETextJustify {
-    return textAlign === 'center' ? UE.ETextJustify.Center : textAlign === 'right'
-                                  ? UE.ETextJustify.Right : UE.ETextJustify.Left;
+    if (textAlign === 'center') {
+        return UE.ETextJustify.Center;
+    } else if (textAlign === 'right') {
+        return UE.ETextJustify.Right;
+    } else {
+        return UE.ETextJustify.Left;
+    }
 }
 
 export function parseFontFaceName(fontStyle: string, fontWeight: string) {
@@ -146,7 +152,7 @@ export function parseFont(style: any) {
     return result;
 }
 
-export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontStyle: any) 
+export function setupFontStyles(outer: UE.Object, font: UE.SlateFontInfo, fontStyle: any) 
 {
     if (fontStyle?.fontSize) {
         font.Size = parseFontSize(fontStyle?.fontSize, fontStyle);
@@ -159,6 +165,10 @@ export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontSty
     }
     if (fontStyle?.fontFamily) {
         const fontFamilyArray = parseFontFamily(fontStyle?.fontFamily);
+        if (fontFamilyArray.length === 0) {
+            fontFamilyArray.push('Roboto'); // default font family
+        }
+
         if (fontFamilyArray.includes('monospace')) {
             font.bForceMonospaced = true;
         }
@@ -177,13 +187,20 @@ export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontSty
         if (fontObject) {
             font.FontObject = fontObject;
         }
+    } else if (!font.FontObject) {
+        let familyNames = UE.NewArray(UE.BuiltinString);
+        familyNames.Add('Roboto');
+        font.FontObject = UE.UMGManager.FindFontFamily(familyNames, outer);
     }
+
     if (fontStyle?.letterSpacing) {
         font.LetterSpacing = convertLengthUnitToSlateUnit(fontStyle?.letterSpacing, fontStyle);
     }
+
     if (fontStyle?.wordSpacing) {
         font.LetterSpacing = convertLengthUnitToSlateUnit(fontStyle?.wordSpacing, fontStyle);
     }
+
     if (fontStyle?.outline) {
         const outlineResult = parseOutline(fontStyle?.outline, fontStyle);
         font.OutlineSettings.OutlineSize = outlineResult.width;
@@ -192,6 +209,7 @@ export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontSty
         font.OutlineSettings.OutlineColor.B = outlineResult.color.b;
         font.OutlineSettings.OutlineColor.A = outlineResult.color.a;
     }
+
     if (fontStyle?.outlineColor) {
         const outlineColor = parseColor(fontStyle?.outlineColor);
         font.OutlineSettings.OutlineColor.R = outlineColor.r;
@@ -199,7 +217,19 @@ export function setupFontStyles(outer: UE.Object,font: UE.SlateFontInfo, fontSty
         font.OutlineSettings.OutlineColor.B = outlineColor.b;
         font.OutlineSettings.OutlineColor.A = outlineColor.a;
     }
+
     if (fontStyle?.outlineWidth) {
         font.OutlineSettings.OutlineSize = convertLengthUnitToSlateUnit(fontStyle?.outlineWidth, fontStyle);
     }
+}
+
+export function hasFontStyles(style: any) {
+    const styleNames = ['fontSize', 'fontStyle', 'fontWeight', 'fontFamily', 
+        'letterSpacing', 'wordSpacing', 'outline', 'outlineColor', 'outlineWidth'];
+    for (const styleName of styleNames) {
+        if (isKeyOfRecord(styleName, style)) {
+            return true;
+        }
+    }
+    return false;
 }

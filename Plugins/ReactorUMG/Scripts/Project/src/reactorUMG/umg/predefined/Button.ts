@@ -8,8 +8,8 @@ import { parseColor } from '../../parsers/css_color_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class ButtonConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
     
     private setupButtonProps(button: UE.Button, props: any) {
@@ -67,7 +67,7 @@ export class ButtonConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const button = new UE.Button();
+        const button = new UE.Button(this.outer);
         this.setupButtonProps(button, this.props);
         return button;
     }

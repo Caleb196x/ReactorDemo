@@ -6,8 +6,8 @@ import { parseColor } from '../../parsers/css_color_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class BorderConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setupProps(border: UE.Border, props: any): void {
@@ -76,7 +76,10 @@ export class BorderConverter extends UMGConverter {
         const padding = props?.contentPadding || props?.contentMargin;
         if (padding) {
             const style = getAllStyles(this.typeName, props);
-            border.SetPadding(convertToUEMargin(style, padding, '', '', '', ''));
+            const pdd = convertToUEMargin(style, padding, '', '', '', '')
+            if (pdd) {
+                border.SetPadding(pdd);
+            }
         }
     }
 
@@ -126,7 +129,7 @@ export class BorderConverter extends UMGConverter {
     }
 
     createNativeWidget(): UE.Widget {
-        const border = new UE.Border();
+        const border = new UE.Border(this.outer);
         this.setupProps(border, this.props);
         const bindEvent = this.bindEvent(border, this.props);
         if (bindEvent) {

@@ -26,8 +26,8 @@ export class ButtonConverter extends JSXConverter {
         onBlur: {event: 'OnUnhovered', handler: 'onBlur'}
     };
 
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private setButtonTextColor(button: UE.Button, style: any) {
@@ -139,7 +139,7 @@ export class ButtonConverter extends JSXConverter {
     }
 
     createNativeWidget() {
-        const button = new UE.Button();
+        const button = new UE.Button(this.outer);
         this.setupButtonProps(button, this.props);
         return button;
     }

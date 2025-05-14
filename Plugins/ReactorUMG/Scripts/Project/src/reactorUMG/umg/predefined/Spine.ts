@@ -3,8 +3,8 @@ import { UMGConverter } from '../umg_converter';
 import * as UE from 'ue';
 
 export class SpineConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     private initSpineProps(spine: UE.SpineWidget, props: any): boolean {
@@ -70,7 +70,7 @@ export class SpineConverter extends UMGConverter {
     }
     
     createNativeWidget(): UE.Widget {
-        const spine = new UE.SpineWidget();
+        const spine = new UE.SpineWidget(this.outer);
         const propsInit = this.initSpineProps(spine, this.props);
         if (propsInit) {
             UE.UMGManager.SynchronizeWidgetProperties(spine);

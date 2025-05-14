@@ -2,12 +2,12 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 
 export class InvalidationBoxConverter extends UMGConverter {
-    constructor(typeName: string, props: any) {
-        super(typeName, props);
+    constructor(typeName: string, props: any, outer: any) {
+        super(typeName, props, outer);
     }
 
     createNativeWidget(): UE.Widget {
-        const invalidationBox = new UE.InvalidationBox();
+        const invalidationBox = new UE.InvalidationBox(this.outer);
         const cache = this.props?.cache;
         if (cache) {
             invalidationBox.SetCanCache(cache);
