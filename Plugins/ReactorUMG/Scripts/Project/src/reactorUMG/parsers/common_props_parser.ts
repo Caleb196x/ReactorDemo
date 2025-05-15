@@ -363,11 +363,14 @@ export function parseVisibility(visibility: string, hitTest?: string): UE.ESlate
     switch (visibility) {
         case 'visible':
             result = UE.ESlateVisibility.Visible;
+            break;
         case 'hidden':
             result = UE.ESlateVisibility.Hidden;
+            break;
         case 'collapse':
         case 'collapsed':
             result = UE.ESlateVisibility.Collapsed;
+            break;
         default:
             result = UE.ESlateVisibility.Visible;
     }

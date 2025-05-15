@@ -16,7 +16,7 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 {
 	const FString LaunchTsxFilePath = FPaths::Combine(ScriptHome, TEXT("launch.tsx"));
 	GeneratedTemplateOutput = {"", ""};
-	GeneratedTemplateOutput << "/** Note: Auto-generated code, please do not make any changes */ \n";
+	GeneratedTemplateOutput << "/** !!!Warning: Auto-generated code, please do not make any changes */ \n";
 	GeneratedTemplateOutput << "import * as UE from \"ue\";\n";
 	GeneratedTemplateOutput << "import { $Nullable, argv } from \"puerts\";\n";
 	GeneratedTemplateOutput << "import {ReactorUMG, Root} from \"reactorUMG\";\n";
@@ -24,17 +24,24 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 
 	const FString ImportWidget = FString::Printf(TEXT("import { %s } from \"./%s\"\n"), *WidgetName, *WidgetName);
 	GeneratedTemplateOutput << ImportWidget << "\n";
-	GeneratedTemplateOutput << "let rootBlueprint = (argv.getByName(\"WidgetBlueprint\") as UE.ReactorUMGWidgetBlueprint);\n";
-	GeneratedTemplateOutput << "function Launch(rootBlueprint: $Nullable<UE.ReactorUMGWidgetBlueprint>) : Root {\n";
-	GeneratedTemplateOutput << "    ReactorUMG.init(rootBlueprint);\n";
+	GeneratedTemplateOutput << "let bridgeCaller = (argv.getByName(\"ReactorUIWidget_BridgeCaller\") as UE.JsBridgeCaller);\n";
+	GeneratedTemplateOutput << "let container = (argv.getByName(\"WidgetTree\") as UE.WidgetTree);\n";
+	GeneratedTemplateOutput << "function Launch(container: $Nullable<UE.WidgetTree>) : Root {\n";
+	GeneratedTemplateOutput << "    ReactorUMG.init(container);\n";
 	GeneratedTemplateOutput << "    return ReactorUMG.render(\n";
 
 	const FString ComponentName = FString::Printf(TEXT("<%s/> \n"), *WidgetName);
 	GeneratedTemplateOutput << "       " << ComponentName;
 	GeneratedTemplateOutput << "    );\n";
+	GeneratedTemplateOutput << "}\n\n";
+	GeneratedTemplateOutput << "if (bridgeCaller && bridgeCaller.MainCaller) { \n";
+	GeneratedTemplateOutput << "	if (bridgeCaller.MainCaller.IsBound()) {\n";
+	GeneratedTemplateOutput << "		bridgeCaller.MainCaller.Unbind();\n";
+	GeneratedTemplateOutput << "	}\n";
+	GeneratedTemplateOutput << "    bridgeCaller.MainCaller.Bind(Launch);\n";
+	GeneratedTemplateOutput << "} else { \n";
+	GeneratedTemplateOutput << "	Launch(rootBlueprint);\n";
 	GeneratedTemplateOutput << "}\n";
-	GeneratedTemplateOutput << "Launch(rootBlueprint);\n";
-	GeneratedTemplateOutput << "rootBlueprint.ReleaseJsEnv_EditorOnly();\n";
 	GeneratedTemplateOutput.Indent(4);
 	
 	GeneratedTemplateOutput.Prefix = TEXT(".tsx");

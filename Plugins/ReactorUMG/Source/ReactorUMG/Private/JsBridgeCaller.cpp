@@ -48,14 +48,13 @@ void PrintSelfHolder(const TMap<FString, UJsBridgeCaller*>& SelfHolder)
 
 UJsBridgeCaller* UJsBridgeCaller::AddNewBridgeCaller(const FString& CallerName)
 {
-	UE_LOG(LogReactorUMG, Log, TEXT("Before add "))
+	UE_LOG(LogReactorUMG, Log, TEXT("Add New BridgeCaller: "))
 	PrintSelfHolder(SelfHolder);
 	if (!SelfHolder.Contains(CallerName))
 	{
 		UJsBridgeCaller* Caller = NewObject<UJsBridgeCaller>();
 		Caller->AddToRoot();
 		SelfHolder.Add(CallerName, Caller);
-		UE_LOG(LogReactorUMG, Log, TEXT("After add "))
 		PrintSelfHolder(SelfHolder);
 		return Caller;
 	}

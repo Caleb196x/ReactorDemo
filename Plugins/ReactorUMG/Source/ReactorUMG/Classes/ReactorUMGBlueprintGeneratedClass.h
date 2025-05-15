@@ -15,4 +15,7 @@ UCLASS()
 class REACTORUMG_API UReactorUMGBlueprintGeneratedClass : public UWidgetBlueprintGeneratedClass
 {
 	GENERATED_UCLASS_BODY()
+
+public:
+	FString MainScriptPath;
 };

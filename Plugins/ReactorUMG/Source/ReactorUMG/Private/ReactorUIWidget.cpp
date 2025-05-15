@@ -2,6 +2,7 @@
 #include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
+#include "ReactorUMGBlueprintGeneratedClass.h"
 #include "Blueprint/WidgetTree.h"
 
 UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
@@ -10,10 +11,55 @@ UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
 
 }
 
+bool UReactorUIWidget::Initialize()
+{
+	bool SuperRes = Super::Initialize();
+#if WITH_EDITOR
+	if (GIsPlayInEditorWorld)
+	{
+		SetNewWidgetTree();
+	}
+	return SuperRes;
+#else
+	if (IsRunningGame())
+	{
+		SetNewWidgetTree();
+	}
+	return SuperRes;
+#endif
+}
+
 void UReactorUIWidget::BeginDestroy()
 {
 	Super::BeginDestroy();
 }
+
+void UReactorUIWidget::SetNewWidgetTree()
+{
+	if (!bWidgetTreeInitialized && !HasAnyFlags(RF_ClassDefaultObject))
+	{
+		if (WidgetTree != nullptr)
+		{
+			UWidgetTree* OldWidgetTree = WidgetTree;
+			WidgetTree = NewObject<UWidgetTree>(this, TEXT("ReactorUMG_WidgetTree"), RF_Transient);
+			OldWidgetTree->MarkAsGarbage();
+			OldWidgetTree = nullptr;
+		}
+		
+		UReactorUMGBlueprintGeneratedClass* ReactorBPGC = Cast<UReactorUMGBlueprintGeneratedClass>(GetClass());
+		if (ReactorBPGC)
+		{
+			LaunchScriptPath = ReactorBPGC->MainScriptPath;
+			if (!LaunchScriptPath.IsEmpty())
+			{
+				RunScriptToInitWidgetTree();
+			}
+		}
+		
+		bWidgetTreeInitialized = true;
+	}
+}
+
 
 #if WITH_EDITOR
 const FText UReactorUIWidget::GetPaletteCategory()
@@ -22,25 +68,24 @@ const FText UReactorUIWidget::GetPaletteCategory()
 }
 #endif
 
-void UReactorUIWidget::init()
+void UReactorUIWidget::RunScriptToInitWidgetTree()
 {
-	if (!WidgetName.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(WidgetName))
+	if (!LaunchScriptPath.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(LaunchScriptPath))
 	{
 		TArray<TPair<FString, UObject*>> Arguments;
-		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(WidgetName);
-		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
-		Arguments.Add(TPair<FString, UObject*>(TEXT("CoreWidget"), this));
+		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(LaunchScriptPath);
+		Arguments.Add(TPair<FString, UObject*>(TEXT("ReactorUIWidget_BridgeCaller"), Caller));
+		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
 
 		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 		if (JsEnv)
 		{
-		
-			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
+			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchScriptPath, Arguments);
 			if (!Result)
 			{
 				UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
 				ReleaseJsEnv();
-				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchJsScriptPath);
+				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchScriptPath);
 			}
 		}
 		else
@@ -51,73 +96,13 @@ void UReactorUIWidget::init()
 		}
 	}
 	
-	const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(WidgetName, this);
+	const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(LaunchScriptPath, this->WidgetTree);
 	if (!DelegateRunResult)
 	{
-		UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+		UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
 		ReleaseJsEnv();
-		UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *WidgetName);
+		UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *LaunchScriptPath);
 	}
-}
-
-UPanelSlot* UReactorUIWidget::AddChild(UWidget* Content)
-{
-	if (Content == nullptr)
-	{
-		return nullptr;
-	}
-
-	if (RootSlot)
-	{
-		return nullptr;
-	}
-
-	Content->RemoveFromParent();
-
-	EObjectFlags NewObjectFlags = RF_Transactional;
-	if (HasAnyFlags(RF_Transient))
-	{
-		NewObjectFlags |= RF_Transient;
-	}
-
-	UPanelSlot* PanelSlot = NewObject<UPanelSlot>(this, UPanelSlot::StaticClass(), FName("PanelSlot_USmartUICoreWidget"), NewObjectFlags);
-	PanelSlot->Content = Content;
-
-	Content->Slot = PanelSlot;
-
-	RootSlot = PanelSlot;
-
-	WidgetTree->RootWidget = Content;
-
-	InvalidateLayoutAndVolatility();
-
-	return PanelSlot;
-}
-
-bool UReactorUIWidget::RemoveChild(UWidget* Content)
-{
-	if (Content == nullptr || RootSlot == nullptr || Content != RootSlot->Content)
-	{
-		return false;
-	}
-	UPanelSlot* PanelSlot = RootSlot;
-	RootSlot = nullptr;
-
-	if (PanelSlot->Content)
-	{
-		PanelSlot->Content->Slot = nullptr;
-	}
-
-	const bool bReleaseChildren = true;
-	PanelSlot->ReleaseSlateResources(bReleaseChildren);
-	PanelSlot->Parent = nullptr;
-	PanelSlot->Content = nullptr;
-
-	WidgetTree->RootWidget = nullptr;
-
-	InvalidateLayoutAndVolatility();
-
-	return true;
 }
 
 void UReactorUIWidget::ReleaseJsEnv()
@@ -133,8 +118,4 @@ void UReactorUIWidget::ReleaseJsEnv()
 FString UReactorUIWidget::GetWidgetName()
 {
 	return WidgetName;
-}
-
-void UReactorUIWidget::RestartJsScript()
-{
 }

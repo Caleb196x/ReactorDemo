@@ -42,13 +42,6 @@ TSharedPtr<puerts::FJsEnv> FJsEnvRuntime::GetFreeJsEnv()
 
 bool FJsEnvRuntime::StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, const FString& Script, const TArray<TPair<FString, UObject*>>& Arguments) const
 {
-	// 1. check js script legal
-	if (!CheckScriptLegal(Script))
-	{
-		return false;
-	}
-	
-	// 3. start js execute
 	if (JsEnv)
 	{
 		JsEnv->Start(Script, Arguments);

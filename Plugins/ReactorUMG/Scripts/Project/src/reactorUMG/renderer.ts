@@ -51,7 +51,7 @@ class UMGWidget {
 
     init() {
         try {
-            const WidgetTreeOuter = this.rootContainer.native.WidgetTree_EditorOnly;
+            const WidgetTreeOuter = this.rootContainer.widgetTree;
             this.converter = createElementConverter(this.typeName, this.props, WidgetTreeOuter);
             this.native = this.converter.creatWidget();
             if (this.native === null) {
@@ -83,17 +83,17 @@ class UMGWidget {
 }
 
 class RootContainer {
-    public native: UE.ReactorUMGWidgetBlueprint;
-    constructor(nativePtr: UE.ReactorUMGWidgetBlueprint) {
-        this.native = nativePtr;
+    public widgetTree: UE.WidgetTree;
+    constructor(nativePtr: UE.WidgetTree) {
+        this.widgetTree = nativePtr;
     }
 
     appendChild(child: UMGWidget) {
-        this.native.AddChild_EditorOnly(child.native);
+        UE.UMGManager.AddRootWidgetToWidgetTree(this.widgetTree, child.native);
     }
 
     removeChild(child: UMGWidget) {
-        this.native.RemoveChild_EditorOnly(child.native);
+        UE.UMGManager.RemoveRootWidgetFromWidgetTree(this.widgetTree, child.native);
     }
 }
 
@@ -172,23 +172,19 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
 }
 
 const reconciler = Reconciler(hostConfig);
-let coreWidget: UE.ReactorUMGWidgetBlueprint;
+let widgetTree: UE.WidgetTree;
 
 export const ReactorUMG = {
     render: function(reactElement: React.ReactNode) {
-        if (coreWidget == undefined) {
+        if (widgetTree == undefined) {
             throw new Error("init with ReactorUIWidget first!");
         }
-        let root = new RootContainer(coreWidget);
+        let root = new RootContainer(widgetTree);
         const container = reconciler.createContainer(root, 0, null, false, false, "", null, null);
         reconciler.updateContainer(reactElement, container, null, null);
         return root;
     },
-    init: function(inCoreWidget: UE.ReactorUMGWidgetBlueprint) {
-        coreWidget = inCoreWidget;
-    },
-    release: function() {
-        coreWidget.ReleaseJsEnv_EditorOnly()
+    init: function(inWidgetTree: UE.WidgetTree) {
+        widgetTree = inWidgetTree;
     }
-
 }

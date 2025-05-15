@@ -13,7 +13,7 @@
 #include "Engine/Font.h"
 #include "Engine/StreamableManager.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Kismet/GameplayStatics.h"
+#include "Blueprint/WidgetTree.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -27,6 +27,7 @@ UUserWidget* UUMGManager::CreateWidget(UWidgetTree* Outer, UClass* Class)
 
 void UUMGManager::SynchronizeWidgetProperties(UWidget* Widget)
 {
+    UE_LOG(LogReactorUMG, Display, TEXT("UUMGManager::SynchronizeWidgetProperties"))
     Widget->SynchronizeProperties();
 }
 
@@ -365,4 +366,65 @@ void UUMGManager::LoadImageTextureFromURL(const FString& Url, UObject* Context,
     HttpRequest->SetURL(Url);
     HttpRequest->SetVerb("GET");
     HttpRequest->ProcessRequest();
+}
+
+void UUMGManager::AddRootWidgetToWidgetTree(UWidgetTree* Container, UWidget* RootWidget)
+{
+    if (Container == nullptr || RootWidget == nullptr)
+    {
+        return;
+    }
+
+    if (!Container->IsA(UWidgetTree::StaticClass()))
+    {
+        return;
+    }
+
+    RootWidget->RemoveFromParent();
+
+    EObjectFlags NewObjectFlags = RF_Transactional;
+    if (Container->HasAnyFlags(RF_Transient))
+    {
+        NewObjectFlags |= RF_Transient;
+    }
+
+    UPanelSlot* PanelSlot = NewObject<UPanelSlot>(Container, UPanelSlot::StaticClass(), FName("PanelSlot_ReactorUMGWidgetBlueprint"), NewObjectFlags);
+    PanelSlot->Content = RootWidget;
+	
+    RootWidget->Slot = PanelSlot;
+	
+    if (Container)
+    {
+        Container->RootWidget = RootWidget;
+    }
+}
+
+void UUMGManager::RemoveRootWidgetFromWidgetTree(UWidgetTree* Container, UWidget* RootWidget)
+{
+    if (RootWidget == nullptr || Container == nullptr)
+    {
+        return;
+    }
+    
+    if (!Container->IsA(UWidgetTree::StaticClass()))
+    {
+        return;
+    }
+    
+    UPanelSlot* PanelSlot = RootWidget->Slot;
+    if (PanelSlot == nullptr)
+    {
+        return;
+    }
+
+    if (PanelSlot->Content)
+    {
+        PanelSlot->Content->Slot = nullptr;
+    }
+
+    PanelSlot->ReleaseSlateResources(true);
+    PanelSlot->Parent = nullptr;
+    PanelSlot->Content = nullptr;
+
+    Container->RootWidget = nullptr;
 }
