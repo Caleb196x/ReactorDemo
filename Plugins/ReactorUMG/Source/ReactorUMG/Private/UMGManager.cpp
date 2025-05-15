@@ -369,6 +369,7 @@ void UUMGManager::LoadImageTextureFromURL(const FString& Url, UObject* Context,
 
 void UUMGManager::AddRootWidgetToWidgetTree(UWidgetTree* Container, UWidget* RootWidget)
 {
+    // TODO@Caleb196x: 有内存释放问题，导致无法删除蓝图类
     if (Container == nullptr || RootWidget == nullptr)
     {
         return;
