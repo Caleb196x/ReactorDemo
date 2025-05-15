@@ -27,7 +27,6 @@ UUserWidget* UUMGManager::CreateWidget(UWidgetTree* Outer, UClass* Class)
 
 void UUMGManager::SynchronizeWidgetProperties(UWidget* Widget)
 {
-    UE_LOG(LogReactorUMG, Display, TEXT("UUMGManager::SynchronizeWidgetProperties"))
     Widget->SynchronizeProperties();
 }
 

@@ -6,9 +6,9 @@
 #include "Blueprint/WidgetTree.h"
 
 UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super(ObjectInitializer), CustomJSArg(nullptr), LaunchScriptPath(TEXT("")),
+		JsEnv(nullptr), bWidgetTreeInitialized(false)
 {
-
 }
 
 bool UReactorUIWidget::Initialize()
@@ -77,23 +77,31 @@ void UReactorUIWidget::RunScriptToInitWidgetTree()
 		Arguments.Add(TPair<FString, UObject*>(TEXT("ReactorUIWidget_BridgeCaller"), Caller));
 		Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
 
+		if (!CustomJSArg)
+		{
+			CustomJSArg = NewObject<UCustomJSArg>(this, FName("ReactorUIWidget_CustomArgs"), RF_Transient);
+		}
+		CustomJSArg->bIsUsingBridgeCaller = true;
+		Arguments.Add(TPair<FString, UObject*>(TEXT("CustomArgs"), CustomJSArg));
+		
 		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 		if (JsEnv)
 		{
 			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchScriptPath, Arguments);
 			if (!Result)
 			{
-				UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+				UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
 				ReleaseJsEnv();
 				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchScriptPath);
 			}
 		}
 		else
 		{
-			UJsBridgeCaller::RemoveBridgeCaller(WidgetName);
+			UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
 			UE_LOG(LogReactorUMG, Error, TEXT("Can not obtain any valid javascript runtime environment"))
 			return;
 		}
+		ReleaseJsEnv();
 	}
 	
 	const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(LaunchScriptPath, this->WidgetTree);
@@ -113,9 +121,4 @@ void UReactorUIWidget::ReleaseJsEnv()
 		FJsEnvRuntime::GetInstance().ReleaseJsEnv(JsEnv);
 		JsEnv = nullptr;
 	}
-}
-
-FString UReactorUIWidget::GetWidgetName()
-{
-	return WidgetName;
 }

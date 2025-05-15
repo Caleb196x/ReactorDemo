@@ -26,6 +26,7 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 	GeneratedTemplateOutput << ImportWidget << "\n";
 	GeneratedTemplateOutput << "let bridgeCaller = (argv.getByName(\"ReactorUIWidget_BridgeCaller\") as UE.JsBridgeCaller);\n";
 	GeneratedTemplateOutput << "let container = (argv.getByName(\"WidgetTree\") as UE.WidgetTree);\n";
+	GeneratedTemplateOutput << "let customArgs = (argv.getByName(\"CustomArgs\") as UE.CustomJSArg);\n";
 	GeneratedTemplateOutput << "function Launch(container: $Nullable<UE.WidgetTree>) : Root {\n";
 	GeneratedTemplateOutput << "    ReactorUMG.init(container);\n";
 	GeneratedTemplateOutput << "    return ReactorUMG.render(\n";
@@ -34,13 +35,13 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 	GeneratedTemplateOutput << "       " << ComponentName;
 	GeneratedTemplateOutput << "    );\n";
 	GeneratedTemplateOutput << "}\n\n";
-	GeneratedTemplateOutput << "if (bridgeCaller && bridgeCaller.MainCaller) { \n";
+	GeneratedTemplateOutput << "if (customArgs.bIsUsingBridgeCaller && bridgeCaller && bridgeCaller.MainCaller) { \n";
 	GeneratedTemplateOutput << "	if (bridgeCaller.MainCaller.IsBound()) {\n";
 	GeneratedTemplateOutput << "		bridgeCaller.MainCaller.Unbind();\n";
 	GeneratedTemplateOutput << "	}\n";
 	GeneratedTemplateOutput << "    bridgeCaller.MainCaller.Bind(Launch);\n";
 	GeneratedTemplateOutput << "} else { \n";
-	GeneratedTemplateOutput << "	Launch(rootBlueprint);\n";
+	GeneratedTemplateOutput << "	Launch(container);\n";
 	GeneratedTemplateOutput << "}\n";
 	GeneratedTemplateOutput.Indent(4);
 	
@@ -76,7 +77,7 @@ void TemplateScriptCreator::GenerateIndexTsFile(const FString& ScriptHome)
 	const FString Export = FString::Printf(TEXT("export * from \"./%s\"; \n"), *WidgetName);
 	GeneratedTemplateOutput << Export;
 
-	GeneratedTemplateOutput.Prefix = TEXT(".tsx");
+	GeneratedTemplateOutput.Prefix = TEXT(".ts");
 	FFileHelper::SaveStringToFile(GeneratedTemplateOutput.Buffer, *IndexFilePath, FFileHelper::EEncodingOptions::ForceUTF8);
 }
 

@@ -1,5 +1,6 @@
 ﻿#include "ReactorUMGWidgetBlueprint.h"
 
+#include "CustomJSArg.h"
 #include "DirectoryWatcherModule.h"
 #include "IDirectoryWatcher.h"
 #include "JsBridgeCaller.h"
@@ -89,7 +90,8 @@ void FDirectoryMonitor::UnWatch()
 }
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer), LaunchJsScriptFullPath(TEXT("")), RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
+	: Super(ObjectInitializer), CustomJSArg(nullptr), JSScriptContentDir(TEXT("")), LaunchJsScriptFullPath(TEXT("")),
+		RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
 {
 	if (this->HasAnyFlags(RF_ClassDefaultObject))
 	{
@@ -325,8 +327,15 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 
 void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 {
+	if (!CustomJSArg)
+	{
+		CustomJSArg = NewObject<UCustomJSArg>(this, FName("WidgetBlueprint_CustomArgs"), RF_Transient);
+	}
+	
+	CustomJSArg->bIsUsingBridgeCaller = false;
 	TArray<TPair<FString, UObject*>> Arguments;
 	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CustomArgs"), CustomJSArg));
 	JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptFullPath, Arguments);
 	ReleaseJsEnv();
@@ -334,9 +343,16 @@ void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 
 void UReactorUMGWidgetBlueprint::ReloadJsScripts()
 {
+	if (!CustomJSArg)
+	{
+		CustomJSArg = NewObject<UCustomJSArg>(this, FName("WidgetBlueprint_CustomArgs"), RF_Transient);
+	}
+	
+	CustomJSArg->bIsUsingBridgeCaller = false;
 	TRACE_CPUPROFILER_EVENT_SCOPE(ReloadJsScripts)
 	TArray<TPair<FString, UObject*>> Arguments;
-	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree)); 
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CustomArgs"), CustomJSArg));
 	FJsEnvRuntime::GetInstance().RestartJsScripts(JSScriptContentDir, TsScriptHomeRelativeDir, LaunchJsScriptFullPath, Arguments);
 }
 

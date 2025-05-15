@@ -7,6 +7,7 @@ import { WBPR_YUAN } from "./WBPR_YUAN"
 
 let container = (argv.getByName("WidgetTree") as UE.WidgetTree);
 let bridgeCaller = (argv.getByName("ReactorUIWidget_BridgeCaller") as UE.JsBridgeCaller);
+let customArgs = (argv.getByName("CustomArgs") as UE.CustomJSArg);
 
 function Launch(container: $Nullable<UE.WidgetTree>) : Root {
     if (!container) {
@@ -20,7 +21,7 @@ function Launch(container: $Nullable<UE.WidgetTree>) : Root {
     );
 }
 
-if (bridgeCaller?.MainCaller) {
+if (customArgs.bIsUsingBridgeCaller) {
     bridgeCaller.MainCaller.Bind(Launch);
     console.log("bridgeCaller finished");
 } else {

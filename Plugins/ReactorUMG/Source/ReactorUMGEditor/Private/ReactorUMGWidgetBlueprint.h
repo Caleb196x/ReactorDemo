@@ -3,7 +3,7 @@
 #include "JsEnv.h"
 #include "WidgetBlueprint.h"
 #include "Components/PanelSlot.h"
-
+#include "CustomJSArg.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -112,6 +112,8 @@ protected:
 	FDirectoryMonitor TsProjectMonitor;
 
 private:
+	TObjectPtr<UCustomJSArg> CustomJSArg;
+	
 	FString LaunchJsScriptFullPath;
 
 	FString JSScriptContentDir;
