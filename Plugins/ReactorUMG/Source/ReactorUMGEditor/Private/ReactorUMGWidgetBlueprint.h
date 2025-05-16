@@ -72,7 +72,10 @@ public:
 	void ExecuteJsScripts();
 
 	void CompileTsScript();
-	
+
+// Blueprint
+	virtual void BeginDestroy() override;
+//~Blueprint	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsProjectDir;

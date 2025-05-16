@@ -98,7 +98,7 @@ void FJsEnvRuntime::RestartJsScripts(
 	TMap<FString, FString> ModuleNames;
 	for (FString& SourcePath : FileNames)
 	{
-		if (SourcePath.EndsWith(TEXT(".js.map")))
+		if (!SourcePath.EndsWith(TEXT(".js")))
 		{
 			continue;
 		}

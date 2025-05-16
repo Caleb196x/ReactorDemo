@@ -223,6 +223,11 @@ bool UReactorUMGWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
 	return false;
 }
 
+void UReactorUMGWidgetBlueprint::BeginDestroy()
+{
+	UE_LOG(LogReactorUMG, Display, TEXT("UReactorUMGWidgetBlueprint::BeginDestroy"))
+}
+
 UPanelSlot* UReactorUMGWidgetBlueprint::AddChild(UWidget* Content)
 {
 	if (Content == nullptr)
@@ -455,7 +460,7 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 			if (this->MarkPackageDirty())
 			{
 				FBlueprintEditorUtils::MarkBlueprintAsModified(this);
-				UE_LOG(LogReactorUMG, Log, TEXT("Set package blueprint dirty"))
+				UE_LOG(LogReactorUMG, Log, TEXT("Set package reactorUMG blueprint dirty"))
 			}
 
 			auto GetDestFilePath = [this](const FString& SourceFilePath) -> FString
@@ -469,7 +474,6 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 				return SourceFilePath;
 			};
 
-			// TODO@Caleb196x: 拷贝变化的非脚本文件，删除编译结果目录下的同名文件
 			for (const auto& AddFile : Added)
 			{
 				if (!(AddFile.EndsWith(TEXT(".ts")) ||
@@ -505,8 +509,6 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 				FReactorUtils::DeleteFile(DestFilePath);
 			}
 		}
-
-		// TODO@Caleb196x: 此回调函数可能会被执行多次
 	});
 }
 
