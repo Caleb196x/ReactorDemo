@@ -1,5 +1,6 @@
 ﻿#include "ReactorUMGWidgetBlueprint.h"
 
+#include "CustomJSArg.h"
 #include "DirectoryWatcherModule.h"
 #include "IDirectoryWatcher.h"
 #include "JsBridgeCaller.h"
@@ -89,8 +90,16 @@ void FDirectoryMonitor::UnWatch()
 }
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer), LaunchJsScriptPath(TEXT("")), RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
+	: Super(ObjectInitializer), CustomJSArg(nullptr), JSScriptContentDir(TEXT("")), LaunchJsScriptFullPath(TEXT("")),
+		RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
 {
+	if (this->HasAnyFlags(RF_ClassDefaultObject))
+	{
+		// do nothing for default blueprint
+		return;
+	}
+
+	// TODO@Caleb196x: Widget可能同名的情况，需要加入路径进行区分
 	FString WidgetRelativePathName;
 
 	if (GetPackage())
@@ -100,14 +109,13 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	WidgetName = GetName();
 
 	TsProjectDir = FPaths::ConvertRelativePathToFull(FReactorUtils::GetTypeScriptHomeDir());
-	// TODO@Caleb196x: Widget可能同名的情况，需要加入路径进行区分
 	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);
 	TsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), WidgetName);
-	LaunchJsScriptPath = GetLaunchJsScriptPath();
 	JSScriptContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
+	LaunchJsScriptFullPath = GetLaunchJsScriptPath();
+	MainScriptPath = GetLaunchJsScriptPath(false);
 
 	RegisterBlueprintDeleteHandle();
-	// SetupTsScripts();
 }
 
 bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
@@ -161,6 +169,8 @@ void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
 
 	TsScriptHomeFullDir = NewTsScriptHomeFullDir;
 	TsScriptHomeRelativeDir = NewTsScriptHomeRelativeDir;
+	LaunchJsScriptFullPath = GetLaunchJsScriptPath();
+	MainScriptPath = GetLaunchJsScriptPath(false);
 }
 
 
@@ -211,6 +221,11 @@ UClass* UReactorUMGWidgetBlueprint::GetBlueprintClass() const
 bool UReactorUMGWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
 {
 	return false;
+}
+
+void UReactorUMGWidgetBlueprint::BeginDestroy()
+{
+	UE_LOG(LogReactorUMG, Display, TEXT("UReactorUMGWidgetBlueprint::BeginDestroy"))
 }
 
 UPanelSlot* UReactorUMGWidgetBlueprint::AddChild(UWidget* Content)
@@ -287,8 +302,6 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 {
 	FScopedSlowTask SlowTask(2);
 	FString CompileOutMessage, CompileErrorMessage;
-
-	// TODO@Caleb196x: 使用JS脚本执行编译TS脚本的工作
 	
 	if (CheckLaunchJsScriptExist())
 	{
@@ -319,19 +332,33 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 
 void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 {
+	if (!CustomJSArg)
+	{
+		CustomJSArg = NewObject<UCustomJSArg>(this, FName("WidgetBlueprint_CustomArgs"), RF_Transient);
+	}
+	
+	CustomJSArg->bIsUsingBridgeCaller = false;
 	TArray<TPair<FString, UObject*>> Arguments;
-	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CustomArgs"), CustomJSArg));
 	JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
-	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptPath, Arguments);
+	const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchJsScriptFullPath, Arguments);
 	ReleaseJsEnv();
 }
 
 void UReactorUMGWidgetBlueprint::ReloadJsScripts()
 {
+	if (!CustomJSArg)
+	{
+		CustomJSArg = NewObject<UCustomJSArg>(this, FName("WidgetBlueprint_CustomArgs"), RF_Transient);
+	}
+	
+	CustomJSArg->bIsUsingBridgeCaller = false;
 	TRACE_CPUPROFILER_EVENT_SCOPE(ReloadJsScripts)
 	TArray<TPair<FString, UObject*>> Arguments;
-	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetBlueprint"), this));
-	FJsEnvRuntime::GetInstance().RestartJsScripts(JSScriptContentDir, TsScriptHomeRelativeDir, LaunchJsScriptPath, Arguments);
+	Arguments.Add(TPair<FString, UObject*>(TEXT("WidgetTree"), this->WidgetTree));
+	Arguments.Add(TPair<FString, UObject*>(TEXT("CustomArgs"), CustomJSArg));
+	FJsEnvRuntime::GetInstance().RestartJsScripts(JSScriptContentDir, TsScriptHomeRelativeDir, LaunchJsScriptFullPath, Arguments);
 }
 
 void UReactorUMGWidgetBlueprint::CompileTsScript()
@@ -411,12 +438,12 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 
 bool UReactorUMGWidgetBlueprint::CheckLaunchJsScriptExist()
 {
-	if (LaunchJsScriptPath.IsEmpty())
+	if (LaunchJsScriptFullPath.IsEmpty())
 	{
-		LaunchJsScriptPath = GetLaunchJsScriptPath();
+		LaunchJsScriptFullPath = GetLaunchJsScriptPath();
 	}
 	
-	return FPaths::FileExists(LaunchJsScriptPath);
+	return FPaths::FileExists(LaunchJsScriptFullPath);
 }
 
 void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
@@ -433,7 +460,7 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 			if (this->MarkPackageDirty())
 			{
 				FBlueprintEditorUtils::MarkBlueprintAsModified(this);
-				UE_LOG(LogReactorUMG, Log, TEXT("Set package blueprint dirty"))
+				UE_LOG(LogReactorUMG, Log, TEXT("Set package reactorUMG blueprint dirty"))
 			}
 
 			auto GetDestFilePath = [this](const FString& SourceFilePath) -> FString
@@ -447,7 +474,6 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 				return SourceFilePath;
 			};
 
-			// TODO@Caleb196x: 拷贝变化的非脚本文件，删除编译结果目录下的同名文件
 			for (const auto& AddFile : Added)
 			{
 				if (!(AddFile.EndsWith(TEXT(".ts")) ||
@@ -483,18 +509,17 @@ void UReactorUMGWidgetBlueprint::StartTsScriptsMonitor()
 				FReactorUtils::DeleteFile(DestFilePath);
 			}
 		}
-
-		// TODO@Caleb196x: 此回调函数可能会被执行多次
 	});
 }
 
-FString UReactorUMGWidgetBlueprint::GetLaunchJsScriptPath()
+FString UReactorUMGWidgetBlueprint::GetLaunchJsScriptPath(bool bForceFullPath)
 {
-	if (!JSScriptContentDir.IsEmpty())
+	if (!JSScriptContentDir.IsEmpty() && bForceFullPath)
 	{
 		const FString ScriptPath = FPaths::Combine(JSScriptContentDir, TsScriptHomeRelativeDir, TEXT("launch.js"));
 		return ScriptPath;
+	} else
+	{
+		return FPaths::Combine( TsScriptHomeRelativeDir, TEXT("launch"));
 	}
-
-	return TEXT("");
 }

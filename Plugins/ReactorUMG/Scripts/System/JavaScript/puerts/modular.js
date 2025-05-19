@@ -334,10 +334,13 @@ var global = global || (function () { return this; }());
         }
         let reloaded = false;
         for(var moduleKey in moduleCache) {
-            if (!reloadModuleKey || (reloadModuleKey == moduleKey)) {
-                moduleCache[moduleKey].__forceReload = true;
-                reloaded = true;
-                if (reloadModuleKey) break;
+            if (!reloadModuleKey || (reloadModuleKey === moduleKey)) {
+                const module = moduleCache[moduleKey];
+                if (module) {
+                    module.__forceReload = true;
+                    reloaded = true;
+                    if (reloadModuleKey) break;
+                }
             }
         }
         if (!reloaded && reloadModuleKey) {

@@ -43,11 +43,7 @@ void FReactorUMGBlueprintCompilerContext::SpawnNewClass(const FString& NewClassN
 
 void FReactorUMGBlueprintCompilerContext::CopyTermDefaultsToDefaultObject(UObject* DefaultObject)
 {
-	/*if (USmartUICoreWidget* DefaultInstance = Cast<USmartUICoreWidget>(DefaultObject))
-	{
-		USmartUIBlueprint* SmartUIBlueprint = CastChecked<USmartUIBlueprint>(Blueprint);
-		DefaultInstance->WidgetName = SmartUIBlueprint->WidgetName;
-	}*/
+	
 }
 
 void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
@@ -60,11 +56,12 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
 	{
 		WidgetBlueprint->SetupTsScripts(true, true);
+		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
+		if (BPGClass)
+		{
+			BPGClass->MainScriptPath = WidgetBlueprint->MainScriptPath;
+		}
 	}
 
-	// 在这里执行脚本并生成WidgetTree
-	// 调用Blueprint的Compile函数执行脚本编译
-	//调用Blueprint的Execute函数执行脚本装填
-	
 	Super::FinishCompilingClass(Class);
 }

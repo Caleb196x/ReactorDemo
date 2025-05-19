@@ -74,9 +74,9 @@ export abstract class ElementConverter {
         const widgetProps = {};
         for (const key in this.translators) {
             const propName = this.PropMaps[key];
-            if (isKeyOfRecord(propName, changeProps)) {
+            if (isKeyOfRecord(propName, styles) || isKeyOfRecord(propName, changeProps)) {
                 const value = this.translators[key](styles, changeProps);
-                if (value) {
+                if (value !== null) {
                     widgetProps[key] = value;
                 }
             }

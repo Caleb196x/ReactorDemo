@@ -5,12 +5,26 @@ import {ReactorUMG, Root} from "reactorUMG";
 import * as React from "react";
 import { WBPR_YUAN } from "./WBPR_YUAN"
 
-let rootBlueprint = (argv.getByName("WidgetBlueprint") as UE.ReactorUMGWidgetBlueprint);
-function Launch(rootBlueprint: $Nullable<UE.ReactorUMGWidgetBlueprint>) : Root {
-    ReactorUMG.init(rootBlueprint);
+let container = (argv.getByName("WidgetTree") as UE.WidgetTree);
+let bridgeCaller = (argv.getByName("ReactorUIWidget_BridgeCaller") as UE.JsBridgeCaller);
+let customArgs = (argv.getByName("CustomArgs") as UE.CustomJSArg);
+
+function Launch(container: $Nullable<UE.WidgetTree>) : Root {
+    if (!container) {
+        console.error("container is null");
+        return null;
+    }
+
+    ReactorUMG.init(container);
     return ReactorUMG.render(
        <WBPR_YUAN/> 
     );
 }
-Launch(rootBlueprint);
-rootBlueprint.ReleaseJsEnv_EditorOnly();
+
+if (customArgs.bIsUsingBridgeCaller) {
+    bridgeCaller.MainCaller.Bind(Launch);
+    console.log("bridgeCaller finished");
+} else {
+    Launch(container);
+    console.log("Launch finished");
+}

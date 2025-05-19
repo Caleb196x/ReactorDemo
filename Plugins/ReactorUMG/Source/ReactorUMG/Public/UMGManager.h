@@ -75,6 +75,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static FString GetAbsoluteJSContentPath(const FString& RelativePath, const FString& DirName);
 
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static void AddRootWidgetToWidgetTree(UWidgetTree* Container, UWidget* Content);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static void RemoveRootWidgetFromWidgetTree(UWidgetTree* Container, UWidget* Content);
+
 private:
 	static FString ProcessAssetFilePath(const FString& RelativePath, const FString& DirName);
 	static void LoadImageBrushAsset(const FString& AssetPath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);

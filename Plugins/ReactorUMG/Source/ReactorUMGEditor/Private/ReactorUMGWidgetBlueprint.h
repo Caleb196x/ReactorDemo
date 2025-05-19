@@ -3,7 +3,7 @@
 #include "JsEnv.h"
 #include "WidgetBlueprint.h"
 #include "Components/PanelSlot.h"
-
+#include "CustomJSArg.h"
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -48,14 +48,21 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="ReactorUMGEditor|WidgetBlueprint")
 	void ReleaseJsEnv();
+
+	// The path of the main javascript file where the entry function is used to execute during the runtime,
+	// which is the relative path of the Content/JavaScript path.
+	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
+	FString MainScriptPath;
 	
 	FORCEINLINE FString GetWidgetName()
 	{
 		return WidgetName;
 	}
 
-	// 在AssetEditorSubsystem的OnAssetOpenedInEditor事件中触发监听模式
-	// 在在AssetEditorSubsystem的OnAssetClosedInEditor事件中结束监听模式
+	/**
+	* 1. 在AssetEditorSubsystem的OnAssetOpenedInEditor事件中触发监听模式
+	* 2. 在在AssetEditorSubsystem的OnAssetClosedInEditor事件中结束监听模式
+	 */
 	void SetupMonitorForTsScripts();
 	
 	void SetupTsScripts(bool bForceCompile = false, bool bForceReload = false);
@@ -65,18 +72,21 @@ public:
 	void ExecuteJsScripts();
 
 	void CompileTsScript();
-	
+
+// Blueprint
+	virtual void BeginDestroy() override;
+//~Blueprint	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsProjectDir;
-
+	
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsScriptHomeFullDir;
 
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category = "ReactorUMGEditor|WidgetBlueprint")
+	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsScriptHomeRelativeDir;
 
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category = "ReactorUMGEditor|WidgetBlueprint")
+	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString WidgetName;
 	
 	virtual bool Rename(const TCHAR* NewName = nullptr, UObject* NewOuter = nullptr, ERenameFlags Flags = REN_None) override;
@@ -88,7 +98,7 @@ protected:
 	void RegisterBlueprintDeleteHandle();
 	bool CheckLaunchJsScriptExist();
 	void StartTsScriptsMonitor();
-	FString GetLaunchJsScriptPath();
+	FString GetLaunchJsScriptPath(bool bForceFullPath = true);
 	/**
 	 * Repeat the script function via the bridge caller,
 	 * You need to bind the function to the bridge caller in the script.
@@ -105,7 +115,9 @@ protected:
 	FDirectoryMonitor TsProjectMonitor;
 
 private:
-	FString LaunchJsScriptPath;
+	TObjectPtr<UCustomJSArg> CustomJSArg;
+	
+	FString LaunchJsScriptFullPath;
 
 	FString JSScriptContentDir;
 	

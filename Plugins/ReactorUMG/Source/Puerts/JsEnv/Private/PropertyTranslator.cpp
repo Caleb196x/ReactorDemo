@@ -342,7 +342,6 @@ public:
         v8::Isolate* Isolate, v8::Local<v8::Context>& Context, const void* ValuePtr, bool PassByPointer) const override
     {
         const FString CppTypeName = Property->GetCPPType();
-        UE_LOG(LogTemp, Warning, TEXT("Enum type name %s"), *CppTypeName)
         return v8::Integer::New(
             Isolate, static_cast<int32>(EnumProperty->GetUnderlyingProperty()->GetSignedIntPropertyValue(ValuePtr)));
     }
@@ -354,9 +353,6 @@ public:
 
         FString ExternType;
         const FString Name = Property->GetCPPMacroType(ExternType);
-        
-        UE_LOG(LogTemp, Warning, TEXT("Enum type name %s"), *CppTypeName)
-        
         EnumProperty->GetUnderlyingProperty()->SetIntPropertyValue(
             ValuePtr, static_cast<uint64>(Value->Int32Value(Context).ToChecked()));
         return true;
