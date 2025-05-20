@@ -151,7 +151,7 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, 
     return RiveFile;
 }
 
-UWorld* UUMGManager::GetWorld()
+UWorld* UUMGManager::GetCurrentWorld()
 {
 #if WITH_EDITOR
     if (GEditor && GEditor->PlayWorld)

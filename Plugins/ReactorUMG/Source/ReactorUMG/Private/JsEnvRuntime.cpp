@@ -1,26 +1,51 @@
 #include "JsEnvRuntime.h"
-
+#include "Misc/MessageDialog.h"
+#include "Logging/MessageLog.h"
 #include "LogReactorUMG.h"
 #include "ReactorUtils.h"
 
+void FReactorUMGJSLogger::Log(const FString& Message) const
+{
+	UE_LOG(LogReactorUMG, Log, TEXT("%s"), *Message)
+}
+
+void FReactorUMGJSLogger::Error(const FString& Message) const
+{
+	UE_LOG(LogReactorUMG, Error, TEXT("%s"), *Message)
+#if WITH_EDITOR
+	FMessageLog(FName(MessageLogCategoryName)).Error()
+		->AddToken(FTextToken::Create(FText::FromString(Message)));
+#endif
+}
+
+void FReactorUMGJSLogger::Warn(const FString& Message) const
+{
+	UE_LOG(LogReactorUMG, Warning, TEXT("%s"), *Message)
+#if WITH_EDITOR
+	FMessageLog(FName(MessageLogCategoryName)).Warning()
+		->AddToken(FTextToken::Create(FText::FromString(Message)));
+#endif
+}
+
+void FReactorUMGJSLogger::Info(const FString& Message) const
+{
+	UE_LOG(LogReactorUMG, Display, TEXT("%s"), *Message)
+}
+
 FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize, int32 DebugPort)
 {
+	ReactorUmgLogger = std::make_shared<FReactorUMGJSLogger>();
 	for (int32 i = 0; i < EnvPoolSize; i++)
 	{
 		TSharedPtr<puerts::FJsEnv> JsEnv = MakeShared<puerts::FJsEnv>(
 		std::make_unique<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")),
-		std::make_shared<puerts::FDefaultLogger>(), DebugPort + i);
+		ReactorUmgLogger, DebugPort + i);
 		JsRuntimeEnvPool.Add(JsEnv, 0);
 	}
 }
 
 FJsEnvRuntime::~FJsEnvRuntime()
 {
-	/*for (auto& Pair : JsRuntimeEnvPool)
-	{
-		Pair.Key.Reset();
-	}*/
-	
 	JsRuntimeEnvPool.Empty();
 }
 

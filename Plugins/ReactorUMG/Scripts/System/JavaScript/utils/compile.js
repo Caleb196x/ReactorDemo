@@ -69,15 +69,17 @@ function getFileOptionSystem(callObject) {
     return customSystem;
 }
 
-function logErrors(allDiagnostics) {
+function logErrors(allDiagnostics, compileErrorReporter) {
     allDiagnostics.forEach(diagnostic => {
         let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
         if (diagnostic.file) {
             let { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
             console.error(`  Error ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+            compileErrorReporter.CompileReportDelegate.Execute(`  Error ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
         }
         else {
             console.error(`  Error: ${message}`);
+            compileErrorReporter.CompileReportDelegate.Execute(`  Error: ${message}`);
         }
     });
 }
@@ -93,7 +95,7 @@ function readAndParseConfigFile(customSystem, configFilePath) {
     }, customSystem.getCurrentDirectory());
 }
 
-function compileInternal(service, sourceFilePath, program) {
+function compileInternal(service, sourceFilePath, program, compileErrorReporter) {
     if (!program) {
         let beginTime = new Date().getTime();
         program = getProgramFromService();
@@ -106,7 +108,7 @@ function compileInternal(service, sourceFilePath, program) {
             ...program.getSemanticDiagnostics(sourceFile)
         ];
         if (diagnostics.length > 0) {
-            logErrors(diagnostics);
+            logErrors(diagnostics, compileErrorReporter);
         } else {
             if (!sourceFile.isDeclarationFile) {
                 let emitOutput = service.getEmitOutput(sourceFilePath);
@@ -139,6 +141,8 @@ function compile(callObject) {
         return;
     }
 
+    let compileErrorReporter = callObject.CompileErrorReporter;
+
     let customSystem = getFileOptionSystem(callObject);
 
     const configFilePath = tsi.combinePaths(callObject.TsProjectDir, "tsconfig.json");
@@ -148,7 +152,10 @@ function compile(callObject) {
     fileNames = convertTArrayToJSArray(fileNames);
     if (fileNames.length === 0) {
         console.warn("Not found any script file, give up compiling")
+        compileErrorReporter.CompileReportDelegate.Execute("Not found any script file, give up compiling");
+        return;
     }
+
     console.log("start compile..", JSON.stringify({ fileNames: fileNames, options: options }));
     const fileVersions = {};
     let beginTime = new Date().getTime();
@@ -177,6 +184,7 @@ function compile(callObject) {
         },
         getScriptSnapshot: fileName => {
             if (!customSystem.fileExists(fileName)) {
+                compileErrorReporter.CompileReportDelegate.Execute(fileName + " file not existed.");
                 console.error("getScriptSnapshot: file not existed! path=" + fileName);
                 return undefined;
             }
@@ -186,6 +194,7 @@ function compile(callObject) {
             if (!scriptSnapshotsCache.has(fileName)) {
                 const sourceFile = customSystem.readFile(fileName);
                 if (!sourceFile) {
+                    compileErrorReporter.CompileReportDelegate.Execute("read file failed! path=" + fileName);
                     console.error("getScriptSnapshot: read file failed! path=" + fileName);
                     return undefined;
                 }
@@ -198,13 +207,13 @@ function compile(callObject) {
             if (scriptSnapshotsInfo.version != fileVersions[fileName].version) {
                 const sourceFile = customSystem.readFile(fileName);
                 if (!sourceFile) {
+                    compileErrorReporter.CompileReportDelegate.Execute("read file failed! path=" + fileName);
                     console.error("getScriptSnapshot: read file failed! path=" + fileName);
                     return undefined;
                 }
                 scriptSnapshotsInfo.version = fileVersions[fileName].version;
                 scriptSnapshotsInfo.scriptSnapshot = ts.ScriptSnapshot.fromString(sourceFile);
             }
-            console.log("getScriptSnapshot:"+ fileName)
             return scriptSnapshotsInfo.scriptSnapshot;
         },
         getCurrentDirectory: customSystem.getCurrentDirectory,
@@ -235,6 +244,7 @@ function compile(callObject) {
                 
                 // Exit after 5 consecutive errors
                 if (getProgramErrorCount >= 10) {
+                    compileErrorReporter.CompileReportDelegate.Execute("Exceeded maximum error count (5). Exiting compilation process.");
                     console.error("Exceeded maximum error count (5). Exiting compilation process.");
                     throw new Error("Maximum error count exceeded during compilation");
                 }
@@ -250,7 +260,7 @@ function compile(callObject) {
     console.log("full compile using " + (new Date().getTime() - beginTime) + "ms");
     fileNames.forEach(fileName => {
         if (fileName.endsWith(".ts") || fileName.endsWith(".tsx")) {
-            compileInternal(service, fileName, program);
+            compileInternal(service, fileName, program, compileErrorReporter);
         }
     });
 }

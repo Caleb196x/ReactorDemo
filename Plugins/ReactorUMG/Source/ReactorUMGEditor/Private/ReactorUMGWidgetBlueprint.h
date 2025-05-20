@@ -9,10 +9,14 @@
 #include "Misc/FileHelper.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "Tickable.h"
+#include "ReactorBlueprintCompilerContext.h"
 #include "ReactorUMGWidgetBlueprint.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(
 	FDirectoryMonitorCallback, const TArray<FString>&, const TArray<FString>&, const TArray<FString>&);
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(FCompileReportDelegate, const FString&, Message);
+
 
 class FDirectoryMonitor
 {
@@ -36,6 +40,15 @@ private:
 };
 
 UCLASS(BlueprintType)
+class UCompileErrorReport : public UObject
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(BlueprintType)
+	FCompileReportDelegate CompileReportDelegate;
+};
+
+UCLASS(BlueprintType)
 class REACTORUMGEDITOR_API UReactorUMGWidgetBlueprint : public UWidgetBlueprint
 {
 	GENERATED_UCLASS_BODY()
@@ -48,6 +61,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="ReactorUMGEditor|WidgetBlueprint")
 	void ReleaseJsEnv();
+
+	UFUNCTION(Blueprintable, Category="ReactorUMGEditor|WidgetBlueprint")
+	void ReportToMessageLog(const FString& Message);
 
 	// The path of the main javascript file where the entry function is used to execute during the runtime,
 	// which is the relative path of the Content/JavaScript path.
@@ -65,7 +81,7 @@ public:
 	 */
 	void SetupMonitorForTsScripts();
 	
-	void SetupTsScripts(bool bForceCompile = false, bool bForceReload = false);
+	void SetupTsScripts(const FReactorUMGCompilerLog& CompilerResultsLogger, bool bForceCompile = false, bool bForceReload = false);
 
 	void ReloadJsScripts();
 
@@ -73,9 +89,6 @@ public:
 
 	void CompileTsScript();
 
-// Blueprint
-	virtual void BeginDestroy() override;
-//~Blueprint	
 protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsProjectDir;
@@ -88,6 +101,9 @@ protected:
 
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString WidgetName;
+
+	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
+	UCompileErrorReport* CompileErrorReporter;
 	
 	virtual bool Rename(const TCHAR* NewName = nullptr, UObject* NewOuter = nullptr, ERenameFlags Flags = REN_None) override;
 	virtual UClass* GetBlueprintClass() const override;
@@ -115,6 +131,7 @@ protected:
 	FDirectoryMonitor TsProjectMonitor;
 
 private:
+	
 	TObjectPtr<UCustomJSArg> CustomJSArg;
 	
 	FString LaunchJsScriptFullPath;
@@ -126,6 +143,8 @@ private:
 	TSharedPtr<puerts::FJsEnv> JsEnv;
 
 	FDelegateHandle TsMonitorDelegateHandle;
+
+	FString TSCompileErrorMessageBuffer;
 	
 	bool bTsScriptsChanged;
 };

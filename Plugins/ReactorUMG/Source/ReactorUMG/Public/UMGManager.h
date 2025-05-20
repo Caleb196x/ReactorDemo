@@ -54,7 +54,7 @@ public:
 	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName);
 
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
-	static UWorld* GetWorld();
+	static UWorld* GetCurrentWorld();
 
     /**
      * 从插件资产中查找可用字体，按顺序从Names中进行搜索，如果找到一个可用字体族，那么直接返回

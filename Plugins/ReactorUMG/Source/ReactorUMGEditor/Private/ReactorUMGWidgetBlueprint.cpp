@@ -6,6 +6,7 @@
 #include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
+#include "ReactorBlueprintCompilerContext.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
 #include "ReactorUtils.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -90,8 +91,8 @@ void FDirectoryMonitor::UnWatch()
 }
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer), CustomJSArg(nullptr), JSScriptContentDir(TEXT("")), LaunchJsScriptFullPath(TEXT("")),
-		RootSlot(nullptr), JsEnv(nullptr), bTsScriptsChanged(false)
+	: Super(ObjectInitializer), CompileErrorReporter(nullptr), CustomJSArg(nullptr), LaunchJsScriptFullPath(TEXT("")), JSScriptContentDir(TEXT("")),
+		RootSlot(nullptr), JsEnv(nullptr), TSCompileErrorMessageBuffer(TEXT("")), bTsScriptsChanged(false)
 {
 	if (this->HasAnyFlags(RF_ClassDefaultObject))
 	{
@@ -223,11 +224,6 @@ bool UReactorUMGWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
 	return false;
 }
 
-void UReactorUMGWidgetBlueprint::BeginDestroy()
-{
-	UE_LOG(LogReactorUMG, Display, TEXT("UReactorUMGWidgetBlueprint::BeginDestroy"))
-}
-
 UPanelSlot* UReactorUMGWidgetBlueprint::AddChild(UWidget* Content)
 {
 	if (Content == nullptr)
@@ -297,11 +293,26 @@ void UReactorUMGWidgetBlueprint::ReleaseJsEnv()
 	}
 }
 
+void UReactorUMGWidgetBlueprint::ReportToMessageLog(const FString& Message)
+{
+	UE_LOG(LogReactorUMG, Warning, TEXT("%s"), *Message)
+	TSCompileErrorMessageBuffer.Append(Message + TEXT("\n"));
+}
 
-void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceReload)
+void UReactorUMGWidgetBlueprint::SetupTsScripts(const FReactorUMGCompilerLog& CompilerResultsLogger, bool bForceCompile, bool bForceReload)
 {
 	FScopedSlowTask SlowTask(2);
 	FString CompileOutMessage, CompileErrorMessage;
+
+	if (!CompileErrorReporter)
+	{
+		CompileErrorReporter = NewObject<UCompileErrorReport>(this, TEXT("CompileErrorReporter"));
+
+		if (!CompileErrorReporter->CompileReportDelegate.IsBound())
+		{
+			CompileErrorReporter->CompileReportDelegate.BindDynamic(this, &UReactorUMGWidgetBlueprint::ReportToMessageLog);
+		}
+	}
 	
 	if (CheckLaunchJsScriptExist())
 	{
@@ -328,6 +339,11 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(bool bForceCompile, bool bForceR
 		SlowTask.EnterProgressFrame(1);
 	}
 
+	if (!TSCompileErrorMessageBuffer.IsEmpty())
+	{
+		CompilerResultsLogger.Error(FText::FromString(TSCompileErrorMessageBuffer));
+		TSCompileErrorMessageBuffer.Empty();
+	}
 }
 
 void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
@@ -376,6 +392,7 @@ void UReactorUMGWidgetBlueprint::ExecuteScriptFunctionViaBridgeCaller(const FStr
 		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(BindName);
 
 		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
+		Arguments.Add(TPair<FString, UObject*>(TEXT("CompileErrorReporter"), CompileErrorReporter));
 		
 		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 		if (JsEnv)
@@ -410,9 +427,6 @@ void UReactorUMGWidgetBlueprint::ExecuteScriptFunctionViaBridgeCaller(const FStr
 
 void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 {
-	// run in editor
-	SetupTsScripts();
-	
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([](UObject* Asset)
 	{
 		UE_LOG(LogReactorUMG, Log, TEXT("AssetName: %s, AssetType: %s"), *Asset->GetName(), *Asset->GetClass()->GetName());
