@@ -37,7 +37,7 @@ export const ReplayComponent = () => {
 
     const handleExit = () => {
         console.log("Exit");
-        UE.GameplayStatics.OpenLevel(UE.UMGManager.GetWorld(), "FirstPersonMap");
+        UE.GameplayStatics.OpenLevel(UE.UMGManager.GetCurrentWorld(), "FirstPersonMap");
     }
 
     const handleReplayListChange = (e) => {

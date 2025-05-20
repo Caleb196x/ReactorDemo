@@ -55,7 +55,8 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 
 	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
 	{
-		WidgetBlueprint->SetupTsScripts(true, true);
+		const FReactorUMGCompilerLog Logger(MessageLog);
+		WidgetBlueprint->SetupTsScripts(Logger, true, true);
 		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
 		if (BPGClass)
 		{
