@@ -162,5 +162,6 @@ void FJsEnvRuntime::RestartJsScripts(
 		Env->Release();
 		Env->ForceReloadJsFile(MainJsScript);
 		Env->Start(MainJsScript, Arguments);
+		Env->Release();
 	}
 }
