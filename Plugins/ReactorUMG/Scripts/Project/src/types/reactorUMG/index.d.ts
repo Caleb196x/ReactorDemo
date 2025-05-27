@@ -126,7 +126,8 @@ declare module "reactorUMG" {
     }
 
     class Overlay extends React.Component<OverlayProps> {
-        nativePtr: UE.Overlay;
+        native: UE.Overlay;
+        children: React.ReactNode;
     }
 
     interface ScaleBoxProps extends PanelProps {
@@ -135,7 +136,8 @@ declare module "reactorUMG" {
     }
 
     class ScaleBox extends React.Component<ScaleBoxProps> {
-        nativePtr: UE.ScaleBox;
+        native: UE.ScaleBox;
+        children: React.ReactNode;
     }
 
     interface UniformGridProps extends PanelProps {
@@ -145,7 +147,8 @@ declare module "reactorUMG" {
     }
 
     class UniformGrid extends React.Component<UniformGridProps> {
-        nativePtr: UE.UniformGridPanel;
+        native: UE.UniformGridPanel;
+        children: React.ReactNode;
     }
 
     interface InvalidationBoxProps extends PanelProps {
@@ -153,7 +156,8 @@ declare module "reactorUMG" {
     }
 
     class InvalidationBox extends React.Component<InvalidationBoxProps> {
-        nativePtr: UE.InvalidationBox;
+        native: UE.InvalidationBox;
+        children: React.ReactNode;
     }
 
     interface RetainerBoxProps extends PanelProps {
@@ -165,7 +169,8 @@ declare module "reactorUMG" {
     }
 
     class RetainerBox extends React.Component<RetainerBoxProps> {
-        nativePtr: UE.RetainerBox;
+        native: UE.RetainerBox;
+        children: React.ReactNode;
     }
     
     interface SafeZoneProps extends PanelProps {
@@ -176,7 +181,8 @@ declare module "reactorUMG" {
     }
 
     class SafeZone extends React.Component<SafeZoneProps> {
-        nativePtr: UE.SafeZone;
+        native: UE.SafeZone;
+        children: React.ReactNode;
     }
     
     interface SizeBoxProps extends PanelProps {
@@ -191,7 +197,8 @@ declare module "reactorUMG" {
     }
 
     class SizeBox extends React.Component<SizeBoxProps> {
-        nativePtr: UE.SizeBox;
+        native: UE.SizeBox;
+        children: React.ReactNode;
     }
 
     interface OutlineSetting {
@@ -254,7 +261,8 @@ declare module "reactorUMG" {
     }
 
     class Border extends React.Component<BorderProps> {
-        nativePtr: UE.Border;
+        native: UE.Border;
+        children: React.ReactNode;
     }
 
     interface SliderStyle {
@@ -303,7 +311,7 @@ declare module "reactorUMG" {
     }
 
     class RadialSlider extends React.Component<RadialSliderProps> {
-        nativePtr: UE.RadialSlider;
+        native: UE.RadialSlider;
     }
 
     interface SliderProps extends SliderCommonProps {
@@ -314,7 +322,7 @@ declare module "reactorUMG" {
     }
 
     class Slider extends React.Component<SliderProps> {
-        nativePtr: UE.Slider;
+        native: UE.Slider;
     }
     
     interface SpinBoxProps extends PanelProps {
@@ -356,7 +364,8 @@ declare module "reactorUMG" {
     }
 
     class SpinBox extends React.Component<SpinBoxProps> {
-        nativePtr: UE.SpinBox;
+        native: UE.SpinBox;
+        children: React.ReactNode;
     }
 
     interface CircularThrobberProps extends CommonProps {
@@ -368,7 +377,7 @@ declare module "reactorUMG" {
     }
     
     class CircularThrobber extends React.Component<CircularThrobberProps> {
-        nativePtr: UE.CircularThrobber;
+        native: UE.CircularThrobber;
     }
 
     interface ThrobberProps extends CommonProps {
@@ -381,7 +390,7 @@ declare module "reactorUMG" {
     }
 
     class Throbber extends React.Component<ThrobberProps> {
-        nativePtr: UE.Throbber;
+        native: UE.Throbber;
     }
     
     interface SpacerProps extends CommonProps {
@@ -389,7 +398,7 @@ declare module "reactorUMG" {
     }
 
     class Spacer extends React.Component<SpacerProps> {
-        nativePtr: UE.Spacer;
+        native: UE.Spacer;
     }
     
     interface ExpandableAreaProps extends CommonProps {
@@ -415,7 +424,7 @@ declare module "reactorUMG" {
     }
 
     class ExpandableArea extends React.Component<ExpandableAreaProps> {
-        nativePtr: UE.ExpandableArea;
+        native: UE.ExpandableArea;
         header: React.ReactNode;
         area: React.ReactNode;
     }
@@ -442,7 +451,8 @@ declare module "reactorUMG" {
     }
 
     class ScrollBox extends React.Component<ScrollBoxProps> {
-        nativePtr: UE.ScrollBox;
+        native: UE.ScrollBox;
+        children: React.ReactNode;
     }
 
     interface ButtonProps extends PanelProps {
@@ -469,7 +479,8 @@ declare module "reactorUMG" {
     }
 
     class Button extends React.Component<ButtonProps> {
-        nativePtr: UE.Button;
+        native: UE.Button;
+        children: React.ReactNode;
     }
 
     type comboBoxItemSelectionType = 'key-press' | 'navigation' | 'mouse-click' | 'direct' | 'default';
@@ -533,10 +544,10 @@ declare module "reactorUMG" {
     }
 
     class ComboBox extends React.Component<ComboBoxProps> {
-        nativePtr: UE.ComboBoxString;
+        native: UE.ComboBoxString;
     }
 
-    interface CheckboxProps extends CommonProps {
+    interface CheckBoxProps extends CommonProps {
         checked?: boolean | undefined;
         type?: 'checkbox' | 'toggle' | 'default' | undefined;
         padding?: CssType.Property.Padding | undefined;
@@ -563,7 +574,7 @@ declare module "reactorUMG" {
         onCheckStateChanged?: (InChecked: boolean) => void;
     }
 
-    class Checkbox extends React.Component<CheckboxProps> {
+    class Checkbox extends React.Component<CheckBoxProps> {
         native: UE.CheckBox;
     }
 
@@ -656,7 +667,7 @@ declare module "reactorUMG" {
     }
  
     class Spine extends React.Component<SpineProps> {
-        nativePtr: UE.SpineWidget;
+        native: UE.SpineWidget;
     }
 
     interface RiveProps extends ResourceProps {
@@ -670,6 +681,14 @@ declare module "reactorUMG" {
 
         onRiveReady?: () => void;
         onRiveNamedEvent?: (eventName: string) => void;
+    }
+
+    interface ViewportProps extends PanelProps {
+    }
+
+    class Viewport extends React.Component<ViewportProps> {
+        native: UE.Viewport;
+		children: React.ReactNode;
     }
 
     class Rive extends React.Component<RiveProps> {}
