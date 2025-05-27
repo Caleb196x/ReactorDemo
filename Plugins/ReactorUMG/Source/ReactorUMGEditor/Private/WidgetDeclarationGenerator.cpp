@@ -3,6 +3,7 @@
 #include "PropertyMacros.h"
 #include "ReactorUtils.h"
 #include "TypeScriptDeclarationGenerator.h"
+#include "Components/ContentWidget.h"
 #include "Components/PanelWidget.h"
 #include "Components/Widget.h"
 
@@ -80,6 +81,33 @@ static bool IsPanelWidget(UWidget* CheckWidget)
 	return PanelWidget == nullptr;
 }
 
+static void InsertTextAtSecondLastLine(const FString& SourcePath, const FString& OutPath, const FString& TextToInsert)
+{
+	TArray<FString> Lines;
+	if (FFileHelper::LoadFileToStringArray(Lines, *SourcePath))
+	{
+		int32 LastNonEmptyIndex = Lines.Num() - 1;
+		while (LastNonEmptyIndex >= 0 && Lines[LastNonEmptyIndex].TrimStartAndEnd().IsEmpty())
+		{
+			Lines.RemoveAt(LastNonEmptyIndex);
+			--LastNonEmptyIndex;
+		}
+		
+		if (LastNonEmptyIndex >= 2)
+		{
+			Lines.Insert(TextToInsert, LastNonEmptyIndex - 1);
+
+			const FString BaseOutDir = FPaths::GetPath(OutPath);
+			if (!FPaths::DirectoryExists(*BaseOutDir))
+			{
+				FReactorUtils::CreateDirectoryRecursive(BaseOutDir);
+			}
+			
+			FFileHelper::SaveStringArrayToFile(Lines, *OutPath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+		}
+	}
+}
+
 struct FReactDeclarationGenerator : public FTypeScriptDeclarationGenerator
 {
 	void Begin(FString Namespace) override;
@@ -100,16 +128,15 @@ struct FReactDeclarationGenerator : public FTypeScriptDeclarationGenerator
 
 	/* The following widgets are skipped when generating custom widget declarations */
 	TArray<FString> PredefinedWidgets = {
-		TEXT("Widget"), TEXT("UserWidget"), TEXT("PanelWidget"), TEXT("ContentWidget"), TEXT("BackgroundBlur"),
+		TEXT("Widget"), TEXT("PanelWidget"), TEXT("ContentWidget"), TEXT("ReactorUIWidget"),
 		TEXT("Border"), TEXT("Button"), TEXT("CanvasPanel"), TEXT("CheckBox"), TEXT("CircularThrobber"),
-		TEXT("ComboBox"), TEXT("ComboBoxString"), TEXT("EditableText"), TEXT("EditableTextBox"), TEXT("ExpandableArea"),
+		TEXT("ComboBox"), TEXT("ExpandableArea"), TEXT("ListView"), TEXT("Overlay"), TEXT("ProgressBar"),
 		TEXT("GridPanel"), TEXT("HorizontalBox"), TEXT("Image"), TEXT("InvalidationBox"), TEXT("ListViewBase"),
-		TEXT("ListView"), TEXT("MultiLineEditableText"), TEXT("MultiLineEditableTextBox"), TEXT("Overlay"), TEXT("ProgressBar"),
-		TEXT("RetainerBox"), TEXT("RichTextBlock"), TEXT("ScaleBox"), TEXT("ScrollBar"), TEXT("ScrollBox"),
+		TEXT("RetainerBox"), TEXT("RichTextBlock"), TEXT("ScaleBox"), TEXT("ScrollBox"),
 		TEXT("SizeBox"), TEXT("Slider"), TEXT("ScaleBox"), TEXT("SpinBox"), TEXT("TextBlock"),
 		TEXT("Throbber"), TEXT("TileView"), TEXT("TreeView"), TEXT("UniformGridPanel"), TEXT("VerticalBox"),
-		TEXT("WrapBox"), TEXT("PropertyViewBase"), TEXT("ReactorUIWidget"), TEXT("ReactRiveWidget"), TEXT("RiveWidget"),
-		TEXT("SpineWidget ")
+		TEXT("WrapBox"), TEXT("ReactorUIWidget"), TEXT("ReactRiveWidget"), TEXT("RiveWidget"),
+		TEXT("SpineWidget"), TEXT("SafeZone"), TEXT("Spacer"), TEXT("RadialSlider"), TEXT("Viewport")
 	};
 };
 
@@ -135,43 +162,45 @@ void FReactDeclarationGenerator::GenReactDeclaration(const FString& ReactHomeDir
 {
     FString Components = TEXT("exports.lazyloadComponents = {};\n");
 
-    Output << "\n\n /* Widget declaration generated from custom widgets user defined*/ \n\n";
+    Output << "\n/* Widget declaration generated from custom widgets user defined*/ \n\n";
 
     for (TObjectIterator<UClass> It; It; ++It)
     {
         UClass* Class = *It;
         checkfSlow(Class != nullptr, TEXT("Class name corruption!"));
-        if (Class->GetName().StartsWith("SKEL_") || Class->GetName().StartsWith("REINST_") ||
-            Class->GetName().StartsWith("TRASHCLASS_") || Class->GetName().StartsWith("PLACEHOLDER_"))
+    	const FString SuperClassName = SafeName(Class->GetName());
+        if (SuperClassName.StartsWith("SKEL_") || SuperClassName.StartsWith("REINST_") ||
+            SuperClassName.StartsWith("TRASHCLASS_") || SuperClassName.StartsWith("PLACEHOLDER_"))
         {
             continue;
         }
     	
-        if (Class->IsChildOf<UWidget>())
+        if (!PredefinedWidgets.Contains(SuperClassName) && Class->IsChildOf<UWidget>())
         {
             Gen(Class);
             Components += "exports." + SafeName(Class->GetName()) + " = '" + SafeName(Class->GetName()) + "';\n";
-            if (!(Class->ClassFlags & CLASS_Native))
+            if (!(Class->ClassFlags & CLASS_Native) && !SuperClassName.Equals(TEXT("ReactorUIWidget")))
             {
                 Components += "exports.lazyloadComponents." + SafeName(Class->GetName()) + " = '" + Class->GetPathName() + "';\n";
             }
         }
     }
 
-	const FString TSProjectDir = ReactHomeDir;
-	const FString DeclarationFile = TSProjectDir / TEXT("reactorUMG/index.d.ts");
-	if (FPaths::FileExists(*DeclarationFile))
-	{
-		FFileHelper::SaveStringToFile(ToString(), *DeclarationFile,
-			FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Append);
-	}
+	const FString TemplateIndexFile = FPaths::Combine(FReactorUtils::GetPluginDir(), TEXT("Scripts/Project/src/types/reactorUMG/index.d.ts"));
 
-	const FString JSContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(FReactorUtils::GetTypeScriptHomeDir());
-	const FString ComponentsFile = JSContentDir / TEXT("src/reactorUMG/components.js");
-	if (FPaths::FileExists(*ComponentsFile))
+	const FString TSProjectDir = ReactHomeDir;
+	const FString OutDeclarationFile = TSProjectDir / TEXT("reactorUMG/index.d.ts");
+	if (FPaths::FileExists(*TemplateIndexFile))
 	{
-		FFileHelper::SaveStringToFile(Components, *ComponentsFile,
-			FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Append);
+		InsertTextAtSecondLastLine(TemplateIndexFile, OutDeclarationFile, ToString());
+	}
+	
+	const FString TemplateComponentJSFile = FPaths::Combine(FReactorUtils::GetPluginDir(), TEXT("Scripts/Project/src/reactorUMG/components.js"));
+	const FString JSContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(FReactorUtils::GetTypeScriptHomeDir());
+	const FString OutComponentsFile = JSContentDir / TEXT("src/reactorUMG/components.js");
+	if (FPaths::FileExists(*TemplateComponentJSFile))
+	{
+		InsertTextAtSecondLastLine(TemplateComponentJSFile, OutComponentsFile, Components);
 	}
 }
 
@@ -181,30 +210,53 @@ void FReactDeclarationGenerator::GenClass(UClass* Class)
         return;
 	
     bool IsWidget = Class->IsChildOf<UWidget>();
-	bool IsPanelWidget = Class->IsChildOf<UPanelWidget>();
+	bool IsPanelWidget = Class->IsChildOf<UPanelWidget>() || Class->IsChildOf<UContentWidget>();
     FStringBuffer StringBuffer{"", ""};
-    StringBuffer << "interface " << SafeName(Class->GetName());
+    StringBuffer << "    "
+				 << "interface " << SafeName(Class->GetName());
     if (IsWidget)
         StringBuffer << "Props";
 
     auto Super = Class->GetSuperStruct();
-
-    if (Super && Super->IsChildOf<UWidget>())
-    {
-        Gen(Super);
-        StringBuffer << " extends " << SafeName(Super->GetName());
-        if (Super->IsChildOf<UWidget>())
-            StringBuffer << "Props";
-    }
+	const FString SuperClassName = Super->GetName();
+	if (SuperClassName.Equals("ReactorUIWidget"))
+		return;
+	
+	const bool bSuperIsWidget = SuperClassName.Equals("Widget");
+	const bool bSuperIsPanel = SuperClassName.Equals("PanelWidget") || SuperClassName.Equals("ContentWidget");
+	
+	FString SuperName = SafeName(Super->GetName());
+	if (Super && Super->IsChildOf<UWidget>())
+	{
+		if (!PredefinedWidgets.Contains(SuperName))
+		{
+			Gen(Super);
+			StringBuffer << " extends " << SafeName(Super->GetName());
+			if (Super->IsChildOf<UWidget>())
+				StringBuffer << "Props";
+				
+		} else if (bSuperIsWidget)
+		{
+			StringBuffer << " extends CommonProps";
+		} else if (bSuperIsPanel)
+		{
+			StringBuffer << " extends PanelProps";
+		} else
+		{
+			StringBuffer << " extends " << SafeName(Super->GetName());
+			if (Super->IsChildOf<UWidget>())
+				StringBuffer << "Props";
+		}
+	}
 	else if (IsPanelWidget)
 	{
 		StringBuffer << " extends PanelProps";
 	}
-    else if (IsWidget)
-    {
-        StringBuffer << " extends CommonProps";
-    }
-
+	else if (IsWidget)
+	{
+		StringBuffer << " extends CommonProps";
+	}		
+	
     StringBuffer << " {\n";
 
     for (TFieldIterator<PropertyMacro> PropertyIt(Class, EFieldIteratorFlags::ExcludeSuper); PropertyIt; ++PropertyIt)
@@ -266,6 +318,9 @@ void FReactDeclarationGenerator::GenClass(UClass* Class)
     	if (IsPanelWidget)
     	{
     		StringBuffer << "		children: React.ReactNode;" << "\n    }\n\n";
+    	} else
+    	{
+    		StringBuffer << "      }\n\n";
     	}
     }
 
