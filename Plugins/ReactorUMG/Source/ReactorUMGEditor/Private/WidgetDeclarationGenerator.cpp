@@ -179,7 +179,7 @@ void FReactDeclarationGenerator::GenReactDeclaration(const FString& ReactHomeDir
         {
             Gen(Class);
             Components += "exports." + SafeName(Class->GetName()) + " = '" + SafeName(Class->GetName()) + "';\n";
-            if (!(Class->ClassFlags & CLASS_Native))
+            if (!(Class->ClassFlags & CLASS_Native) && !SuperClassName.Equals(TEXT("ReactorUIWidget")))
             {
                 Components += "exports.lazyloadComponents." + SafeName(Class->GetName()) + " = '" + Class->GetPathName() + "';\n";
             }
