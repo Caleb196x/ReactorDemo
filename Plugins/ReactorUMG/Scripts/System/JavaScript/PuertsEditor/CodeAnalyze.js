@@ -57,10 +57,10 @@ function getCustomSystem() {
         throw new Error("exit with code:" + exitCode);
     }
     function getExecutingFilePath() {
-        return getCurrentDirectory() + "Content/JavaScript/PuertsEditor/node_modules/typescript/lib/tsc.js";
+        return getCurrentDirectory() + "Content/JavaScript/node_modules/typescript/lib/tsc.js";
     }
     function getCurrentDirectory() {
-        return UE.FileSystemOperation.GetCurrentDirectory();
+        return UE.FileSystemOperation.GetCurrentDirectory() + "TypeScript/";
     }
     function getDirectories(path) {
         let result = [];
@@ -235,6 +235,7 @@ function readAndParseConfigFile(configFilePath) {
     }, customSystem.getCurrentDirectory());
 }
 function watch(configFilePath) {
+    console.log("configFilePath: ", configFilePath);
     let { fileNames, options } = readAndParseConfigFile(configFilePath);
     console.log("start watch..", JSON.stringify({ fileNames: fileNames, options: options }));
     const versionsFilePath = tsi.getDirectoryPath(configFilePath) + "/ts_file_versions_info.json";
