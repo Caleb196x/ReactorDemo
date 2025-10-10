@@ -72,11 +72,6 @@ bool FJsEnvRuntime::StartJavaScript(const TSharedPtr<puerts::FJsEnv>& JsEnv, con
 {
 	if (JsEnv)
 	{
-		if (FReactorUtils::IsAnyPIERunning())
-		{
-			JsEnv->ForceReloadJsFile(Script);
-		}
-		
 		JsEnv->Start(Script, Arguments);
 		return true;
 	}

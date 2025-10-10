@@ -3,6 +3,7 @@
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
+#include "ReactorUtils.h"
 #include "Blueprint/WidgetTree.h"
 
 UReactorUIWidget::UReactorUIWidget(const FObjectInitializer& ObjectInitializer)
@@ -49,6 +50,8 @@ void UReactorUIWidget::SetNewWidgetTree()
 		UReactorUMGBlueprintGeneratedClass* ReactorBPGC = Cast<UReactorUMGBlueprintGeneratedClass>(GetClass());
 		if (ReactorBPGC)
 		{
+			TsProjectDir = ReactorBPGC->TsProjectDir;
+			TsScriptHomeRelativeDir = ReactorBPGC->TsScriptHomeRelativeDir;
 			LaunchScriptPath = ReactorBPGC->MainScriptPath;
 			if (!LaunchScriptPath.IsEmpty())
 			{
@@ -87,12 +90,19 @@ void UReactorUIWidget::RunScriptToInitWidgetTree()
 		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 		if (JsEnv)
 		{
-			const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchScriptPath, Arguments);
-			if (!Result)
+			if (!FReactorUtils::IsAnyPIERunning())
 			{
-				UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
-				ReleaseJsEnv();
-				UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchScriptPath);
+				const bool Result = FJsEnvRuntime::GetInstance().StartJavaScript(JsEnv, LaunchScriptPath, Arguments);
+				if (!Result)
+				{
+					UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
+					ReleaseJsEnv();
+					UE_LOG(LogReactorUMG, Warning, TEXT("Start ui javascript file %s failed"), *LaunchScriptPath);
+				}		
+			} else
+			{
+				const FString JSScriptContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
+				FJsEnvRuntime::GetInstance().RestartJsScripts(JSScriptContentDir, TsScriptHomeRelativeDir, LaunchScriptPath, Arguments);
 			}
 		}
 		else

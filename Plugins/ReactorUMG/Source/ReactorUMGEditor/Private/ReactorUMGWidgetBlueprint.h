@@ -88,8 +88,7 @@ public:
 	void ExecuteJsScripts();
 
 	void CompileTsScript();
-
-protected:
+	
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsProjectDir;
 	
@@ -105,6 +104,7 @@ protected:
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	UCompileErrorReport* CompileErrorReporter;
 	
+protected:
 	virtual bool Rename(const TCHAR* NewName = nullptr, UObject* NewOuter = nullptr, ERenameFlags Flags = REN_None) override;
 	virtual UClass* GetBlueprintClass() const override;
 	virtual bool SupportedByDefaultBlueprintFactory() const override;

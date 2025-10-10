@@ -61,6 +61,10 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 		if (BPGClass)
 		{
 			BPGClass->MainScriptPath = WidgetBlueprint->MainScriptPath;
+			BPGClass->TsProjectDir = WidgetBlueprint->TsProjectDir;
+			BPGClass->TsScriptHomeFullDir = WidgetBlueprint->TsScriptHomeFullDir;
+			BPGClass->TsScriptHomeRelativeDir = WidgetBlueprint->TsScriptHomeRelativeDir;
+			BPGClass->WidgetName = WidgetBlueprint->WidgetName;
 		}
 	}
 

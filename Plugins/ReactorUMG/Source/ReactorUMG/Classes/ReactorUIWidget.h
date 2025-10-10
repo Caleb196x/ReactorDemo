@@ -26,6 +26,10 @@ private:
 	
 	FString LaunchScriptPath;
 
+	FString TsProjectDir;
+
+	FString TsScriptHomeRelativeDir;
+
 	TSharedPtr<puerts::FJsEnv> JsEnv;
 
 	bool bWidgetTreeInitialized;

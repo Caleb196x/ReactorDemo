@@ -18,4 +18,8 @@ class REACTORUMG_API UReactorUMGBlueprintGeneratedClass : public UWidgetBlueprin
 
 public:
 	FString MainScriptPath;
+	FString TsProjectDir;
+	FString TsScriptHomeFullDir;
+	FString TsScriptHomeRelativeDir;
+	FString WidgetName;
 };
