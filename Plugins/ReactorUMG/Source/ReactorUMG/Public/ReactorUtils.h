@@ -45,4 +45,6 @@ public:
 	static FString GetGamePlayTSHomeDir();
 
 	static FString GetGamePlayStartPoint();
+
+	static bool IsAnyPIERunning();
 };

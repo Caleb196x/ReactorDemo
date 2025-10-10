@@ -379,3 +379,19 @@ FString FReactorUtils::GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir)
 	
 	return Result;
 }
+
+bool FReactorUtils::IsAnyPIERunning()
+{
+#if WITH_EDITOR
+	if (!GEngine) return false;
+	const TIndirectArray<FWorldContext>& Contexts = GEngine->GetWorldContexts();
+	for (const FWorldContext& Ctx : Contexts)
+	{
+		if (Ctx.WorldType == EWorldType::PIE)
+		{
+			return true;
+		}
+	}
+#endif
+	return false;
+}

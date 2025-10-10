@@ -85,3 +85,7 @@ Plugins/ReactorUMG/Scripts/Project/src/types/cpp
 # 
 **/v8_9.4.146.24
 **/nodejs_16
+Content/JavaScript
+Content/StarterContent
+TypeScript/node_modules
+TypeScript/yarn.lock
