@@ -1,6 +1,6 @@
 /*
 * Tencent is pleased to support the open source community by making Puerts available.
-* Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2020 Tencent.  All rights reserved.
 * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms.
 * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
 */
@@ -17,18 +17,17 @@ public class JsEnv : ModuleRules
         VDeprecated, // for 4.24 or blow only
         V8_4_371_19,
         V9_4_146_24,
-        V10_6_194,
         V11_8_172
     }
 
     private SupportedV8Versions UseV8Version = 
 #if UE_4_25_OR_LATER
-        SupportedV8Versions.V10_6_194;
+        SupportedV8Versions.V9_4_146_24;
 #else
         SupportedV8Versions.VDeprecated;
 #endif
 
-    private bool UseNodejs = false;
+    private bool UseNodejs = true;
 
     private bool Node16 = true;
 
@@ -85,7 +84,7 @@ public class JsEnv : ModuleRules
 
         PublicDependencyModuleNames.AddRange(new string[]
         {
-            "Core", "CoreUObject", "Engine", "ParamDefaultValueMetas", "UMG", "Projects"
+            "Core", "CoreUObject", "Engine", "ParamDefaultValueMetas", "UMG"
         });
 
         if (Target.bBuildEditor)
@@ -407,10 +406,6 @@ public class JsEnv : ModuleRules
         else if (UseV8Version == SupportedV8Versions.V9_4_146_24)
         {
             v8LibSuffix = "_9.4.146.24";
-        }
-        else if (UseV8Version == SupportedV8Versions.V10_6_194)
-        {
-            v8LibSuffix = "_10.6.194";
         }
         else if (UseV8Version == SupportedV8Versions.V11_8_172)
         {

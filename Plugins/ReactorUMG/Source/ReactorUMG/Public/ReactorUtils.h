@@ -1,5 +1,4 @@
 #pragma once
-#include "Interfaces/IPluginManager.h"
 
 class REACTORUMG_API FReactorUtils
 {
@@ -18,17 +17,10 @@ public:
 	static void CopyFile(const FString& SrcFile, const FString& DestFile);
 
 	static void DeleteFile(const FString& FilePath);
+
+	static FString GetPluginContentDir();
 	
-	FORCEINLINE static FString GetPluginContentDir()
-	{
-		return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetContentDir());
-	}
-
-	FORCEINLINE static FString GetPluginDir()
-	{
-		return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetBaseDir());
-
-	}
+	static FString GetPluginDir();
 
 	static bool DeleteDirectoryRecursive(const FString& DirPath);
 
@@ -47,8 +39,10 @@ public:
 	static bool ReadFileContent(const FString& FilePath, FString& OutContent);
 
 	static FString ConvertRelativePathToFullUsingTSConfig(const FString& RelativePath, const FString& DirName);
-
-	static bool RunCommandWithProcess(const FString& Command, const FString& WorkDir, FScopedSlowTask* SlowTask, FString& StdOut, FString& StdErr);
-
+	
 	static FString GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir);
+
+	static FString GetGamePlayTSHomeDir();
+
+	static FString GetGamePlayStartPoint();
 };

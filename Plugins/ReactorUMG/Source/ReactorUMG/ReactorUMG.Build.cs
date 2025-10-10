@@ -11,7 +11,7 @@ public class ReactorUMG : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
-				"Programs/UnrealHeaderTool/Public"
+				// "Programs/UnrealHeaderTool/Public"
 			}
 			);
 				
@@ -37,15 +37,11 @@ public class ReactorUMG : ModuleRules
 			{
 				"CoreUObject",
 				"UMG",
-				"UnrealEd",
-				"LevelEditor",
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"EditorStyle",
 				"InputCore",
 				"Projects",
-				"DeclarationGenerator",
 				"DeveloperSettings",
 				"JsEnv",
 				"SpinePlugin",
@@ -54,7 +50,9 @@ public class ReactorUMG : ModuleRules
 				"Json",
 				"JsonUtilities",
 				"JsonSerialization",
-				"UMGEditor"
+				"ProceduralMeshComponent",
+				"Puerts",
+				"Projects"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

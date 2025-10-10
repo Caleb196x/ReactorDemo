@@ -19,7 +19,7 @@ class DECLARATIONGENERATOR_API UTemplateBindingGenerator : public UObject, publi
 
 public:
     UFUNCTION(BlueprintNativeEvent)
-    void Gen(const FString& OutDir) const;
+    void Gen(const FString& OutDir = TEXT("")) const;
 
-    virtual void Gen_Implementation(const FString& OutDir) const override;
+    virtual void Gen_Implementation(const FString& OutDir = TEXT("")) const override;
 };

@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -11,7 +11,6 @@
 #include "PuertsNamespaceDef.h"
 
 #include "CoreMinimal.h"
-#include "Interfaces/IPluginManager.h"
 
 namespace PUERTS_NAMESPACE
 {
@@ -47,11 +46,6 @@ public:
     virtual bool SearchModuleInDir(const FString& Dir, const FString& RequiredModule, FString& Path, FString& AbsolutePath);
 
     virtual bool SearchModuleWithExtInDir(const FString& Dir, const FString& RequiredModule, FString& Path, FString& AbsolutePath);
-	
-	FORCEINLINE static FString GetPluginContentDir(const FString& PluginName = TEXT("ReactorUMG"))
-	{
-		return IPluginManager::Get().FindPlugin(PluginName)->GetBaseDir() / TEXT("Content");
-	}
 
     FString ScriptRoot;
 };

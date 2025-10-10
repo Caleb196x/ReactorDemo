@@ -48,8 +48,9 @@ USpineAtlasAsset* UUMGManager::LoadSpineAtlas(UObject* Context, const FString& A
     USpineAtlasAsset* SpineAtlasAsset = NewObject<USpineAtlasAsset>(Context, USpineAtlasAsset::StaticClass(),
         NAME_None, RF_Public|RF_Transient);
     SpineAtlasAsset->SetRawData(RawData);
+#if WITH_EDITORONLY_DATA
     SpineAtlasAsset->SetAtlasFileName(FName(*AssetFilePath));
-
+#endif
     const FString BaseFilePath = FPaths::GetPath(AssetFilePath);
 
     // load textures
@@ -80,10 +81,11 @@ USpineSkeletonDataAsset* UUMGManager::LoadSpineSkeleton(UObject* Context, const 
 
     USpineSkeletonDataAsset* SkeletonDataAsset = NewObject<USpineSkeletonDataAsset>(Context,
             USpineSkeletonDataAsset::StaticClass(), NAME_None, RF_Transient | RF_Public);
-    
+
+#if WITH_EDITORONLY_DATA
     SkeletonDataAsset->SetSkeletonDataFileName(FName(*AssetFilePath));
     SkeletonDataAsset->SetRawData(RawData);
-
+#endif
     return SkeletonDataAsset;
 }
 
@@ -137,7 +139,8 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, 
     URiveFile* RiveFile =
     NewObject<URiveFile>(Context, URiveFile::StaticClass(), NAME_None, RF_Transient | RF_Public);
     check(RiveFile);
-
+    
+#if WITH_EDITORONLY_DATA
     if (!RiveFile->EditorImport(RiveAssetFilePath, FileBuffer))
     {
         UE_LOG(LogReactorUMG, Error,
@@ -147,24 +150,13 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, 
         RiveFile->ConditionalBeginDestroy();
         return nullptr;
     }
-
+#endif
+    
     return RiveFile;
 }
 
 UWorld* UUMGManager::GetCurrentWorld()
 {
-#if WITH_EDITOR
-    if (GEditor && GEditor->PlayWorld)
-    {
-        return GEditor->PlayWorld;
-    }
-
-    if (GEditor && GEditor->GetEditorWorldContext().World())
-    {
-        return GEditor->GetEditorWorldContext().World();
-    }
-#endif
-
     if (GEngine && GEngine->GetWorld())
     {
         return GEngine->GetWorld();

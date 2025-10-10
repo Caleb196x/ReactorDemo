@@ -18,12 +18,18 @@
 		{
 			"Name": "ReactorUMG",
 			"Type": "Runtime",
-			"LoadingPhase": "PostDefault"
+			"LoadingPhase": "PostDefault",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
 		},
 		{
 			"Name": "ReactorUMGEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PostDefault"
+			"LoadingPhase": "PostDefault",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
 		},
 		{
 			"Name": "WasmCore",
@@ -86,17 +92,17 @@
 		{
 			"Name": "SpinePlugin",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
 		},
 		{
 			"Name": "Rive",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Mac",
-				"IOS",
-				"Android"
+				"Win64"
 			]
 		},
 		{
@@ -104,10 +110,7 @@
 			"Type": "Runtime",
 			"LoadingPhase": "PostConfigInit",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Mac",
-				"IOS",
-				"Android"
+				"Win64"
 			]
 		},
 		{
@@ -115,10 +118,7 @@
 			"Type": "Runtime",
 			"LoadingPhase": "PostConfigInit",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Mac",
-				"IOS",
-				"Android"
+				"Win64"
 			]
 		},
 		{
@@ -126,11 +126,13 @@
 			"Type": "RuntimeNoCommandlet",
 			"LoadingPhase": "PreDefault",
 			"WhitelistPlatforms": [
-				"Win64",
-				"Mac",
-				"IOS",
-				"Android"
+				"Win64"
 			]
+		},
+		{
+			"Name": "AutoMixinEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	]
 }

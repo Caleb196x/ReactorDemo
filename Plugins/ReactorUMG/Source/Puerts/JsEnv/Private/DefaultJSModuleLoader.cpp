@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -69,10 +69,7 @@ bool DefaultJSModuleLoader::SearchModuleInDir(
 {
     FString Extension = FPaths::GetExtension(RequiredModule);
     bool IsJs = Extension == TEXT("js") || Extension == TEXT("mjs") || Extension == TEXT("cjs") || Extension == TEXT("json");
-    bool IsImage = Extension == TEXT("jpg") || Extension == TEXT("png") || Extension == TEXT("jpeg") || Extension == TEXT("webp");
-    bool IsCss = Extension == TEXT("css") || Extension == TEXT("scss");
-    bool IsAnimAssets =  Extension == TEXT("json") ||  Extension == TEXT("skel") ||  Extension == TEXT("atlas") || Extension == TEXT("riv");
-    if ((IsJs || IsImage || IsCss || IsAnimAssets) && SearchModuleWithExtInDir(Dir, RequiredModule, Path, AbsolutePath))
+    if (IsJs && SearchModuleWithExtInDir(Dir, RequiredModule, Path, AbsolutePath))
         return true;
     return SearchModuleWithExtInDir(Dir, RequiredModule + ".js", Path, AbsolutePath) ||
            SearchModuleWithExtInDir(Dir, RequiredModule + ".mjs", Path, AbsolutePath) ||

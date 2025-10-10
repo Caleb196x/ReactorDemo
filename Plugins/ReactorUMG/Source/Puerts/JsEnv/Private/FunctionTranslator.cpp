@@ -1,6 +1,6 @@
 ﻿/*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -216,7 +216,6 @@ v8::Local<v8::FunctionTemplate> FFunctionTranslator::ToFunctionTemplate(v8::Isol
     return v8::FunctionTemplate::New(Isolate, Call, v8::External::New(Isolate, this));
 }
 
-// 怎么调到这里来的？
 void FFunctionTranslator::Call(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
     v8::Isolate* Isolate = Info.GetIsolate();
@@ -318,7 +317,6 @@ void FFunctionTranslator::FastCall(v8::Isolate* Isolate, v8::Local<v8::Context>&
     for (TFieldIterator<PropertyMacro> It(CallFunction); It && (It->PropertyFlags & CPF_Parm); ++It)
     {
         PropertyMacro* Property = *It;
-        
         FOutParmRec* Out = nullptr;
         if (Property->HasAnyPropertyFlags(CPF_OutParm))
         {

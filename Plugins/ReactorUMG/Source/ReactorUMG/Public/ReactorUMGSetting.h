@@ -3,7 +3,7 @@
 #include "Engine/DeveloperSettings.h"
 #include "ReactorUMGSetting.generated.h"
 
-UCLASS(Config = Engine, DefaultConfig)
+UCLASS(Config = ReactorUMG, DefaultConfig, meta = (DisplayName = "ReactorUMG"))
 class REACTORUMG_API UReactorUMGSetting : public UDeveloperSettings
 {
 	GENERATED_BODY()

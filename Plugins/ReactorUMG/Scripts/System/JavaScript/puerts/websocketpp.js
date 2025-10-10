@@ -1,6 +1,6 @@
 /*
 * Tencent is pleased to support the open source community by making Puerts available.
-* Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2020 Tencent.  All rights reserved.
 * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms.
 * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
 */
@@ -50,8 +50,6 @@ var global = global || (function () { return this; }());
     
     const readyStates = ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'];
     
-    const poll_ws_objects = [];
-    
     class WebSocket extends EventTarget {
         constructor(url, protocols) {
             super();
@@ -72,9 +70,7 @@ var global = global || (function () { return this; }());
                 this._addPendingEvent({type:'close', code:code, reason: reason});
             }, 
             () => {
-                this._addPendingEvent({type:'error'});
-                this._cleanup();
-                this._addPendingEvent({type:'close', code:1006, reason: ""});
+                this._fail();
             });
             
             this._readyState = WebSocket.CONNECTING;
@@ -92,9 +88,21 @@ var global = global || (function () { return this; }());
         
         send(data) {
             if (this._readyState !== WebSocket.OPEN) {
-              throw new Error(`WebSocket is not open: readyState ${this._readyState} (${readyStates[this._readyState]})`);
+                //throw new Error(`WebSocket is not open: readyState ${this._readyState} (${readyStates[this._readyState]})`);
+                this.dispatchEvent({type:'error'}); //dispatchEvent immediately
+                return;
             }
-            this._raw.send(data);
+            try {
+                this._raw.send(data);
+            } catch {
+                this._fail();
+            }
+        }
+        
+        _fail() {
+            this._addPendingEvent({type:'error'});
+            this._cleanup();
+            this._addPendingEvent({type:'close', code:1006, reason: ""});
         }
         
         _cleanup() {
@@ -111,10 +119,11 @@ var global = global || (function () { return this; }());
             } 
             const ev = this._pendingEvents.shift();
             if (ev) this.dispatchEvent(ev);
-            if (this._pendingEvents.length === 0 && this._readyState == WebSocket.CLOSING) {
+            if ((this._pendingEvents.length === 0 && this._readyState == WebSocket.CLOSING) || (ev && ev.type === 'close')) {
                 this._raw = undefined;
                 clearInterval(this._tid);
                 this._readyState = WebSocket.CLOSED;
+                this._pendingEvents = [];
             }
         }
         

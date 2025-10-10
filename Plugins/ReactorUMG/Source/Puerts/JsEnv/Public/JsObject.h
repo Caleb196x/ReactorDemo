@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -49,6 +49,8 @@ public:
 #ifdef THREAD_SAFE
         v8::Locker Locker(Isolate);
 #endif
+        v8::Isolate::Scope IsolateScope(Isolate);
+        v8::HandleScope HandleScope(Isolate);
         GContext.Reset(Isolate, InOther.GContext.Get(Isolate));
         GObject.Reset(Isolate, InOther.GObject.Get(Isolate));
         JsEnvLifeCycleTracker = PUERTS_NAMESPACE::DataTransfer::GetJsEnvLifeCycleTracker(Isolate);
@@ -62,9 +64,6 @@ public:
 
     ~FJsObject()
     {
-#ifdef THREAD_SAFE
-        v8::Locker Locker(Isolate);
-#endif
         if (JsEnvLifeCycleTracker.expired())
         {
 #if V8_MAJOR_VERSION < 11
@@ -74,6 +73,9 @@ public:
         }
         else
         {
+#ifdef THREAD_SAFE
+            v8::Locker Locker(Isolate);
+#endif
             GObject.Reset();
             GContext.Reset();
         }
@@ -96,6 +98,8 @@ public:
             return *this;
         }
         Isolate = InOther.Isolate;
+        v8::Isolate::Scope IsolateScope(Isolate);
+        v8::HandleScope HandleScope(Isolate);
         GContext.Reset(Isolate, InOther.GContext.Get(Isolate));
         GObject.Reset(Isolate, InOther.GObject.Get(Isolate));
         JsEnvLifeCycleTracker = PUERTS_NAMESPACE::DataTransfer::GetJsEnvLifeCycleTracker(Isolate);

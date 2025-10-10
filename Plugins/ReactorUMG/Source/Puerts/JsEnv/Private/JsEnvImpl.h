@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -137,7 +137,7 @@ public:
 
     virtual void Release() override { Started = false; }
 
-    virtual void ForceReloadJsFile(const FString& ModuleName);
+    virtual void ForceReloadJsFile(const FString& ModuleName) override;
 
 public:
     bool IsTypeScriptGeneratedClass(UClass* Class);
@@ -563,7 +563,7 @@ private:
 
     v8::Global<v8::Function> GetESMMain;
 
-    v8::Global<v8::Function> ReloadJs;
+    v8::Global<v8::Function> MyReloadJs;
 
 #if !PUERTS_FORCE_CPP_UFUNCTION
     v8::Global<v8::Function> MergePrototype;

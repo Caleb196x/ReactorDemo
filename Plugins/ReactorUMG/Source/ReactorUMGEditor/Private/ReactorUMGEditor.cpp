@@ -74,7 +74,7 @@ void GenerateUEDeclaration(const FName& SearchPath, bool GenFull)
 		UClass* Class = Cast<UClass>(SortedClasses[i]);
 		if (Class && Class->ImplementsInterface(UCodeGenerator::StaticClass()))
 		{
-			ICodeGenerator::Execute_Gen(Class->GetDefaultObject(), TypesHomeDir);
+			// ICodeGenerator::Execute_Gen(Class->GetDefaultObject(), TypesHomeDir);
 		}
 	}
 }
@@ -148,7 +148,7 @@ void SetJSDirToNonAssetPackageList()
 	FString Section = TEXT("/Script/UnrealEd.ProjectPackagingSettings");
 	FString Key = TEXT("DirectoriesToAlwaysStageAsUFS");
 	FString PathToStage = TEXT("(Path=\"JavaScript\")");
-
+	
 	TArray<FString> ExistingValues;
 	GConfig->GetArray(*Section, *Key, ExistingValues, ConfigFilePath);
 	if (!ExistingValues.Contains(PathToStage))
@@ -191,12 +191,7 @@ void FReactorUMGEditorModule::InstallTsScriptNodeModules()
 
 	if (FPaths::FileExists(PackageJson))
 	{
-		// install dependency node modules
-		FString CommandOut, CommandError;
-		if (!FReactorUtils::RunCommandWithProcess(TEXT("yarn install"), TsProjectDir, nullptr, CommandOut, CommandError))
-		{
-			UE_LOG(LogReactorUMG, Warning, TEXT("Failed to install node modules for TypeScript project, ERROR: %s"), *CommandError);
-		}
+		// do nothing
 	}
 	else
 	{

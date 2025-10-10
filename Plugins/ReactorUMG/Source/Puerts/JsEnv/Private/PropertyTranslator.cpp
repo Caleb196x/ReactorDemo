@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -11,7 +11,11 @@
 #include "ObjectMapper.h"
 #include "StructWrapper.h"
 #if !defined(ENGINE_INDEPENDENT_JSENV)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 5)
+#include "StructUtils/UserDefinedStruct.h"
+#else
 #include "Engine/UserDefinedStruct.h"
+#endif
 #endif
 #include "ArrayBuffer.h"
 #include "ContainerWrapper.h"
@@ -37,7 +41,7 @@ void FPropertyTranslator::Getter(
     if (!IsPropertyValid())
     {
         FV8Utils::ThrowException(Isolate, "Property is invalid!");
-        return; 
+        return;
     }
 
     v8::Local<v8::Value> Ret;
@@ -341,7 +345,6 @@ public:
     v8::Local<v8::Value> UEToJs(
         v8::Isolate* Isolate, v8::Local<v8::Context>& Context, const void* ValuePtr, bool PassByPointer) const override
     {
-        const FString CppTypeName = Property->GetCPPType();
         return v8::Integer::New(
             Isolate, static_cast<int32>(EnumProperty->GetUnderlyingProperty()->GetSignedIntPropertyValue(ValuePtr)));
     }
@@ -349,10 +352,6 @@ public:
     bool JsToUE(v8::Isolate* Isolate, v8::Local<v8::Context>& Context, const v8::Local<v8::Value>& Value, void* ValuePtr,
         bool DeepCopy) const override
     {
-        const FString CppTypeName = Property->GetCPPType();
-
-        FString ExternType;
-        const FString Name = Property->GetCPPMacroType(ExternType);
         EnumProperty->GetUnderlyingProperty()->SetIntPropertyValue(
             ValuePtr, static_cast<uint64>(Value->Int32Value(Context).ToChecked()));
         return true;
@@ -1031,7 +1030,7 @@ public:
     }
 };
 
-// fix array        
+// fix array
 class FFixArrayReflection : public FPropertyTranslator
 {
 public:

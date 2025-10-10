@@ -1,6 +1,6 @@
 /*
 * Tencent is pleased to support the open source community by making Puerts available.
-* Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2020 Tencent.  All rights reserved.
 * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms.
 * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
 */
@@ -190,7 +190,6 @@ var global = global || (function () { return this; }());
     }
     
     function genRequire(requiringDir, outerIsESM) {
-        // module cache
         let localModuleCache = Object.create(null);
         function require(moduleName) {
             if (org_require) {
@@ -198,11 +197,8 @@ var global = global || (function () { return this; }());
                     return org_require(moduleName);
                 } catch (e) {}
             }
-
             moduleName = normalize(moduleName);
-
             let forceReload = false;
-            // find the module from the local module cache
             if ((moduleName in localModuleCache)) {
                 let m = localModuleCache[moduleName];
                 if (m && !m.__forceReload) {
@@ -211,7 +207,6 @@ var global = global || (function () { return this; }());
                     forceReload = true;
                 }
             }
-
             if (moduleName in buildinModule) return buildinModule[moduleName];
             let nativeModule = findModule(moduleName);
             if (nativeModule) {
@@ -230,19 +225,17 @@ var global = global || (function () { return this; }());
             }
             
             let key = fullPath;
-            // find the module information from the global module cache
             if ((key in moduleCache) && !forceReload) {
                 const module = moduleCache[key];
                 if (module && !module.__forceReload) {
                     localModuleCache[moduleName] = module;
                     return module.exports;
-                }
+            }
             }
 
             let m = {"exports":{}};
             localModuleCache[moduleName] = m;
             moduleCache[key] = m;
-
             let sid = addModule(m);
             let isESM = outerIsESM === true || fullPath.endsWith(".mjs") || fullPath.endsWith(".mbc");
             if (fullPath.endsWith(".cjs") || fullPath.endsWith(".cbc")) isESM = false;
@@ -256,10 +249,10 @@ var global = global || (function () { return this; }());
             if (!isPictureFile && !isCssFile && !isAnimFile) {
                 script = isESM ? undefined : loadModule(fullPath);
                 bytecode = undefined;
-                if (fullPath.endsWith(".mbc") || fullPath.endsWith(".cbc")) {
-                    bytecode = script;
-                    script = generateEmptyCode(getSourceLengthFromBytecode(bytecode));
-                }
+            if (fullPath.endsWith(".mbc") || fullPath.endsWith(".cbc")) {
+                bytecode = script;
+                script = generateEmptyCode(getSourceLengthFromBytecode(bytecode));
+            }
             } else {
                 console.log("picture file, css file and anim file will not be loaded");
             }
@@ -338,8 +331,8 @@ var global = global || (function () { return this; }());
                 const module = moduleCache[moduleKey];
                 if (module) {
                     module.__forceReload = true;
-                    reloaded = true;
-                    if (reloadModuleKey) break;
+                reloaded = true;
+                if (reloadModuleKey) break;
                 }
             }
         }

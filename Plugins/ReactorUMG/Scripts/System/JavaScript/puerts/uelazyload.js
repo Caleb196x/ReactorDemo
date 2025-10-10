@@ -1,6 +1,6 @@
 /*
 * Tencent is pleased to support the open source community by making Puerts available.
-* Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2020 Tencent.  All rights reserved.
 * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms.
 * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
 */
@@ -13,6 +13,8 @@ var global = global || (function () { return this; }());
     
     let loadCPPType = global.puerts.loadCPPType;
     
+    let getFNameString = global.puerts.getFNameString;
+    
     function rawSet(obj, key, val) {
         Object.defineProperty(obj, key, {
             value: val,
@@ -22,16 +24,33 @@ var global = global || (function () { return this; }());
         });
     }
     
+    function interceptClass(cls) {
+        let cls_proxy = new Proxy(cls, {
+        get : function(cls, name) {
+                const fname = getFNameString(name);
+                const p = Object.getOwnPropertyDescriptor(cls, fname);
+                if (p) {
+                    Object.defineProperty(cls, name, p);
+                    return cls[fname];
+                }
+            }
+        });
+        Object.setPrototypeOf(cls_proxy, Object.getPrototypeOf(cls));
+        Object.setPrototypeOf(cls, cls_proxy);
+    }
+    
     let UE = Object.create(null);
     let UE_proxy = new Proxy(UE, {
         get : function(UE, name)
         {
             let cls = loadUEType(name);
             rawSet(UE, name, cls);
+            interceptClass(cls);
             return cls;
         }
     });
     Object.setPrototypeOf(UE, UE_proxy);
+    Object.defineProperty(UE, "__esModule", {value: false});
 
     const TNAMESPACE = 0;
     const TENUM = 1
@@ -95,6 +114,7 @@ var global = global || (function () { return this; }());
         }
     });
     Object.setPrototypeOf(CPP, CPP_proxy);
+    Object.defineProperty(CPP, "__esModule", {value: false});
     
     puerts.registerBuildinModule('cpp', CPP);
     global.CPP = CPP;
@@ -224,15 +244,25 @@ var global = global || (function () { return this; }());
     
     blueprint.unmixin = unmixin;
     
+    const bpns = new Set(['Game']);
+    
+    function blueprint_createNamespace(ns) {
+        if (!bpns.has(ns)) {
+            rawSet(UE, ns, createNamespaceOrClass(ns, undefined, TNAMESPACE));
+            bpns.add(ns);
+        }
+    }
+    
     function blueprint_load(cls) {
         if (cls.__path) {
             let c = cls
-            let path = `.${c.__path}`
+            let path = `.${c.__path}`;
             c = c.__parent;
             while (c && c.__path) {
                 path = `/${c.__path}${path}`
                 c = c.__parent;
             }
+            
             let ufield = UE.Field.Load(path, true);
             if (!ufield) {
                 throw new Error(`load ${path} fail!`);
@@ -245,13 +275,14 @@ var global = global || (function () { return this; }());
                 jsclass.__name = cls.__path;
                 cls.__parent[cls.__path] = jsclass;
             }
-            
+            interceptClass(jsclass);
         } else {
             throw new Error("argument #0 is not a unload type");
         }
     }
     
     blueprint.load = blueprint_load;
+    blueprint.namespace = blueprint_createNamespace;
     
     function blueprint_unload(cls) {
         if (cls.__puerts_ufield) {
@@ -271,7 +302,7 @@ var global = global || (function () { return this; }());
     
     function translateType(t) {
         if (typeof t !== 'number') {
-            if (t.hasOwnProperty('__puerts_ufield')) {
+            if (Object.prototype.hasOwnProperty.call(t, '__puerts_ufield')) {
                 return t.__puerts_ufield
             } else {
                 return t.StaticClass();

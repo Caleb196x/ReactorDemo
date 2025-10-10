@@ -45,7 +45,7 @@ public:
 	REACTORUMG_API void RestartJsScripts(const FString& JSContentDir, const FString& ScriptHomeDir, const FString& MainJsScript, const TArray<TPair<FString, UObject*>>& Arguments);
 
 private:
-	FJsEnvRuntime(int32 EnvPoolSize = 1, int32 DebugPort = 8086);
+	FJsEnvRuntime(int32 EnvPoolSize = 1);
 	TMap<TSharedPtr<PUERTS_NAMESPACE::FJsEnv>, int32> JsRuntimeEnvPool;
 	std::shared_ptr<FReactorUMGJSLogger> ReactorUmgLogger;
 };

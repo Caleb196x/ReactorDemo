@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -20,7 +20,6 @@
 #include "JSLogger.h"
 #if !defined(ENGINE_INDEPENDENT_JSENV)
 #include "JSGeneratedClass.h"
-#include "JSAnimGeneratedClass.h"
 #include "JSWidgetGeneratedClass.h"
 #include "JSGeneratedFunction.h"
 #endif
@@ -156,6 +155,12 @@ static void ToCPtrArray(const v8::FunctionCallbackInfo<v8::Value>& Info)
         Buff[i] = Ptr;
     }
     Info.GetReturnValue().Set(Ret);
+}
+
+static void GetFNameString(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+    FName RequiredFName(*FV8Utils::ToFString(Info.GetIsolate(), Info[0]));
+    Info.GetReturnValue().Set(FV8Utils::ToV8String(Info.GetIsolate(), RequiredFName));
 }
 
 #if defined(WITH_NODEJS)
@@ -494,6 +499,11 @@ FJsEnvImpl::FJsEnvImpl(std::shared_ptr<IJSModuleLoader> InModuleLoader, std::sha
 
     MethodBindingHelper<&FJsEnvImpl::LoadCppType>::Bind(Isolate, Context, PuertsObj, "loadCPPType", This);
 
+    PuertsObj
+        ->Set(Context, FV8Utils::ToV8String(Isolate, "getFNameString"),
+            v8::FunctionTemplate::New(Isolate, GetFNameString)->GetFunction(Context).ToLocalChecked())
+        .Check();
+
     MethodBindingHelper<&FJsEnvImpl::UEClassToJSClass>::Bind(Isolate, Context, Global, "__tgjsUEClassToJSClass", This);
 
     MethodBindingHelper<&FJsEnvImpl::NewContainer>::Bind(Isolate, Context, Global, "__tgjsNewContainer", This);
@@ -634,7 +644,7 @@ FJsEnvImpl::FJsEnvImpl(std::shared_ptr<IJSModuleLoader> InModuleLoader, std::sha
     GetESMMain.Reset(
         Isolate, PuertsObj->Get(Context, FV8Utils::ToV8String(Isolate, "getESMMain")).ToLocalChecked().As<v8::Function>());
 
-    ReloadJs.Reset(Isolate, PuertsObj->Get(Context, FV8Utils::ToV8String(Isolate, "__reload")).ToLocalChecked().As<v8::Function>());
+    MyReloadJs.Reset(Isolate, PuertsObj->Get(Context, FV8Utils::ToV8String(Isolate, "__reload")).ToLocalChecked().As<v8::Function>());
 #if !PUERTS_FORCE_CPP_UFUNCTION
     MergePrototype.Reset(
         Isolate, PuertsObj->Get(Context, FV8Utils::ToV8String(Isolate, "__mergePrototype")).ToLocalChecked().As<v8::Function>());
@@ -685,6 +695,10 @@ FJsEnvImpl::FJsEnvImpl(std::shared_ptr<IJSModuleLoader> InModuleLoader, std::sha
     InitWebsocketPPWrap(Context);
     ExecuteModule("puerts/websocketpp.js");
 #endif
+#ifdef WITH_QUICKJS
+    auto rt = Isolate->runtime_;
+    JS_SetMaxStackSize(rt, 1024 * 1024);
+#endif
 }
 
 // #lizard forgives
@@ -728,7 +742,7 @@ FJsEnvImpl::~FJsEnvImpl()
     InspectorMessageHandler.Reset();
     Require.Reset();
     GetESMMain.Reset();
-    ReloadJs.Reset();
+    MyReloadJs.Reset();
     JsPromiseRejectCallback.Reset();
     ForceReloadJs.Reset();
 
@@ -836,13 +850,6 @@ FJsEnvImpl::~FJsEnvImpl()
                     JSWidgetGeneratedClass->Release();
                 }
             }
-            else if (auto JSAnimGeneratedClass = Cast<UJSAnimGeneratedClass>(GeneratedClass))
-            {
-                if (JSWidgetGeneratedClass->IsValidLowLevelFast() && !UEObjectIsPendingKill(JSWidgetGeneratedClass))
-                {
-                    JSAnimGeneratedClass->Release();
-                }
-            }
         }
 #endif
 
@@ -927,8 +934,6 @@ FJsEnvImpl::~FJsEnvImpl()
         }
     }
     StructCache.Empty();
-
-    UE_LOG(Puerts, Warning, TEXT("Running Destruct for FJsEnvImpl"))
 }
 
 void FJsEnvImpl::InitExtensionMethodsMap()
@@ -1478,7 +1483,7 @@ void FJsEnvImpl::JsHotReload(FName ModuleName, const FString& JsSource)
     v8::HandleScope HandleScope(Isolate);
     auto Context = DefaultContext.Get(Isolate);
     v8::Context::Scope ContextScope(Context);
-    auto LocalReloadJs = ReloadJs.Get(Isolate);
+    auto LocalReloadJs = MyReloadJs.Get(Isolate);
 
     FString OutPath, OutDebugPath;
 
@@ -1529,7 +1534,7 @@ void FJsEnvImpl::ReloadSource(const FString& Path, const PString& JsSource)
     v8::HandleScope HandleScope(Isolate);
     auto Context = DefaultContext.Get(Isolate);
     v8::Context::Scope ContextScope(Context);
-    auto LocalReloadJs = ReloadJs.Get(Isolate);
+    auto LocalReloadJs = MyReloadJs.Get(Isolate);
 
     Logger->Info(FString::Printf(TEXT("reload js [%s]"), *Path));
     v8::TryCatch TryCatch(Isolate);
@@ -2685,6 +2690,18 @@ bool FJsEnvImpl::RemoveFromDelegate(
         return false;
     }
 
+    if (!Iter->second.Owner.IsValid())
+    {
+        Logger->Warn("try to unbind a delegate with invalid owner!");
+        ClearDelegate(Isolate, Context, DelegatePtr);
+        if (!Iter->second.PassByPointer)
+        {
+            delete ((FScriptDelegate*) Iter->first);
+        }
+        DelegateMap.erase(Iter);
+        return false;
+    }
+
     FScriptDelegate Delegate;
 
     if (Iter->second.DelegateProperty)
@@ -3435,7 +3452,6 @@ bool FJsEnvImpl::GetContainerTypeProperty(v8::Local<v8::Context> Context, v8::Lo
             *PropertyPtr = nullptr;
             return false;
         }
-        
         *PropertyPtr = ContainerMeta.GetBuiltinProperty((BuiltinType) Type);
         return true;
     }
@@ -4450,18 +4466,22 @@ void FJsEnvImpl::Mixin(const v8::FunctionCallbackInfo<v8::Value>& Info)
         New->Bind();
         New->StaticLink(true);
 
-        (void) (New->GetDefaultObject());
-        if (auto AnimClass = Cast<UAnimBlueprintGeneratedClass>(New))
-        {
-            AnimClass->UpdateCustomPropertyListForPostConstruction();
-        }
-        else if (auto WidgetClass = Cast<UWidgetBlueprintGeneratedClass>(New))
+        auto CDO = New->GetDefaultObject();
+        if (auto WidgetClass = Cast<UWidgetBlueprintGeneratedClass>(New))
         {
             WidgetClass->UpdateCustomPropertyListForPostConstruction();
         }
         else if (auto BPClass = Cast<UBlueprintGeneratedClass>(New))
         {
             BPClass->UpdateCustomPropertyListForPostConstruction();
+        }
+
+        if (CDO->IsA<AActor>())
+        {
+            if (UBlueprintGeneratedClass* BPGClass = Cast<UBlueprintGeneratedClass>(New))
+            {
+                BPGClass->bCooked = true;
+            }
         }
 
 #if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION > 12

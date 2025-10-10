@@ -3,6 +3,7 @@
 #include "Logging/MessageLog.h"
 #include "LogReactorUMG.h"
 #include "ReactorUtils.h"
+#include "PuertsSetting.h"
 
 void FReactorUMGJSLogger::Log(const FString& Message) const
 {
@@ -32,14 +33,15 @@ void FReactorUMGJSLogger::Info(const FString& Message) const
 	UE_LOG(LogReactorUMG, Display, TEXT("%s"), *Message)
 }
 
-FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize, int32 DebugPort)
+FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize)
 {
+	int32 DebugPort = GetDefault<UPuertsSetting>()->DebugPort;
 	ReactorUmgLogger = std::make_shared<FReactorUMGJSLogger>();
 	for (int32 i = 0; i < EnvPoolSize; i++)
 	{
 		TSharedPtr<puerts::FJsEnv> JsEnv = MakeShared<puerts::FJsEnv>(
 		std::make_unique<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")),
-		ReactorUmgLogger, DebugPort + i);
+		ReactorUmgLogger, DebugPort + i + 3);
 		JsRuntimeEnvPool.Add(JsEnv, 0);
 	}
 }

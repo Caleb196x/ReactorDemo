@@ -81,3 +81,7 @@ Plugins/**/node_modules/*
 Plugins/ReactorUMG/Scripts/Project/src/types/ue/ue.d.ts
 Plugins/ReactorUMG/Scripts/Project/src/types/ue/ue_bp.d.ts
 Plugins/ReactorUMG/Scripts/Project/src/types/cpp
+
+# 
+**/v8_9.4.146.24
+**/nodejs_16

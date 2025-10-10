@@ -1,18 +1,11 @@
 #include "ReactorUtils.h"
 
+#include "Interfaces/IPluginManager.h"
 #include "LogReactorUMG.h"
 #include "ReactorUMGSetting.h"
 #include "HAL/PlatformFilemanager.h"
-#include "GenericPlatform/GenericPlatformFile.h"
 #include "Misc/Paths.h"
-#include "Windows/AllowWindowsPlatformTypes.h"
-	#include <shellapi.h>
-	#include <ShlObj.h>
-	#include <LM.h>
-	#include <Psapi.h>
-	#include <TlHelp32.h>
-#include "Windows/HideWindowsPlatformTypes.h"
-#include "Windows/WindowsPlatformMisc.h"
+#include "PuertsSetting.h"
 
 bool FReactorUtils::CopyDirectoryRecursive(const FString& SrcDir, const FString& DestDir, const TArray<FString>& SkipExistFiles)
 {
@@ -84,6 +77,17 @@ void FReactorUtils::DeleteFile(const FString& FilePath)
 	}
 }
 
+FString FReactorUtils::GetPluginContentDir()
+{
+	return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetContentDir());
+}
+
+FString FReactorUtils::GetPluginDir()
+{
+	return FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin("ReactorUMG")->GetBaseDir());
+
+}
+
 bool FReactorUtils::DeleteDirectoryRecursive(const FString& DirPath)
 {
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -123,6 +127,28 @@ FString FReactorUtils::GetTypeScriptHomeDir()
 	}
 
 	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir()), ScriptHomeDir);
+}
+
+FString FReactorUtils::GetGamePlayTSHomeDir()
+{
+	const FString ProjectName = FApp::GetProjectName();
+	const FString TSGamePlayHomeDir = FPaths::Combine(GetTypeScriptHomeDir(), TEXT("src"), ProjectName);
+	if (!FPaths::DirectoryExists(TSGamePlayHomeDir))
+	{
+		if (CreateDirectoryRecursive(TSGamePlayHomeDir))
+		{
+			return TSGamePlayHomeDir;
+		}
+	}
+
+	return TSGamePlayHomeDir;
+}
+
+FString FReactorUtils::GetGamePlayStartPoint()
+{
+	const FString ProjectName = FApp::GetProjectName();
+	const FString DestDir = GetDefault<UPuertsSetting>()->RootPath;
+	return FPaths::Combine(FPaths::ProjectContentDir(), DestDir, TEXT("src"), ProjectName, TEXT("start_game.js"));
 }
 
 bool FReactorUtils::CheckNameExistInArray(const TArray<FString>& SkipExistFiles, const FString& CheckName)
@@ -221,6 +247,7 @@ FString FReactorUtils::ConvertRelativePathToFullUsingTSConfig(const FString& Rel
 	return Result;
 }
 
+/**
 bool FReactorUtils::RunCommandWithProcess(const FString& Command, const FString& WorkDir, FScopedSlowTask* SlowTask, FString& StdOut, FString& StdErr)
 {
 	bool bAllocSlowTask = false;
@@ -315,6 +342,7 @@ bool FReactorUtils::RunCommandWithProcess(const FString& Command, const FString&
 	
 	return false;
 }
+**/
 
 FString FReactorUtils::GetTSCBuildOutDirFromTSConfig(const FString& ProjectDir)
 {

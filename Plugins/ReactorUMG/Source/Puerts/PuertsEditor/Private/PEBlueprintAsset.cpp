@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -1152,7 +1152,7 @@ void UPEBlueprintAsset::AddMemberVariable(FName NewVarName, FPEGraphPinType InGr
 
         // The following code recalculates the final flags.
         // Variables added to the blueprint via FBlueprintEditorUtils::AddMemberVariable come with some default flags.
-        InFlags |= CPF_Edit | CPF_BlueprintVisible | CPF_DisableEditOnInstance;
+        InFlags |= CPF_Edit | CPF_BlueprintVisible;
 
         if (Blueprint->NewVariables[VarIndex].VarType.PinCategory == UEdGraphSchema_K2::PC_MCDelegate)
         {
@@ -1188,6 +1188,11 @@ void UPEBlueprintAsset::AddMemberVariableWithMetaData(FName InNewVarName, FPEGra
         EPropertyFlags InputFlags = static_cast<EPropertyFlags>((static_cast<uint64>(InHFLags) << 32) + InLFlags);
 
         InputFlags |= InMetaData->PropertyFlags;
+        // meta data has instanced specifier
+        if (InMetaData->MetaData.Contains(TEXT("EditInline")))
+        {
+            InputFlags &= ~CPF_DisableEditOnInstance;
+        }
         InLFlags = (static_cast<uint64>(InputFlags) & 0xffffffff);
         InHFLags = (static_cast<uint64>(InputFlags) >> 32);
     }

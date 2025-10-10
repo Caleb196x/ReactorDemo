@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -414,9 +414,10 @@ void V8WebSocketClientImpl::OnFail(wspp_connection_hdl InHandle)
     if (!Handles[ON_FAIL].IsEmpty())
     {
         wspp_client::connection_ptr con = Client.get_con_from_hdl(InHandle);
-        v8::Local<v8::Value> args[1] = {v8::String::NewFromUtf8(
-            Isolate, con->get_ec().message().c_str(), v8::NewStringType::kNormal, con->get_ec().message().size())
-                                            .ToLocalChecked()};
+        std::stringstream ss;
+        ss << "on fail: " << con->get_ec().message() << "[" << con->get_ec().value() << "]" << std::endl;
+        v8::Local<v8::Value> args[1] = {
+            v8::String::NewFromUtf8(Isolate, ss.str().c_str(), v8::NewStringType::kNormal, ss.str().size()).ToLocalChecked()};
         // must not raise exception in js, recommend just push a pending msg and process later.
         Handles[ON_FAIL].Get(Isolate)->Call(GContext.Get(Isolate), v8::Undefined(Isolate), 1, args);
     }
