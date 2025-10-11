@@ -109,6 +109,7 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	}
 	
 	WidgetName = GetName();
+	const FString WidgetPath = GetPathName();
 
 	TsProjectDir = FPaths::ConvertRelativePathToFull(FReactorUtils::GetTypeScriptHomeDir());
 	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);

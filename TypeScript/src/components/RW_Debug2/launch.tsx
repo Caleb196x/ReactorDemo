@@ -9,8 +9,8 @@ let bridgeCaller = (argv.getByName("ReactorUIWidget_BridgeCaller") as UE.JsBridg
 let container = (argv.getByName("WidgetTree") as UE.WidgetTree);
 let customArgs = (argv.getByName("CustomArgs") as UE.CustomJSArg);
 function Launch(container: $Nullable<UE.WidgetTree>) : Root {
-    ReactorUMG.init(container);
     return ReactorUMG.render(
+        container,
        <RW_Debug2/> 
     );
 }
@@ -23,3 +23,8 @@ if (customArgs.bIsUsingBridgeCaller && bridgeCaller && bridgeCaller.MainCaller) 
 } else { 
 	Launch(container);
 }
+
+
+argv.remove("ReactorUIWidget_BridgeCaller", bridgeCaller);
+argv.remove("WidgetTree", container);
+argv.remove("CustomArgs", customArgs);

@@ -9,8 +9,8 @@ let container = (argv.getByName("WidgetTree") as UE.WidgetTree);
 let bridgeCaller = (argv.getByName("BridgeCaller") as UE.JsBridgeCaller);
 
 function Launch(container: $Nullable<UE.WidgetTree>) : Root {
-    ReactorUMG.init(container);
     return ReactorUMG.render(
+        container,
        <RiveTest/> 
     );
 }

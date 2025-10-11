@@ -698,7 +698,7 @@ declare module "reactorUMG" {
     }
 
     interface TReactorUMG {
-        render(element: React.ReactElement) : Root;
+        render(coreWidget: any, element: React.ReactElement) : Root;
         init(coreWidget: any) : void;
         release() : void
     }

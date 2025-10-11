@@ -4,7 +4,6 @@
 #include "LogReactorUMG.h"
 #include "ReactorUtils.h"
 #include "PuertsSetting.h"
-#include "Kismet/KismetSystemLibrary.h"
 
 void FReactorUMGJSLogger::Log(const FString& Message) const
 {

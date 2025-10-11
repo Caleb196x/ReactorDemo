@@ -28,7 +28,11 @@
 #include "Widgets/Notifications/SNotificationList.h"
 // #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 5)
+#include "StructUtils/UserDefinedStruct.h"
+#else
 #include "Engine/UserDefinedStruct.h"
+#endif
 #include "Engine/UserDefinedEnum.h"
 #include "Engine/Blueprint.h"
 #include "CodeGenerator.h"
@@ -51,6 +55,15 @@
 #define TYPE_DECL_START "// __TYPE_DECL_START: "
 #define TYPE_DECL_END "// __TYPE_DECL_END"
 #define TYPE_ASSOCIATION "ASSOCIATION"
+
+bool bSearchAllPluginBP = true;
+static FAutoConsoleVariableRef CVarSearchAllPluginBP(TEXT("bSearchAllPluginBP"), bSearchAllPluginBP, TEXT(".\n"), ECVF_Default);
+
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 5
+#define GET_VERSION_ID(PD) LexToString(PD->CookedHash)
+#else
+#define GET_VERSION_ID(PD) PD->PackageGuid.ToString()
+#endif
 
 bool IsTypeScriptKeyword(const FString& InputString)
 {
@@ -619,6 +632,20 @@ void FTypeScriptDeclarationGenerator::LoadAllWidgetBlueprint(FName InSearchPath,
     FARFilter BPFilter;
     BPFilter.PackagePaths.Add(PackagePath);
     BPFilter.PackagePaths.Add(FName(TEXT("/Engine")));
+    if (bSearchAllPluginBP)
+    {
+        TArray<TSharedRef<IPlugin>> AllPlugins = IPluginManager::Get().GetDiscoveredPlugins();
+        for (TSharedRef<IPlugin> Plugin : AllPlugins)
+        {
+            if (!Plugin->CanContainContent())
+            {
+                continue;
+            }
+            FString PluginConfigFilename = Plugin->GetBaseDir();
+            FString PluginName = Plugin->GetName();
+            BPFilter.PackagePaths.Add(FName(FString::Printf(TEXT("/%s"), *PluginName)));
+        }
+    }
     BPFilter.bRecursivePaths = true;
     BPFilter.bRecursiveClasses = true;
 #if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 0
@@ -648,7 +675,7 @@ void FTypeScriptDeclarationGenerator::LoadAllWidgetBlueprint(FName InSearchPath,
 
         if (PackageData && BlueprintTypeDeclInfoPtr)
         {
-            auto FileVersion = PackageData->PackageGuid.ToString();
+            auto FileVersion = GET_VERSION_ID(PackageData);
             BlueprintTypeDeclInfoPtr->IsExist = true;
             BlueprintTypeDeclInfoPtr->Changed = InGenFull || (FileVersion != BlueprintTypeDeclInfoPtr->FileVersionString);
             BlueprintTypeDeclInfoPtr->FileVersionString = FileVersion;
@@ -656,7 +683,7 @@ void FTypeScriptDeclarationGenerator::LoadAllWidgetBlueprint(FName InSearchPath,
         else
         {
             BlueprintTypeDeclInfoCache.Add(AssetData.PackageName,
-                {TMap<FName, FString>(), PackageData ? PackageData->PackageGuid.ToString() : FString(TEXT("")), true, true, false});
+                {TMap<FName, FString>(), PackageData ? GET_VERSION_ID(PackageData) : FString(TEXT("")), true, true, false});
         }
     }
 }
@@ -965,7 +992,11 @@ bool FTypeScriptDeclarationGenerator::GenFunction(
             else
             {
                 FStringBuffer TmpBuf;
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 5
+                TMap<FName, FString>* MetaMap = FMetaData::GetMapForObject(Function);
+#else
                 TMap<FName, FString>* MetaMap = UMetaData::GetMapForObject(Function);
+#endif
                 const FName MetadataCppDefaultValueKey(*(FString(TEXT("CPP_Default_")) + Property->GetName()));
                 FString* DefaultValuePtr = nullptr;
                 if (MetaMap)
@@ -1414,7 +1445,8 @@ void FTypeScriptDeclarationGenerator::GenStruct(UStruct* Struct)
     auto GenConstrutor = [&]()
     {
         auto ClassDefinition = PUERTS_NAMESPACE::FindClassByType(Struct);
-        if (ClassDefinition && ClassDefinition->ConstructorInfos)
+        if (ClassDefinition && ClassDefinition->ConstructorInfos && ClassDefinition->ConstructorInfos->Name &&
+            ClassDefinition->ConstructorInfos->Type)
         {
             PUERTS_NAMESPACE::NamedFunctionInfo* ConstructorInfo = ClassDefinition->ConstructorInfos;
             while (ConstructorInfo && ConstructorInfo->Name && ConstructorInfo->Type)
@@ -1590,13 +1622,13 @@ private:
             UClass* Class = Cast<UClass>(SortedClasses[i]);
             if (Class && Class->ImplementsInterface(UCodeGenerator::StaticClass()))
             {
-                ICodeGenerator::Execute_Gen(Class->GetDefaultObject(), "");
+                ICodeGenerator::Execute_Gen(Class->GetDefaultObject(), TEXT(""));
             }
         }
 
         FName PackagePath = (InSearchPath == NAME_None) ? FName(TEXT("/Game")) : InSearchPath;
 
-        FString DialogMessage = FString::Printf(TEXT("genertate finish, %s store in %s, ([PATH=%s])"), TEXT("ue.d.ts"),
+        FString DialogMessage = FString::Printf(TEXT("generate finish, %s store in %s, ([PATH=%s])"), TEXT("ue.d.ts"),
             TEXT("Content/Typing/ue"), *PackagePath.ToString());
 
         FText DialogText = FText::Format(LOCTEXT("PluginButtonDialogText", "{0}"), FText::FromString(DialogMessage));

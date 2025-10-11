@@ -15,8 +15,8 @@ function Launch(container: $Nullable<UE.WidgetTree>) : Root {
         return null;
     }
 
-    ReactorUMG.init(container);
     return ReactorUMG.render(
+        container,
        <WBPR_YUAN/> 
     );
 }

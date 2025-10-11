@@ -23,6 +23,11 @@
         add : function(name, value) {
             argList.push(value);
             argMap[name] = value;
+        },
+        remove : function(name, value) {
+            delete argMap[name];
+            const idx = argList.indexOf(value);
+            if (idx !== -1) argList.splice(idx, 1);
         }
     }
 }());

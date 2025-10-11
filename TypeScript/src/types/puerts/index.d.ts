@@ -33,6 +33,7 @@ declare module "puerts" {
     const argv : {
         getByIndex(index: number): Object;
         getByName(name: string): Object;
+        remove(name: string, value: any);
     }
     
     function merge(des: {}, src: {}): void;

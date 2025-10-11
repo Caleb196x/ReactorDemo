@@ -1,7 +1,7 @@
 import * as UE from 'ue';
 import { JSXConverter } from './jsx_converter';
 import { getAllStyles } from '../parsers/cssstyle_parser';
-import { hasFontStyles, parseFont, setupFontStyles } from '../parsers/css_font_parser';
+import { hasFontStyles, setupFontStyles } from '../parsers/css_font_parser';
 
 export class InputJSXConverter extends JSXConverter {
     private isCheckbox: boolean;
@@ -17,7 +17,7 @@ export class InputJSXConverter extends JSXConverter {
         if (this.textChangeCallback) {
             widget.OnTextChanged.Remove(this.textChangeCallback);
         }
-        this.textChangeCallback = (text: string) => onChange({target: {value: text}});
+        this.textChangeCallback = (text: string) => onChange({target: {name: this.props.name, type: this.props.type, value: text}});
         widget.OnTextChanged.Add(this.textChangeCallback);
     }
 

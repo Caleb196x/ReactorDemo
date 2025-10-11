@@ -73,7 +73,7 @@ const FText UReactorUIWidget::GetPaletteCategory()
 
 void UReactorUIWidget::RunScriptToInitWidgetTree()
 {
-	if (!LaunchScriptPath.IsEmpty() && !UJsBridgeCaller::IsExistBridgeCaller(LaunchScriptPath))
+	if (!LaunchScriptPath.IsEmpty() && (!UJsBridgeCaller::IsExistBridgeCaller(LaunchScriptPath) || FReactorUtils::IsAnyPIERunning()))
 	{
 		TArray<TPair<FString, UObject*>> Arguments;
 		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(LaunchScriptPath);

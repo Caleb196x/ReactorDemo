@@ -172,19 +172,15 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
 }
 
 const reconciler = Reconciler(hostConfig);
-let widgetTree: UE.WidgetTree;
 
 export const ReactorUMG = {
-    render: function(reactElement: React.ReactNode) {
-        if (widgetTree == undefined) {
+    render: function(inWidgetTree: UE.WidgetTree, reactElement: React.ReactNode) {
+        if (inWidgetTree == undefined) {
             throw new Error("init with ReactorUIWidget first!");
         }
-        let root = new RootContainer(widgetTree);
+        let root = new RootContainer(inWidgetTree);
         const container = reconciler.createContainer(root, 0, null, false, false, "", null, null);
         reconciler.updateContainer(reactElement, container, null, null);
         return root;
-    },
-    init: function(inWidgetTree: UE.WidgetTree) {
-        widgetTree = inWidgetTree;
     }
 }
