@@ -350,7 +350,7 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(const FReactorUMGCompilerLog& Co
 
 void UReactorUMGWidgetBlueprint::ExecuteJsScripts()
 {
-	if (!CustomJSArg)
+	if (!CustomJSArg) 
 	{
 		CustomJSArg = NewObject<UCustomJSArg>(this, FName("WidgetBlueprint_CustomArgs"), RF_Transient);
 	}

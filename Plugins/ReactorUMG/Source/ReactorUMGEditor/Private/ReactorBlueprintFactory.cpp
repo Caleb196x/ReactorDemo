@@ -28,9 +28,8 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 	GeneratedTemplateOutput << "let container = (argv.getByName(\"WidgetTree\") as UE.WidgetTree);\n";
 	GeneratedTemplateOutput << "let customArgs = (argv.getByName(\"CustomArgs\") as UE.CustomJSArg);\n";
 	GeneratedTemplateOutput << "function Launch(container: $Nullable<UE.WidgetTree>) : Root {\n";
-	GeneratedTemplateOutput << "    ReactorUMG.init(container);\n";
 	GeneratedTemplateOutput << "    return ReactorUMG.render(\n";
-
+	GeneratedTemplateOutput << "       " << "container, \n";
 	const FString ComponentName = FString::Printf(TEXT("<%s/> \n"), *WidgetName);
 	GeneratedTemplateOutput << "       " << ComponentName;
 	GeneratedTemplateOutput << "    );\n";
@@ -43,6 +42,8 @@ void TemplateScriptCreator::GenerateLaunchTsxFile(const FString& ScriptHome)
 	GeneratedTemplateOutput << "} else { \n";
 	GeneratedTemplateOutput << "	Launch(container);\n";
 	GeneratedTemplateOutput << "}\n";
+	GeneratedTemplateOutput << "argv.remove(\"WidgetTree\", container);\n";
+	GeneratedTemplateOutput << "argv.remove(\"CustomArgs\", customArgs);\n";
 	GeneratedTemplateOutput.Indent(4);
 	
 	GeneratedTemplateOutput.Prefix = TEXT(".tsx");

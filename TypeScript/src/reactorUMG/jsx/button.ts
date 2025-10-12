@@ -105,9 +105,8 @@ export class ButtonConverter extends JSXConverter {
             return;
         }
 
-        const wrapperHandler = () => { setTimeout(() => handler(), 0); };
-        this.eventCallbacks[mapping.handler] = wrapperHandler;
-        button[mapping.event].Add(wrapperHandler);
+        this.eventCallbacks[mapping.handler] = handler;
+        button[mapping.event].Add(handler);
     }
 
     private removeSingleEventHandler(button: UE.Button, eventName: string) {

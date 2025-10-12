@@ -27,7 +27,7 @@ public class JsEnv : ModuleRules
         SupportedV8Versions.VDeprecated;
 #endif
 
-    private bool UseNodejs = true;
+    private bool UseNodejs = false;
 
     private bool Node16 = true;
 

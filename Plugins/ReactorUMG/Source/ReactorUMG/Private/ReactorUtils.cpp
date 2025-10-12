@@ -126,7 +126,7 @@ FString FReactorUtils::GetTypeScriptHomeDir()
 		return FPackageName::LongPackageNameToFilename(ScriptHomeDir);
 	}
 
-	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir()), ScriptHomeDir);
+	return FPaths::Combine(FPaths::ProjectDir(), ScriptHomeDir);
 }
 
 FString FReactorUtils::GetGamePlayTSHomeDir()

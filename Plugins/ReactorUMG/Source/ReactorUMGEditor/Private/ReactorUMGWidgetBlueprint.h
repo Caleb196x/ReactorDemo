@@ -88,17 +88,22 @@ public:
 	void ExecuteJsScripts();
 
 	void CompileTsScript();
+
+	UFUNCTION(BlueprintCallable)
+	FString GetTsProjectDir() const { return TsProjectDir; }
 	
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
+	UFUNCTION(BlueprintCallable)
+	FString GetTsScriptHomeFullDir() const { return TsScriptHomeFullDir; }
+
+	UFUNCTION(BlueprintCallable)
+	FString GetTsScriptHomeRelativeDir() const { return TsScriptHomeRelativeDir; }
+	
+	UFUNCTION(BlueprintCallable)
+	FString GetWidgetPath() const { return WidgetName; }
+	
 	FString TsProjectDir;
-	
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsScriptHomeFullDir;
-
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString TsScriptHomeRelativeDir;
-
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	FString WidgetName;
 
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
@@ -131,14 +136,15 @@ protected:
 	FDirectoryMonitor TsProjectMonitor;
 
 private:
-	
+	UPROPERTY()
 	TObjectPtr<UCustomJSArg> CustomJSArg;
+	
+	UPROPERTY()
+	TObjectPtr<UPanelSlot> RootSlot;
 	
 	FString LaunchJsScriptFullPath;
 
 	FString JSScriptContentDir;
-	
-	TObjectPtr<UPanelSlot> RootSlot;
 	
 	TSharedPtr<puerts::FJsEnv> JsEnv;
 
