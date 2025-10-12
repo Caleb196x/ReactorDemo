@@ -105,7 +105,9 @@ UObject* UReactorBlueprintFactory::FactoryCreateNew(UClass* Class, UObject* Pare
 	}
 
 	const FString WidgetName = Name.ToString();
-	const FString TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetTypeScriptHomeDir(), TEXT("src"), TEXT("components"), WidgetName);
+	const FString WidgetBPPathName = Parent->GetPathName();
+
+	const FString TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), WidgetBPPathName.Mid(5));
 	FReactorUtils::CreateDirectoryRecursive(TsScriptHomeFullDir);
 	TemplateScriptCreator Generator(TsScriptHomeFullDir, WidgetName);
 	Generator.GenerateTemplateLaunchScripts();

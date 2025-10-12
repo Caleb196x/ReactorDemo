@@ -64,11 +64,6 @@ public:
 
 	UFUNCTION(Blueprintable, Category="ReactorUMGEditor|WidgetBlueprint")
 	void ReportToMessageLog(const FString& Message);
-
-	// The path of the main javascript file where the entry function is used to execute during the runtime,
-	// which is the relative path of the Content/JavaScript path.
-	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
-	FString MainScriptPath;
 	
 	FORCEINLINE FString GetWidgetName()
 	{
@@ -90,6 +85,9 @@ public:
 	void CompileTsScript();
 
 	UFUNCTION(BlueprintCallable)
+	void ForceDeleteAssets(const TArray<UObject*>& InAssetsToDelete);
+
+	UFUNCTION(BlueprintCallable)
 	FString GetTsProjectDir() const { return TsProjectDir; }
 	
 	UFUNCTION(BlueprintCallable)
@@ -105,7 +103,10 @@ public:
 	FString TsScriptHomeFullDir;
 	FString TsScriptHomeRelativeDir;
 	FString WidgetName;
-
+	// The path of the main javascript file where the entry function is used to execute during the runtime,
+	// which is the relative path of the Content/JavaScript path.
+	FString MainScriptPath;
+	
 	UPROPERTY(BlueprintType, VisibleAnywhere, Category="ReactorUMGEditor|WidgetBlueprint")
 	UCompileErrorReport* CompileErrorReporter;
 	
@@ -114,7 +115,7 @@ protected:
 	virtual UClass* GetBlueprintClass() const override;
 	virtual bool SupportedByDefaultBlueprintFactory() const override;
 	
-	void RenameScriptDir(const TCHAR* NewName);
+	void RenameScriptDir(const TCHAR* NewName, UObject* NewOuter);
 	
 	void RegisterBlueprintDeleteHandle();
 	bool CheckLaunchJsScriptExist();

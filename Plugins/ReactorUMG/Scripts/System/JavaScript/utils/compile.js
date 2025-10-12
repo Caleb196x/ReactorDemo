@@ -56,7 +56,7 @@ function getFileOptionSystem(callObject) {
         return getCurrentDirectory() + "/node_modules/typescript/lib/tsc.js";
     }
     function getCurrentDirectory() {
-        return callObject.TsProjectDir;
+        return callObject.GetTsProjectDir();
     }
     function getDirectories(path) {
         let result = [];
@@ -145,9 +145,9 @@ function compile(callObject) {
 
     let customSystem = getFileOptionSystem(callObject);
 
-    const configFilePath = tsi.combinePaths(callObject.TsProjectDir, "tsconfig.json");
+    const configFilePath = tsi.combinePaths(callObject.GetTsProjectDir(), "tsconfig.json");
     let { filesFromConfig, options } = readAndParseConfigFile(customSystem, configFilePath);
-    const scriptDir = callObject.TsScriptHomeFullDir;
+    const scriptDir = callObject.GetTsScriptHomeFullDir();
     let fileNames = UE.FileSystemOperation.GetFilesRecursively(scriptDir);
     fileNames = convertTArrayToJSArray(fileNames);
     if (fileNames.length === 0) {
@@ -263,6 +263,9 @@ function compile(callObject) {
             compileInternal(service, fileName, program, compileErrorReporter);
         }
     });
+
+    compileErrorReporter = undefined;
 }
 
 bridgeCaller.MainCaller.Bind(compile);
+puerts_1.argv.remove("BridgeCaller", bridgeCaller);

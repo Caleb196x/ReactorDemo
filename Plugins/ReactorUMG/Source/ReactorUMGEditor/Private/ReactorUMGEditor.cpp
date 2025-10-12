@@ -5,6 +5,7 @@
 #include "ReactorBlueprintCompiler.h"
 #include "AssetToolsModule.h"
 #include "CodeGenerator.h"
+#include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Framework/Notifications/NotificationManager.h"
@@ -102,6 +103,18 @@ TUniquePtr<FAutoConsoleCommand> RegisterConsoleCommand()
 			GenerateUEDeclaration(SearchPath, GenFull);
 			const FString TypesHomeDir = FPaths::Combine(FReactorUtils::GetTypeScriptHomeDir(), TEXT("src"), TEXT("types"));
 			ShowGeneratedDialog(TypesHomeDir);
+		}));
+}
+
+
+TUniquePtr<FAutoConsoleCommand> RegisterDebugGCConsoleCommand()
+{
+	return MakeUnique<FAutoConsoleCommand>(TEXT("ReactorUMG.DebugFullGC"), TEXT("Request full gc in js"),
+		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+		{
+			FJsEnvRuntime::GetInstance().RebuildRuntimePool();
+			UE_LOG(LogReactorUMG, Display, TEXT("Request full gc finished~"));
+
 		}));
 }
 
@@ -216,6 +229,8 @@ void FReactorUMGEditorModule::StartupModule()
 	
 	CopyPredefinedSystemJSFiles();
 	ConsoleCommand = RegisterConsoleCommand();
+
+	DebugGCConsoleCommand = RegisterDebugGCConsoleCommand();
 	
 	const UReactorUMGSetting* PluginSettings = GetDefault<UReactorUMGSetting>();
 	if (PluginSettings->bAutoGenerateTSProject)

@@ -38,6 +38,8 @@ public:
 
 	REACTORUMG_API void ReleaseJsEnv(TSharedPtr<PUERTS_NAMESPACE::FJsEnv> JsEnv);
 
+	REACTORUMG_API void RebuildRuntimePool();
+
 	/**
 	 * reload all javascript files under ScriptHomeDir
 	 * @param ScriptHomeDir Relative path to the plugin content directory
@@ -48,4 +50,5 @@ private:
 	FJsEnvRuntime(int32 EnvPoolSize = 1);
 	TMap<TSharedPtr<PUERTS_NAMESPACE::FJsEnv>, int32> JsRuntimeEnvPool;
 	std::shared_ptr<FReactorUMGJSLogger> ReactorUmgLogger;
+	int32 EnvPoolSize;
 };

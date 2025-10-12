@@ -91,8 +91,8 @@ void FDirectoryMonitor::UnWatch()
 }
 
 UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer), CompileErrorReporter(nullptr), CustomJSArg(nullptr), LaunchJsScriptFullPath(TEXT("")), JSScriptContentDir(TEXT("")),
-		RootSlot(nullptr), JsEnv(nullptr), TSCompileErrorMessageBuffer(TEXT("")), bTsScriptsChanged(false)
+	: Super(ObjectInitializer), CompileErrorReporter(nullptr), CustomJSArg(nullptr), RootSlot(nullptr),
+		LaunchJsScriptFullPath(TEXT("")), JSScriptContentDir(TEXT("")), JsEnv(nullptr), TSCompileErrorMessageBuffer(TEXT("")), bTsScriptsChanged(false)
 {
 	if (this->HasAnyFlags(RF_ClassDefaultObject))
 	{
@@ -109,27 +109,43 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	}
 	
 	WidgetName = GetName();
-	const FString WidgetPath = GetPathName();
 
 	TsProjectDir = FPaths::ConvertRelativePathToFull(FReactorUtils::GetTypeScriptHomeDir());
-	TsScriptHomeFullDir = FPaths::Combine(TsProjectDir, TEXT("src"), TEXT("components"), WidgetName);
-	TsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), WidgetName);
+
+	const FString WidgetBPPathName = GetPathName();
+	FString Lefts, Rights;
+	WidgetBPPathName.Split(".", &Lefts, &Rights);
+	const FString ProjectName = FApp::GetProjectName();
+	
+	TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), Lefts.Mid(5) /* 排除/Game */);
+	TsScriptHomeRelativeDir = TEXT("src/") + ProjectName + Lefts.Mid(5);
 	JSScriptContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
 	LaunchJsScriptFullPath = GetLaunchJsScriptPath();
 	MainScriptPath = GetLaunchJsScriptPath(false);
 
 	RegisterBlueprintDeleteHandle();
+
+	FEditorDelegates::OnPreForceDeleteObjects.AddUObject(this, &UReactorUMGWidgetBlueprint::ForceDeleteAssets);
+}
+
+void UReactorUMGWidgetBlueprint::ForceDeleteAssets(const TArray<UObject*>& InAssetsToDelete)
+{
+	UE_LOG(LogReactorUMG, Warning, TEXT("Force delete react umg asset, it will rebuild js env to force release all js object holders."))
+	if (InAssetsToDelete.Find(this) != INDEX_NONE)
+	{
+		FJsEnvRuntime::GetInstance().RebuildRuntimePool();
+	}
 }
 
 bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
 {
 	bool Res = Super::Rename(NewName, NewOuter, Flags);
-	RenameScriptDir(NewName);
+	RenameScriptDir(NewName, NewOuter);
 	WidgetName = FString(NewName);
 	return Res;
 }
 
-void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
+void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName, UObject* NewOuter)
 {
 	if (NewName == nullptr)
 	{
@@ -137,24 +153,41 @@ void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
 		return;
 	}
 
-	if (WidgetName.Equals(NewName))
+	if (WidgetName.Equals(NewName) && NewOuter == GetOuter())
 	{
+		// do nothing
 		return;
 	}
-
-	const FString NewTsScriptHomeRelativeDir = FPaths::Combine(TEXT("src"), TEXT("components"), NewName);
-	const FString NewTsScriptHomeFullDir = FPaths::Combine(TsProjectDir, NewTsScriptHomeRelativeDir);
 	
-	FString PluginContentDir = FReactorUtils::GetPluginContentDir();
+	const FString WidgetBPPathName = NewOuter->GetPathName();
+	const FString ProjectName = FApp::GetProjectName();
+	
+	const FString NewWidgetRelativePath = TEXT("src/") + ProjectName + WidgetBPPathName.Mid(5);
+	const FString NewTsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), WidgetBPPathName.Mid(5) /* 排除/Game */);
+	
 	const FString OldTsScriptHomeDirFullPath = TsScriptHomeFullDir;
-	const FString OldJsScriptHomeDirFullPath = FPaths::Combine(PluginContentDir, TEXT("JavaScript"), TsScriptHomeRelativeDir);
+	const FString OldJsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), TsScriptHomeRelativeDir);
 
 	const FString NewTsScriptHomeDirFullPath = NewTsScriptHomeFullDir;
-	const FString NewJsScriptHomeDirFullPath = FPaths::Combine(PluginContentDir, TEXT("JavaScript"), NewTsScriptHomeRelativeDir);
+	const FString NewJsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), NewWidgetRelativePath);
 
+	auto MoveDirectory = [&](const FString& Src, const FString& Dst)
+	{
+		const FString NewParentDir = FPaths::GetPath(Dst);
+		const FString OldParentDir = FPaths::GetPath(Src);
+		if (NewParentDir.Equals(OldParentDir))
+		{
+			IFileManager::Get().Move(*Dst,*Src);
+		} else
+		{
+			FReactorUtils::CopyDirectoryTree(Src, Dst, true);
+			FReactorUtils::DeleteDirectoryRecursive(Src);
+		}	
+	};
+	
 	if (FPaths::DirectoryExists(OldTsScriptHomeDirFullPath))
 	{
-		IFileManager::Get().Move(*NewTsScriptHomeDirFullPath,*OldTsScriptHomeDirFullPath);
+		MoveDirectory(OldTsScriptHomeDirFullPath, NewTsScriptHomeDirFullPath);
 	}
 	else
 	{
@@ -163,7 +196,7 @@ void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
 
 	if (FPaths::DirectoryExists(OldJsScriptHomeDirFullPath))
 	{
-		IFileManager::Get().Move(*NewJsScriptHomeDirFullPath,*OldJsScriptHomeDirFullPath);
+		MoveDirectory(OldJsScriptHomeDirFullPath, NewJsScriptHomeDirFullPath);
 	}
 	else
 	{
@@ -171,7 +204,7 @@ void UReactorUMGWidgetBlueprint::RenameScriptDir(const TCHAR* NewName)
 	}
 
 	TsScriptHomeFullDir = NewTsScriptHomeFullDir;
-	TsScriptHomeRelativeDir = NewTsScriptHomeRelativeDir;
+	TsScriptHomeRelativeDir = NewWidgetRelativePath;
 	LaunchJsScriptFullPath = GetLaunchJsScriptPath();
 	MainScriptPath = GetLaunchJsScriptPath(false);
 }
@@ -183,35 +216,47 @@ void UReactorUMGWidgetBlueprint::RegisterBlueprintDeleteHandle()
 	
 	AssetRegistry.OnAssetRemoved().AddLambda([this](const FAssetData& AssetData)
 	{
+		if (!this || this->IsPossiblyDirty()) return;
+		
 		const FName AssetName = AssetData.AssetName;
-		if (this->GetFName() == AssetName)
+		
+		if (this && this->GetFName() == AssetName)
 		{
-			const FString TsScriptHomeDirFullPath = TsScriptHomeFullDir;
-			if (FPaths::DirectoryExists(TsScriptHomeDirFullPath))
-			{
-				if (!FReactorUtils::DeleteDirectoryRecursive(TsScriptHomeDirFullPath))
-				{
-					UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *TsScriptHomeDirFullPath);
-				}
-				else
-				{
-					UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *TsScriptHomeDirFullPath, *AssetName.ToString());
-				}
-			}
-
-			const FString JsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), TsScriptHomeRelativeDir);
-			if (FPaths::DirectoryExists(JsScriptHomeDirFullPath))
-			{
-				if (!FReactorUtils::DeleteDirectoryRecursive(JsScriptHomeDirFullPath))
-				{
-					UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *JsScriptHomeDirFullPath);
-				}
-				else
-				{
-					UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *JsScriptHomeDirFullPath, *AssetName.ToString());
-				}
-			}
+			const FString PackagePath = AssetData.PackagePath.ToString();
+			const FString AssetPath = PackagePath / AssetName.ToString();
+			const FString MyPath = this->GetPathName();
+			FString Left, Right;
+			MyPath.Split(".", &Left, &Right); 
+			const FString PureAssetPath = Left;
 			
+			if (PureAssetPath.Equals(AssetPath))
+			{
+				const FString TsScriptHomeDirFullPath = TsScriptHomeFullDir;
+				if (FPaths::DirectoryExists(TsScriptHomeDirFullPath))
+				{
+					if (!FReactorUtils::DeleteDirectoryRecursive(TsScriptHomeDirFullPath))
+					{
+						UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *TsScriptHomeDirFullPath);
+					}
+					else
+					{
+						UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *TsScriptHomeDirFullPath, *AssetName.ToString());
+					}
+
+					const FString JsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), TsScriptHomeRelativeDir);
+					if (FPaths::DirectoryExists(JsScriptHomeDirFullPath))
+					{
+						if (!FReactorUtils::DeleteDirectoryRecursive(JsScriptHomeDirFullPath))
+						{
+							UE_LOG(LogReactorUMG, Warning, TEXT("Delete %s failed"), *JsScriptHomeDirFullPath);
+						}
+						else
+						{
+							UE_LOG(LogReactorUMG, Log, TEXT("Delete %s success when delete smartui blueprint %s"), *JsScriptHomeDirFullPath, *AssetName.ToString());
+						}
+					}
+				}
+			}
 		}
 	});
 }
@@ -394,7 +439,6 @@ void UReactorUMGWidgetBlueprint::ExecuteScriptFunctionViaBridgeCaller(const FStr
 		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(BindName);
 
 		Arguments.Add(TPair<FString, UObject*>(TEXT("BridgeCaller"), Caller));
-		Arguments.Add(TPair<FString, UObject*>(TEXT("CompileErrorReporter"), CompileErrorReporter));
 		
 		JsEnv = FJsEnvRuntime::GetInstance().GetFreeJsEnv();
 		if (JsEnv)

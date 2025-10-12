@@ -37,6 +37,7 @@ FJsEnvRuntime::FJsEnvRuntime(int32 EnvPoolSize)
 {
 	int32 DebugPort = GetDefault<UPuertsSetting>()->DebugPort;
 	ReactorUmgLogger = std::make_shared<FReactorUMGJSLogger>();
+	this->EnvPoolSize = EnvPoolSize;
 	for (int32 i = 0; i < EnvPoolSize; i++)
 	{
 		TSharedPtr<puerts::FJsEnv> JsEnv = MakeShared<puerts::FJsEnv>(
@@ -103,6 +104,27 @@ void FJsEnvRuntime::ReleaseJsEnv(TSharedPtr<puerts::FJsEnv> JsEnv)
 			Pair.Value = 0;
 			break;
 		}
+	}
+}
+
+void FJsEnvRuntime::RebuildRuntimePool()
+{
+	for (auto& Pair : JsRuntimeEnvPool)
+	{
+		auto Key = Pair.Key;
+		Key.Reset();
+	}
+
+	JsRuntimeEnvPool.Empty();
+
+	int32 DebugPort = GetDefault<UPuertsSetting>()->DebugPort;
+	ReactorUmgLogger = std::make_shared<FReactorUMGJSLogger>();
+	for (int32 i = 0; i < EnvPoolSize; i++)
+	{
+		TSharedPtr<puerts::FJsEnv> JsEnv = MakeShared<puerts::FJsEnv>(
+		std::make_unique<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")),
+		ReactorUmgLogger, DebugPort + i + 3);
+		JsRuntimeEnvPool.Add(JsEnv, 0);
 	}
 }
 

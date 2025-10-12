@@ -217,7 +217,7 @@ void FJsEnvModule::StartupModule()
     v8::V8::SetFlagsFromString("--no-lazy --no-flush-bytecode --no-enable-lazy-source-positions");
 #endif
 
-    // v8::V8::SetFlagsFromString("--expose-gc");
+    v8::V8::SetFlagsFromString("--expose-gc");
     // v8::V8::SetFlagsFromString("--no-freeze-flags-after-init");
 
 #if defined(V8_HAS_WRAP_API_WITHOUT_STL)

@@ -22,6 +22,7 @@ private:
 	void RunScriptToInitWidgetTree();
 	void ReleaseJsEnv();
 
+	UPROPERTY()
 	TObjectPtr<UCustomJSArg> CustomJSArg;
 	
 	FString LaunchScriptPath;
