@@ -60,11 +60,11 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
 		if (BPGClass)
 		{
-			BPGClass->MainScriptPath = WidgetBlueprint->MainScriptPath;
-			BPGClass->TsProjectDir = WidgetBlueprint->TsProjectDir;
-			BPGClass->TsScriptHomeFullDir = WidgetBlueprint->TsScriptHomeFullDir;
-			BPGClass->TsScriptHomeRelativeDir = WidgetBlueprint->TsScriptHomeRelativeDir;
-			BPGClass->WidgetName = WidgetBlueprint->WidgetName;
+			BPGClass->MainScriptPath = WidgetBlueprint->GetMainScriptPath();
+			BPGClass->TsProjectDir = WidgetBlueprint->GetTsProjectDir();
+			BPGClass->TsScriptHomeFullDir = WidgetBlueprint->GetTsScriptHomeFullDir();
+			BPGClass->TsScriptHomeRelativeDir = WidgetBlueprint->GetTsScriptHomeRelativeDir();
+			BPGClass->WidgetName = WidgetBlueprint->GetWidgetName();
 		}
 	}
 
