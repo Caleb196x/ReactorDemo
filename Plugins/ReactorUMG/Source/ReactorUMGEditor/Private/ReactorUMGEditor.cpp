@@ -11,8 +11,10 @@
 #include "Framework/Notifications/NotificationManager.h"
 #include "ReactorUtils.h"
 #include "TypeScriptDeclarationGenerator.h"
-#include "ReactorBlueprintAssetTypeActions.h"
+#include "AssetDefinition_ReactorUMGBlueprint.h"
+#include "AssetDefinition_ReactorUMGUtilityBlueprint.h"
 #include "ReactorUMGSetting.h"
+#include "ReactorUMGUtilityWidgetBlueprint.h"
 
 #define LOCTEXT_NAMESPACE "FReactorUMGEditorModule"
 
@@ -193,8 +195,8 @@ void SetupAutoExecGenDTSCommand()
 
 TSharedPtr<FKismetCompilerContext> GetCompilerForReactorBlueprint(UBlueprint* Blueprint, FCompilerResultsLog& Results, const FKismetCompilerOptions& CompilerOptions)
 {
-	UReactorUMGWidgetBlueprint* NoesisBlueprint = CastChecked<UReactorUMGWidgetBlueprint>(Blueprint);
-	return TSharedPtr<FKismetCompilerContext>(new FReactorUMGBlueprintCompilerContext(NoesisBlueprint, Results, CompilerOptions));
+	UWidgetBlueprint* UMGBlueprint = CastChecked<UWidgetBlueprint>(Blueprint);
+	return TSharedPtr<FKismetCompilerContext>(new FReactorUMGBlueprintCompilerContext(UMGBlueprint, Results, CompilerOptions));
 }
 
 void FReactorUMGEditorModule::InstallTsScriptNodeModules()
@@ -218,14 +220,18 @@ void FReactorUMGEditorModule::StartupModule()
 
 	EAssetTypeCategories::Type Category = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("ReactorUMG")),
 		LOCTEXT("ReactorUMGCategory", "ReactorUMG"));
-	TestBlueprintAssetTypeActions = MakeShareable(new FReactorUMGBlueprintAssetTypeActions(Category));
+	TestBlueprintAssetTypeActions = MakeShareable(new AssetDefinition_ReactorUMGBlueprintAssetTypeActions(Category));
+	EditorUtilityAssetTypeActions = MakeShareable(new AssetDefinition_ReactorUMGUtilityBlueprintAssetTypeActions(Category));
+	
 	AssetTools.RegisterAssetTypeActions(TestBlueprintAssetTypeActions.ToSharedRef());
+	AssetTools.RegisterAssetTypeActions(EditorUtilityAssetTypeActions.ToSharedRef());
 
 	// Register blueprint compiler
 	ReactorUMGBlueprintCompiler = MakeShareable(new FReactorUMGBlueprintCompiler());
 	IKismetCompilerInterface& KismetCompilerModule = FModuleManager::LoadModuleChecked<IKismetCompilerInterface>("KismetCompiler");
 	KismetCompilerModule.GetCompilers().Insert(ReactorUMGBlueprintCompiler.Get(), 0); // Make sure our compiler goes before the WidgetBlueprint compiler
 	FKismetCompilerContext::RegisterCompilerForBP(UReactorUMGWidgetBlueprint::StaticClass(), &GetCompilerForReactorBlueprint);
+	FKismetCompilerContext::RegisterCompilerForBP(UReactorUMGUtilityWidgetBlueprint::StaticClass(), &GetCompilerForReactorBlueprint);
 	
 	CopyPredefinedSystemJSFiles();
 	ConsoleCommand = RegisterConsoleCommand();

@@ -1,5 +1,9 @@
-﻿#include "ReactorUMGWidgetBlueprint.h"
+// Fill out your copyright notice in the Description page of Project Settings.
 
+
+#include "ReactorUMGUtilityWidgetBlueprint.h"
+
+#include "IDirectoryWatcher.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
 #include "ReactorBlueprintCompilerContext.h"
@@ -7,15 +11,14 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
-UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+UReactorUMGUtilityWidgetBlueprint::UReactorUMGUtilityWidgetBlueprint(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	if (this->HasAnyFlags(RF_ClassDefaultObject))
 	{
-		// do nothing for default blueprint
 		return;
 	}
 	
-	ReactorUMGCommonBP = NewObject<UReactorUMGCommonBP>(this, TEXT("ReactorUMGCommonBP_UMGBP"));
+	ReactorUMGCommonBP = NewObject<UReactorUMGCommonBP>(this, TEXT("ReactorUMGCommonBP_UtilityUMGBP"));
 	if(!ReactorUMGCommonBP)
 	{
 		UE_LOG(LogReactorUMG, Warning, TEXT("Create ReactorUMGCommonBP failed, do noting."))
@@ -23,14 +26,13 @@ UReactorUMGWidgetBlueprint::UReactorUMGWidgetBlueprint(const FObjectInitializer&
 	}
 	
 	ReactorUMGCommonBP->WidgetTree = this->WidgetTree;
-	ReactorUMGCommonBP->BuildAllNeedPaths(GetName(), GetPathName());
+	ReactorUMGCommonBP->BuildAllNeedPaths(GetName(), GetPathName(), TEXT("Editor"));
 
 	RegisterBlueprintDeleteHandle();
-
-	FEditorDelegates::OnPreForceDeleteObjects.AddUObject(this, &UReactorUMGWidgetBlueprint::ForceDeleteAssets);
+	FEditorDelegates::OnPreForceDeleteObjects.AddUObject(this, &UReactorUMGUtilityWidgetBlueprint::ForceDeleteAssets);
 }
 
-void UReactorUMGWidgetBlueprint::ForceDeleteAssets(const TArray<UObject*>& InAssetsToDelete)
+void UReactorUMGUtilityWidgetBlueprint::ForceDeleteAssets(const TArray<UObject*>& InAssetsToDelete)
 {
 	if (InAssetsToDelete.Find(this) != INDEX_NONE)
 	{
@@ -38,7 +40,7 @@ void UReactorUMGWidgetBlueprint::ForceDeleteAssets(const TArray<UObject*>& InAss
 	}
 }
 
-bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
+bool UReactorUMGUtilityWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter, ERenameFlags Flags)
 {
 	bool Res = Super::Rename(NewName, NewOuter, Flags);
 	if (ReactorUMGCommonBP)
@@ -50,7 +52,7 @@ bool UReactorUMGWidgetBlueprint::Rename(const TCHAR* NewName, UObject* NewOuter,
 	return Res;
 }
 
-void UReactorUMGWidgetBlueprint::RegisterBlueprintDeleteHandle()
+void UReactorUMGUtilityWidgetBlueprint::RegisterBlueprintDeleteHandle() const
 {
 	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
 	
@@ -61,21 +63,21 @@ void UReactorUMGWidgetBlueprint::RegisterBlueprintDeleteHandle()
 			const FName BPName = this->GetFName();
 			const FString BPPath = this->GetPathName();
 			ReactorUMGCommonBP->DeleteRelativeDirectories(AssetData, BPName, BPPath);
-		}
+		} 
 	});
 }
 
-UClass* UReactorUMGWidgetBlueprint::GetBlueprintClass() const
+UClass* UReactorUMGUtilityWidgetBlueprint::GetBlueprintClass() const
 {
 	return UReactorUMGBlueprintGeneratedClass::StaticClass();
 }
 
-bool UReactorUMGWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
+bool UReactorUMGUtilityWidgetBlueprint::SupportedByDefaultBlueprintFactory() const
 {
 	return false;
 }
 
-void UReactorUMGWidgetBlueprint::SetupTsScripts(const FReactorUMGCompilerLog& CompilerResultsLogger, bool bForceCompile, bool bForceReload)
+void UReactorUMGUtilityWidgetBlueprint::SetupTsScripts(const FReactorUMGCompilerLog& CompilerResultsLogger, bool bForceCompile, bool bForceReload)
 {
 	if (ReactorUMGCommonBP)
 	{
@@ -83,7 +85,7 @@ void UReactorUMGWidgetBlueprint::SetupTsScripts(const FReactorUMGCompilerLog& Co
 	}
 }
 
-void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
+void UReactorUMGUtilityWidgetBlueprint::SetupMonitorForTsScripts()
 {
 	GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OnAssetEditorOpened().AddLambda([this](UObject* Asset)
 	{
@@ -112,4 +114,3 @@ void UReactorUMGWidgetBlueprint::SetupMonitorForTsScripts()
 		}
 	});
 }
-

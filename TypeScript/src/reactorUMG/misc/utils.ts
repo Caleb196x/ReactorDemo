@@ -111,3 +111,7 @@ export function findChangedProps(oldProps: any, newProps: any): any {
     
     return result;
 }
+
+export function compareTwoFunctions(func1: Function, func2: Function): boolean {
+  return func1.toString() === func2.toString();
+}

@@ -1,31 +1,31 @@
-#include "ReactorBlueprintAssetTypeActions.h"
+#include "AssetDefinition_ReactorUMGBlueprint.h"
 // Core includes
 #include "Misc/MessageDialog.h"
 #include "BlueprintEditor.h"
 #include "ReactorUMGWidgetBlueprint.h"
 #include "WidgetBlueprintEditor.h"
 
-FReactorUMGBlueprintAssetTypeActions::FReactorUMGBlueprintAssetTypeActions(EAssetTypeCategories::Type InCategories)
+AssetDefinition_ReactorUMGBlueprintAssetTypeActions::AssetDefinition_ReactorUMGBlueprintAssetTypeActions(EAssetTypeCategories::Type InCategories)
 	: Categories(InCategories)
 {
 };
 
-FText FReactorUMGBlueprintAssetTypeActions::GetName() const
+FText AssetDefinition_ReactorUMGBlueprintAssetTypeActions::GetName() const
 {
 	return NSLOCTEXT("ReactorUMGBlueprint", "ReactorUMGBlueprintAssetTypeActions_Name", "ReactorUMG");
 }
 
-UClass* FReactorUMGBlueprintAssetTypeActions::GetSupportedClass() const
+UClass* AssetDefinition_ReactorUMGBlueprintAssetTypeActions::GetSupportedClass() const
 {
 	return UReactorUMGWidgetBlueprint::StaticClass();
 }
 
-FColor FReactorUMGBlueprintAssetTypeActions::GetTypeColor() const
+FColor AssetDefinition_ReactorUMGBlueprintAssetTypeActions::GetTypeColor() const
 {
 	return FColor(42, 166, 226);
 }
 
-void FReactorUMGBlueprintAssetTypeActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor)
+void AssetDefinition_ReactorUMGBlueprintAssetTypeActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor)
 {
 	EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
 	// FMessageDialog::Open(EAppMsgType::Ok, NSLOCTEXT("SmartUIBlueprint", "FailedToOpenBlueprint", "Not support open editor"));
@@ -55,7 +55,7 @@ void FReactorUMGBlueprintAssetTypeActions::OpenAssetEditor(const TArray<UObject*
 	}
 }
 
-uint32 FReactorUMGBlueprintAssetTypeActions::GetCategories()
+uint32 AssetDefinition_ReactorUMGBlueprintAssetTypeActions::GetCategories()
 {
 	return Categories;
 }

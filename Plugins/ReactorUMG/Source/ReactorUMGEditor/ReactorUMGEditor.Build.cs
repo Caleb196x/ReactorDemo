@@ -32,7 +32,7 @@ public class ReactorUMGEditor : ModuleRules
                 "Projects",
                 "UMG",
                 "UMGEditor",
-                "DirectoryWatcher"
+                "DirectoryWatcher", "Blutility"
             }
         );
     }

@@ -2,9 +2,10 @@
 
 #include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
+#include "ReactorUMGUtilityWidgetBlueprint.h"
 #include "Kismet2/KismetReinstanceUtilities.h"
 
-FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UReactorUMGWidgetBlueprint* SourceBlueprint,
+FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UWidgetBlueprint* SourceBlueprint,
 	FCompilerResultsLog& InMessageLog, const FKismetCompilerOptions& InCompilerOptions)
 	: Super(SourceBlueprint, InMessageLog, InCompilerOptions)
 {
@@ -65,6 +66,21 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 			BPGClass->TsScriptHomeFullDir = WidgetBlueprint->GetTsScriptHomeFullDir();
 			BPGClass->TsScriptHomeRelativeDir = WidgetBlueprint->GetTsScriptHomeRelativeDir();
 			BPGClass->WidgetName = WidgetBlueprint->GetWidgetName();
+		}
+	}
+
+	if (UReactorUMGUtilityWidgetBlueprint* UtilityWidgetBlueprint = Cast<UReactorUMGUtilityWidgetBlueprint>(Blueprint))
+	{
+		const FReactorUMGCompilerLog Logger(MessageLog);
+		UtilityWidgetBlueprint->SetupTsScripts(Logger, true, true);
+		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
+		if (BPGClass)
+		{
+			BPGClass->MainScriptPath = UtilityWidgetBlueprint->GetMainScriptPath();
+			BPGClass->TsProjectDir = UtilityWidgetBlueprint->GetTsProjectDir();
+			BPGClass->TsScriptHomeFullDir = UtilityWidgetBlueprint->GetTsScriptHomeFullDir();
+			BPGClass->TsScriptHomeRelativeDir = UtilityWidgetBlueprint->GetTsScriptHomeRelativeDir();
+			BPGClass->WidgetName = UtilityWidgetBlueprint->GetWidgetName();
 		}
 	}
 

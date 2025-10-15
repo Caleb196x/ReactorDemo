@@ -11,7 +11,8 @@ public:
 
     void InstallTsScriptNodeModules();
     
-    TSharedPtr<class FReactorUMGBlueprintAssetTypeActions> TestBlueprintAssetTypeActions;
+    TSharedPtr<class AssetDefinition_ReactorUMGBlueprintAssetTypeActions> TestBlueprintAssetTypeActions;
+    TSharedPtr<class AssetDefinition_ReactorUMGUtilityBlueprintAssetTypeActions> EditorUtilityAssetTypeActions;
     TSharedPtr<class FReactorUMGBlueprintCompiler> ReactorUMGBlueprintCompiler;
     TUniquePtr<FAutoConsoleCommand> ConsoleCommand;
 

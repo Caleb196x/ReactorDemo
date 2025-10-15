@@ -1,10 +1,10 @@
 #pragma once
 #include "AssetTypeActions_Base.h"
 
-class FReactorUMGBlueprintAssetTypeActions : public FAssetTypeActions_Base
+class AssetDefinition_ReactorUMGBlueprintAssetTypeActions : public FAssetTypeActions_Base
 {
 public:
-	FReactorUMGBlueprintAssetTypeActions(EAssetTypeCategories::Type Categories);
+	AssetDefinition_ReactorUMGBlueprintAssetTypeActions(EAssetTypeCategories::Type Categories);
 
 	// IAssetTypeActions interface
 	virtual FText GetName() const override;

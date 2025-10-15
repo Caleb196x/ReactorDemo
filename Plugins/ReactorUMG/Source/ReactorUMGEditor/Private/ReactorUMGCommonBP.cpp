@@ -1,11 +1,91 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "ReactorUMGCommonBP.h"
 
+#include "DirectoryWatcherModule.h"
+#include "IDirectoryWatcher.h"
 #include "JsBridgeCaller.h"
 #include "JsEnvRuntime.h"
 #include "LogReactorUMG.h"
 #include "ReactorUtils.h"
 #include "Blueprint/WidgetTree.h"
+
+void FDirectoryMonitor::Watch(const FString& InDirectory)
+{
+	if (bIsWatching)
+	{
+		return;
+	}
+	
+	CurrentMonitorDirectory = FPaths::IsRelative(InDirectory) ? FPaths::ConvertRelativePathToFull(InDirectory) : InDirectory;
+    // UE_LOG(LogTemp, Warning, TEXT("PEDirectoryWatcher::Watch: %s"), *InDirectory);
+    if (IFileManager::Get().DirectoryExists(*CurrentMonitorDirectory))
+    {
+        auto Changed = IDirectoryWatcher::FDirectoryChanged::CreateLambda(
+            [&](const TArray<FFileChangeData>& FileChanges)
+            {
+                TArray<FString> Added;
+                TArray<FString> Modified;
+                TArray<FString> Removed;
+
+                for (auto Change : FileChanges)
+                {
+                    FPaths::NormalizeFilename(Change.Filename);
+                    Change.Filename = FPaths::ConvertRelativePathToFull(Change.Filename);
+                    switch (Change.Action)
+                    {
+                        case FFileChangeData::FCA_Added:
+                            if (Added.Contains(Change.Filename))
+                                continue;
+                            Added.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Modified:
+                            if (Modified.Contains(Change.Filename))
+                                continue;
+                            Modified.Add(Change.Filename);
+                            break;
+                        case FFileChangeData::FCA_Removed:
+                            if (Removed.Contains(Change.Filename))
+                                continue;
+                            Removed.Add(Change.Filename);
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            	
+                if (Added.Num() || Modified.Num() || Removed.Num())
+                {
+                    OnChanged.Broadcast(Added, Modified, Removed);
+                }
+            });
+    	
+        FDirectoryWatcherModule& DirectoryWatcherModule =
+            FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+        IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+        DirectoryWatcher->RegisterDirectoryChangedCallback_Handle(
+            CurrentMonitorDirectory, Changed, DelegateHandle, IDirectoryWatcher::IncludeDirectoryChanges);
+    	bIsWatching = true;
+    } else
+    {
+	    UE_LOG(LogReactorUMG, Warning, TEXT("PEDirectoryWatcher::Watch: Directory not found: %s"), *InDirectory);
+    }
+}
+
+void FDirectoryMonitor::UnWatch()
+{
+	if (DelegateHandle.IsValid())
+	{
+		FDirectoryWatcherModule& DirectoryWatcherModule =
+			FModuleManager::Get().LoadModuleChecked<FDirectoryWatcherModule>(TEXT("DirectoryWatcher"));
+		IDirectoryWatcher* DirectoryWatcher = DirectoryWatcherModule.Get();
+
+		DirectoryWatcher->UnregisterDirectoryChangedCallback_Handle(CurrentMonitorDirectory, DelegateHandle);
+		CurrentMonitorDirectory = TEXT("");
+	}
+
+	bIsWatching = false;
+}
+
 
 void UReactorUMGCommonBP::RenameScriptDir(const TCHAR* NewName, UObject* NewOuter)
 {
@@ -356,17 +436,26 @@ void UReactorUMGCommonBP::StartTsScriptsMonitor(TFunction<void()>&& Callback)
 	});
 }
 
-void UReactorUMGCommonBP::BuildAllNeedPaths(const FString& InWidgetName, const FString& WidgetPath)
+void UReactorUMGCommonBP::BuildAllNeedPaths(const FString& InWidgetName, const FString& WidgetPath, const FString& HomePrefix)
 {
 	this->WidgetName = InWidgetName;
 	TsProjectDir = FPaths::ConvertRelativePathToFull(FReactorUtils::GetTypeScriptHomeDir());
+	
 	const FString WidgetBPPathName = WidgetPath;
 	FString Lefts, Rights;
 	WidgetBPPathName.Split(".", &Lefts, &Rights);
 	const FString ProjectName = FApp::GetProjectName();
-	
-	TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), Lefts.Mid(5) /* 排除/Game */);
-	TsScriptHomeRelativeDir = TEXT("src/") + ProjectName + Lefts.Mid(5);
+
+	if (HomePrefix.IsEmpty())
+	{
+		TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), Lefts.Mid(5) /* 排除/Game */);
+		TsScriptHomeRelativeDir = TEXT("src/") + ProjectName + Lefts.Mid(5);
+	} else
+	{
+		TsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), HomePrefix, Lefts.Mid(5) /* 排除/Game */);
+		TsScriptHomeRelativeDir =  FString::Printf(TEXT("src/%s/%s%s"), *ProjectName, *HomePrefix, *Lefts.Mid(5));
+	}
+	 
 	JSScriptContentDir = FReactorUtils::GetTSCBuildOutDirFromTSConfig(TsProjectDir);
 	LaunchJsScriptFullPath = GetLaunchJsScriptPath();
 	MainScriptPath = GetLaunchJsScriptPath(false);

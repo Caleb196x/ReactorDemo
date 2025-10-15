@@ -2,11 +2,12 @@
 #include "ReactorUMGBlueprintGeneratedClass.h"
 #include "ReactorUIWidget.h"
 #include "ReactorBlueprintCompilerContext.h"
+#include "ReactorUMGUtilityWidgetBlueprint.h"
 #include "ReactorUMGWidgetBlueprint.h"
 
 bool FReactorUMGBlueprintCompiler::CanCompile(const UBlueprint* Blueprint)
 {
-	return Blueprint->IsA(UReactorUMGWidgetBlueprint::StaticClass());
+	return Blueprint->IsA(UReactorUMGWidgetBlueprint::StaticClass()) || Blueprint->IsA(UReactorUMGUtilityWidgetBlueprint::StaticClass());
 }
 
 void FReactorUMGBlueprintCompiler::PostCompile(UBlueprint* Blueprint)
@@ -23,6 +24,13 @@ void FReactorUMGBlueprintCompiler::Compile(UBlueprint* Blueprint, const FKismetC
 {
 	// todo: convert typescript to javascript: run tsc command
 	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
+	{
+		FReactorUMGBlueprintCompilerContext Compiler(WidgetBlueprint, Results, CompilerOptions);
+		Compiler.Compile();
+		check(Compiler.NewClass);
+	}
+
+	if (UReactorUMGUtilityWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGUtilityWidgetBlueprint>(Blueprint))
 	{
 		FReactorUMGBlueprintCompilerContext Compiler(WidgetBlueprint, Results, CompilerOptions);
 		Compiler.Compile();
