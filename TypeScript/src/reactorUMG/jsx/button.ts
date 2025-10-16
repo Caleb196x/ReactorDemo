@@ -31,7 +31,7 @@ export class ButtonConverter extends JSXConverter {
     }
 
     private setButtonTextColor(button: UE.Button, style: any) {
-        const textColor = style?.textColor;
+        const textColor = style?.textColor || style?.color;
         if (!textColor) {
             return;
         }
@@ -48,34 +48,21 @@ export class ButtonConverter extends JSXConverter {
         }
     }
 
-    private setButtonBackground(button: UE.Button, style: any) {
-        const background = style?.background;
-        if (!background) {
-            return;
-        }
+    private setButtonBackgroundStyles(button: UE.Button, style: any) {
         
-        const parsedBackground = parseBackgroundProps(background);
+        const parsedBackground = parseBackgroundProps(style);
         if (parsedBackground?.image) {
             button.WidgetStyle.Normal = parsedBackground.image;
         }
 
         if (parsedBackground?.color) {
-            const rgba = parseToLinearColor(parsedBackground.color);
-
-            if (button.BackgroundColor) {
-                button.BackgroundColor.R = rgba.r;
-                button.BackgroundColor.G = rgba.g;
-                button.BackgroundColor.B = rgba.b;
-                button.BackgroundColor.A = rgba.a;
-            } else {
-                button.BackgroundColor = new UE.LinearColor(rgba.r, rgba.g, rgba.b, rgba.a);    
-            }
+            button.BackgroundColor = parsedBackground?.color
         }
 
         // todo@Caleb196x: 处理hover, pressed, disabled状态的背景
     }
 
-    private setButtonStyle(button: UE.Button, props?: any) {
+    private setButtonStyles(button: UE.Button, props?: any) {
         let buttonStyle = this.widgetStyle;
         if (props) {
             buttonStyle = getAllStyles(this.typeName, props);
@@ -91,7 +78,7 @@ export class ButtonConverter extends JSXConverter {
         }
 
         this.setButtonTextColor(button, buttonStyle);
-        this.setButtonBackground(button, buttonStyle);
+        this.setButtonBackgroundStyles(button, buttonStyle);
     }
 
     private initSingleEventHandler(button: UE.Button, eventName: string, handler: Function) {
@@ -133,7 +120,7 @@ export class ButtonConverter extends JSXConverter {
     }
 
     private setupButtonProps(button: UE.Button, props?: any) {
-        this.setButtonStyle(button);
+        this.setButtonStyles(button);
         this.setButtonEventHandlers(button, props);
         UE.UMGManager.SynchronizeWidgetProperties(button);
     }
@@ -146,7 +133,7 @@ export class ButtonConverter extends JSXConverter {
 
     update(widget: UE.Widget, oldProps: any, changedProps: any) {
         const button = widget as UE.Button;
-        this.setButtonStyle(button, changedProps);
+        this.setButtonStyles(button, changedProps);
         
         for (const name in this.eventNameMapping) {
             if (changedProps[name] && typeof changedProps[name] === 'function') { 

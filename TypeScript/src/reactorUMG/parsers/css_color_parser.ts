@@ -217,7 +217,7 @@ const namedColors: Record<string, RGBA> = {
  */
 export function parseColor(color: string): RGBA {
   if (!color) {
-    return { r: 0, g: 0, b: 0, a: 1 };
+    return { r: 255, g: 255, b: 255, a: 1 };
   }
 
   const trimmed = color.trim().toLowerCase();
@@ -245,11 +245,11 @@ export function parseColor(color: string): RGBA {
   // 5. 处理特殊值
   if (trimmed === 'currentcolor') {
     console.warn('currentColor cannot be converted to static RGBA');
-    return { r: 0, g: 0, b: 0, a: 1 };
+    return { r: 255, g: 255, b: 255, a: 1 };
   }
 
   console.warn(`Invalid color format: ${color}`);
-  return { r: 0, g: 0, b: 0, a: 1 };
+  return { r: 255, g: 255, b: 255, a: 1 };
 }
 
 export function parseToLinearColor(color : string): RGBA {

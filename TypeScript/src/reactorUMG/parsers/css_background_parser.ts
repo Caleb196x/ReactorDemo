@@ -415,7 +415,7 @@ export function parseBackgroundImage(backgroundImage: string, backgroundSize: st
 
 export function parseBackgroundColor(backgroundColor: string) : UE.LinearColor {
     const color = parseToLinearColor(backgroundColor);
-    return new UE.LinearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a);
+    return new UE.LinearColor(color.r, color.g, color.b, color.a);
 }
 
 export function parseBackgroundRepeat(backgroundRepeat: string, image: UE.SlateBrush) : UE.SlateBrush {
