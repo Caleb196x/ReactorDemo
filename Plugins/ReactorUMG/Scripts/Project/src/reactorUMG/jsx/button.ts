@@ -1,5 +1,5 @@
 import * as UE from "ue";
-import { parseColor } from "../parsers/css_color_parser";
+import { parseToLinearColor } from "../parsers/css_color_parser";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 import { JSXConverter } from "./jsx_converter";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
@@ -36,7 +36,7 @@ export class ButtonConverter extends JSXConverter {
             return;
         }
 
-        const rgba = parseColor(textColor);
+        const rgba = parseToLinearColor(textColor);
 
         if (button.ColorAndOpacity) {
             button.ColorAndOpacity.R = rgba.r;
@@ -60,7 +60,7 @@ export class ButtonConverter extends JSXConverter {
         }
 
         if (parsedBackground?.color) {
-            const rgba = parseColor(parsedBackground.color);
+            const rgba = parseToLinearColor(parsedBackground.color);
 
             if (button.BackgroundColor) {
                 button.BackgroundColor.R = rgba.r;

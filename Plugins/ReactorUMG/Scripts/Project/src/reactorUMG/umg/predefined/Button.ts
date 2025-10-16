@@ -4,7 +4,7 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 import { parseBrush } from '../../parsers/brush_parser';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class ButtonConverter extends UMGConverter {
@@ -48,7 +48,7 @@ export class ButtonConverter extends UMGConverter {
             if (brushKeyMap[key]) {
                 button.WidgetStyle[brushKeyMap[key]] = parseBrush(value);
             } else if (colorKeyMap[key]) {
-                const rgba = parseColor(value);
+                const rgba = parseToLinearColor(value);
                 button[colorKeyMap[key]].R = rgba.r;
                 button[colorKeyMap[key]].G = rgba.g;
                 button[colorKeyMap[key]].B = rgba.b;

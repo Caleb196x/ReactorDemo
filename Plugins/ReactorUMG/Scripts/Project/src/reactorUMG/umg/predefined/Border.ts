@@ -2,7 +2,7 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 import { getAllStyles } from '../../parsers/cssstyle_parser';
 import { parseBrush } from '../../parsers/brush_parser';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
 export class BorderConverter extends UMGConverter {
@@ -13,7 +13,7 @@ export class BorderConverter extends UMGConverter {
     private setupProps(border: UE.Border, props: any): void {
         const backgroundColor = props?.backgroundColor;
         if (backgroundColor) {
-            const color = parseColor(backgroundColor);
+            const color = parseToLinearColor(backgroundColor);
             border.SetBrushColor(new UE.LinearColor(color.r, color.g, color.b, color.a));
         }
 
@@ -25,7 +25,7 @@ export class BorderConverter extends UMGConverter {
 
         const contentColor = props?.contentColor;
         if (contentColor) {
-            const color = parseColor(contentColor);
+            const color = parseToLinearColor(contentColor);
             border.SetContentColorAndOpacity(new UE.LinearColor(color.r, color.g, color.b, color.a));
         }
 

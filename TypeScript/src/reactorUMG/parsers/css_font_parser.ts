@@ -1,5 +1,5 @@
 import { isKeyOfRecord } from "../misc/utils";
-import { parseColor } from "./css_color_parser";
+import { parseToLinearColor } from "./css_color_parser";
 import { convertLengthUnitToSlateUnit } from "./css_length_parser";
 import * as UE from 'ue';
 
@@ -113,7 +113,7 @@ export function parseOutline(outline: string, style: any) {
             result.style = part;
         } else if (part.match(/^(#|rgb|rgba|hsl|hsla|[a-z]+$)/i)) {
             // Color
-            result.color = parseColor(part);
+            result.color = parseToLinearColor(part);
         } else {
             // Width - assume it's a length value
             result.width = convertLengthUnitToSlateUnit(part, style);
@@ -131,7 +131,7 @@ export function parseOutline(outline: string, style: any) {
 export function parseFont(style: any) {
     let result = {};
     result['fontSize'] = parseFontSize(style?.fontSize, style);
-    result['fontColor'] = parseColor(style?.color);
+    result['fontColor'] = parseToLinearColor(style?.color);
     result['textAlign'] = parseTextAlign(style?.textAlign);
     result['letterSpacing'] = convertLengthUnitToSlateUnit(style?.letterSpacing, style);
     result['wordSpacing'] = convertLengthUnitToSlateUnit(style?.wordSpacing, style);
@@ -143,7 +143,7 @@ export function parseFont(style: any) {
     result['outlineColor'] = outlineColor;
     result['outlineWidth'] = outlineWidth;
     if (style?.outlineColor) {
-        result['outlineColor'] = parseColor(style?.outlineColor);
+        result['outlineColor'] = parseToLinearColor(style?.outlineColor);
     }
     if (style?.outlineWidth) {
         result['outlineWidth'] = convertLengthUnitToSlateUnit(style?.outlineWidth, style);
@@ -211,7 +211,7 @@ export function setupFontStyles(outer: UE.Object, font: UE.SlateFontInfo, fontSt
     }
 
     if (fontStyle?.outlineColor) {
-        const outlineColor = parseColor(fontStyle?.outlineColor);
+        const outlineColor = parseToLinearColor(fontStyle?.outlineColor);
         font.OutlineSettings.OutlineColor.R = outlineColor.r;
         font.OutlineSettings.OutlineColor.G = outlineColor.g;
         font.OutlineSettings.OutlineColor.B = outlineColor.b;

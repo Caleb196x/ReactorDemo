@@ -1,13 +1,13 @@
 import { ImageStyle } from 'reactorUMG';
 import * as UE from 'ue';
-import { parseColor } from './css_color_parser';
+import { parseToLinearColor } from './css_color_parser';
 import { ImageLoader } from '../misc/image_loader';
 import { convertMargin, convertPadding } from './css_margin_parser';
 
 export function parseBrush(imageStyle: ImageStyle) : UE.SlateBrush {
     const brush = new UE.SlateBrush();
 
-    const tintColor = parseColor(imageStyle.color);
+    const tintColor = parseToLinearColor(imageStyle.color);
     if (tintColor) {
         brush.TintColor = new UE.SlateColor();
         brush.TintColor.SpecifiedColor.R = tintColor.r;
@@ -106,7 +106,7 @@ export function parseBrush(imageStyle: ImageStyle) : UE.SlateBrush {
         }
         const outlineColor = outline.outlineColor;
         if (outlineColor) {
-            const parsedOutlineColor = parseColor(outlineColor);
+            const parsedOutlineColor = parseToLinearColor(outlineColor);
             brushOutlineSetting.Color.SpecifiedColor.R = parsedOutlineColor.r;
             brushOutlineSetting.Color.SpecifiedColor.G = parsedOutlineColor.g;
             brushOutlineSetting.Color.SpecifiedColor.B = parsedOutlineColor.b;

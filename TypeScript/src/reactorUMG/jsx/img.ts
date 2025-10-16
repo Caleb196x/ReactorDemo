@@ -1,7 +1,7 @@
 import * as UE from 'ue';
 import { JSXConverter } from './jsx_converter';
 import { ImageLoader } from '../misc/image_loader';
-import { parseColor } from '../parsers/css_color_parser';
+import { parseToLinearColor } from '../parsers/css_color_parser';
 
 /**
  * 支持的图片源src类型：
@@ -64,7 +64,7 @@ export class ImageConverter extends JSXConverter {
         }
 
         if (this.color) {
-            const rgba = parseColor(this.color);
+            const rgba = parseToLinearColor(this.color);
             this.image.ColorAndOpacity.R = rgba.r;
             this.image.ColorAndOpacity.G = rgba.g;
             this.image.ColorAndOpacity.B = rgba.b;

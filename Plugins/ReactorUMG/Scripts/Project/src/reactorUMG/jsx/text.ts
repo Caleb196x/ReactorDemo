@@ -1,4 +1,4 @@
-import { parseColor } from '../parsers/css_color_parser';
+import { parseToLinearColor } from '../parsers/css_color_parser';
 import { hasFontStyles, parseFont, setupFontStyles } from '../parsers/css_font_parser';
 import { convertLengthUnitToSlateUnit } from '../parsers/css_length_parser';
 import { getAllStyles } from '../parsers/cssstyle_parser';
@@ -22,7 +22,7 @@ export class TextConverter extends JSXConverter {
     private setupFontColor(textBlock: UE.TextBlock, prop: any) {
         const fontColor = prop?.color;
         if (fontColor) {
-            const rgba = parseColor(fontColor);
+            const rgba = parseToLinearColor(fontColor);
             textBlock.ColorAndOpacity.SpecifiedColor.R = rgba.r;
             textBlock.ColorAndOpacity.SpecifiedColor.G = rgba.g;
             textBlock.ColorAndOpacity.SpecifiedColor.B = rgba.b;

@@ -2,7 +2,7 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 import { convertMargin, convertToUEMargin } from '../../parsers/css_margin_parser';
 import { parseBrush } from '../../parsers/brush_parser';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 
 export class ComboBoxConverter extends UMGConverter {
     constructor(typeName: string, props: any, outer: any) {
@@ -153,7 +153,7 @@ export class ComboBoxConverter extends UMGConverter {
                 comboBox.ItemStyle[styleMap[key]] = parseBrush(value);
                 itemStyleInit = true;
             } else if (colorMap[key]) {
-                const rgba = parseColor(value as string);
+                const rgba = parseToLinearColor(value as string);
                 comboBox.ItemStyle[colorMap[key]].SpecifiedColor.R = rgba.r;
                 comboBox.ItemStyle[colorMap[key]].SpecifiedColor.G = rgba.g;
                 comboBox.ItemStyle[colorMap[key]].SpecifiedColor.B = rgba.b;

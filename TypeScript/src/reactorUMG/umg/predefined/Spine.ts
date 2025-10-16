@@ -1,4 +1,4 @@
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { UMGConverter } from '../umg_converter';
 import * as UE from 'ue';
 
@@ -16,7 +16,7 @@ export class SpineConverter extends UMGConverter {
 
         const color = props?.color;
         if (color) {
-            const rgba = parseColor(color);
+            const rgba = parseToLinearColor(color);
             spine.Color.R = rgba.r;
             spine.Color.G = rgba.g;
             spine.Color.B = rgba.b;

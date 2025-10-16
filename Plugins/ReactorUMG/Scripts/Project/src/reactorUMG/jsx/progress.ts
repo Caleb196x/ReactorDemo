@@ -2,7 +2,7 @@ import { JSXConverter } from './jsx_converter';
 import * as UE from 'ue';
 import { getAllStyles } from '../parsers/cssstyle_parser';
 import { parseBackgroundProps } from '../parsers/css_background_parser';
-import { parseColor } from '../parsers/css_color_parser';
+import { parseToLinearColor } from '../parsers/css_color_parser';
 
 export class ProgressConverter extends JSXConverter {
     private styles: any;
@@ -26,7 +26,7 @@ export class ProgressConverter extends JSXConverter {
         // fill
         const fill = this.styles?.fill;
         if (fill) {
-            const fillColor = parseColor(fill);
+            const fillColor = parseToLinearColor(fill);
             progressBar.FillColorAndOpacity.R = fillColor.r;
             progressBar.FillColorAndOpacity.G = fillColor.g;
             progressBar.FillColorAndOpacity.B = fillColor.b;

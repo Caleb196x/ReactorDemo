@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 import { convertToUEMargin } from '../../parsers/css_margin_parser';
 
@@ -70,7 +70,7 @@ export class SpinBoxConverter extends UMGConverter {
                 spinBox.WidgetStyle[this.paddingKeyMap[key]] = convertToUEMargin({}, props[key], '', '', '', '');
                 propsInit = true;
             } else if (this.colorKeyMap[key]) {
-                const rgba = parseColor(props[key]);
+                const rgba = parseToLinearColor(props[key]);
                 spinBox.WidgetStyle[this.colorKeyMap[key]] = new UE.LinearColor(rgba.r, rgba.g, rgba.b, rgba.a);
                 propsInit = true;
             } else if (key === 'textAlign') {

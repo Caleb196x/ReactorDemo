@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { SliderConverter } from './Slider';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 
 export class RidialSliderConverter extends SliderConverter {
     constructor(typeName: string, props: any, outer: any) {
@@ -28,7 +28,7 @@ export class RidialSliderConverter extends SliderConverter {
             if (this.valueConvertKeyMap[key]) {
                 radialSlider[this.valueConvertKeyMap[key]] = props[key];
             } else if (this.colorKeyMap[key]) {
-                const color = parseColor(props[key]);
+                const color = parseToLinearColor(props[key]);
                 radialSlider[this.colorKeyMap[key]] = new UE.LinearColor(color.r, color.g, color.b, color.a);
             } else if (key === 'valueTags') {
                 props[key].map((tag: number) => radialSlider.ValueTags.Add(tag));

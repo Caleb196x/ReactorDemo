@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { parseBrush } from '../../parsers/brush_parser';
 
 export class SliderConverter extends UMGConverter {
@@ -50,7 +50,7 @@ export class SliderConverter extends UMGConverter {
                 propsInit = true;
             } else if (colorKeyMap[key]) {
                 if (props?.sliderStyle) {
-                    const color = parseColor(props.sliderStyle[key]);
+                    const color = parseToLinearColor(props.sliderStyle[key]);
                     slider[colorKeyMap[key]] = new UE.LinearColor(color.r, color.g, color.b, color.a);
                     propsInit = true;
                 }

@@ -3,7 +3,7 @@ import { ElementConverter } from "../converter";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 import { convertGap, convertMargin, convertPadding } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
-import { parseColor } from "../parsers/css_color_parser";
+import { parseToLinearColor } from "../parsers/css_color_parser";
 import { convertLengthUnitToSlateUnit, parseScale, parseAspectRatio } from "../parsers/css_length_parser";
 import { safeParseFloat } from "../misc/utils";
 import { parseWidgetSelfAlignment } from "../parsers/alignment_parser";
@@ -161,9 +161,9 @@ export class ContainerConverter extends ElementConverter {
             // color
             const contentColor = style?.color;
             if (contentColor) {
-                const color = parseColor(contentColor);
+                const color = parseToLinearColor(contentColor);
                 border.SetContentColorAndOpacity(
-                    new UE.LinearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a)
+                    new UE.LinearColor(color.r, color.g, color.b, color.a)
                 );
             }
 

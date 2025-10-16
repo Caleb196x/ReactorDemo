@@ -1,6 +1,6 @@
 import * as UE from 'ue';
 import { ImageLoader } from '../misc/image_loader';
-import { parseColor } from './css_color_parser';
+import { parseToLinearColor } from './css_color_parser';
 import { convertLengthUnitToSlateUnit } from './css_length_parser';
 
 function parseBackgroundLayer(layer) {
@@ -414,7 +414,7 @@ export function parseBackgroundImage(backgroundImage: string, backgroundSize: st
 }
 
 export function parseBackgroundColor(backgroundColor: string) : UE.LinearColor {
-    const color = parseColor(backgroundColor);
+    const color = parseToLinearColor(backgroundColor);
     return new UE.LinearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, color.a);
 }
 

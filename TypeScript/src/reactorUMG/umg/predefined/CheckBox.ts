@@ -2,7 +2,7 @@ import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 import { parseBrush } from '../../parsers/brush_parser';
 import { convertPadding } from '../../parsers/css_margin_parser';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 import { getAllStyles } from '../../parsers/cssstyle_parser';
 
 export class CheckBoxConverter extends UMGConverter {
@@ -50,7 +50,7 @@ export class CheckBoxConverter extends UMGConverter {
                 checkbox.WidgetStyle.Padding = convertPadding(checkboxStyle);
                 propsChanged = true;
             } else if (key === 'color') {
-                const rgba = parseColor(value as string);
+                const rgba = parseToLinearColor(value as string);
                 checkbox.WidgetStyle.ForegroundColor.SpecifiedColor.R = rgba.r;
                 checkbox.WidgetStyle.ForegroundColor.SpecifiedColor.G = rgba.g;
                 checkbox.WidgetStyle.ForegroundColor.SpecifiedColor.B = rgba.b;

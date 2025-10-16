@@ -1,7 +1,7 @@
 import * as UE from 'ue';
 import { UMGConverter } from '../umg_converter';
 import { parseBrush } from '../../parsers/brush_parser';
-import { parseColor } from '../../parsers/css_color_parser';
+import { parseToLinearColor } from '../../parsers/css_color_parser';
 
 export class ProgressBarConverter extends UMGConverter {
     constructor(typeName: string, props: any, outer: any) {
@@ -29,7 +29,7 @@ export class ProgressBarConverter extends UMGConverter {
                 progressBar.WidgetStyle.EnableFillAnimation = value as boolean;
                 propsInit = true;
             } else if (key === 'fillColor') {
-                const color = parseColor(value as string);
+                const color = parseToLinearColor(value as string);
                 progressBar.FillColorAndOpacity.R = color.r;
                 progressBar.FillColorAndOpacity.G = color.g;
                 progressBar.FillColorAndOpacity.B = color.b;
@@ -68,7 +68,7 @@ export class ProgressBarConverter extends UMGConverter {
                 propsInit = true;
             } else if (key === 'fillColorBinding' && typeof value === 'function') {
                 progressBar.FillColorAndOpacityDelegate.Bind(() => {
-                    const color = parseColor(value());
+                    const color = parseToLinearColor(value());
                     const linearColor = new UE.LinearColor();
                     linearColor.R = color.r;
                     linearColor.G = color.g;
