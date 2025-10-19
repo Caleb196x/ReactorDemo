@@ -217,7 +217,7 @@ const namedColors: Record<string, RGBA> = {
  */
 export function parseColor(color: string): RGBA {
   if (!color) {
-    return { r: 255, g: 255, b: 255, a: 1 };
+    return { r: 0, g: 0, b: 0, a: 1 };
   }
 
   const trimmed = color.trim().toLowerCase();
@@ -245,11 +245,11 @@ export function parseColor(color: string): RGBA {
   // 5. 处理特殊值
   if (trimmed === 'currentcolor') {
     console.warn('currentColor cannot be converted to static RGBA');
-    return { r: 255, g: 255, b: 255, a: 1 };
+    return { r: 0, g: 0, b: 0, a: 1 };
   }
 
   console.warn(`Invalid color format: ${color}`);
-  return { r: 255, g: 255, b: 255, a: 1 };
+  return { r: 0, g: 0, b: 0, a: 1 };
 }
 
 export function parseToLinearColor(color : string): RGBA {
@@ -259,39 +259,180 @@ export function parseToLinearColor(color : string): RGBA {
 
 // 解析十六进制颜色 (#rgb, #rrggbb, #rrggbbaa)
 function parseHex(hex: string): RGBA {
-  const hexClean = hex.replace(/^#/, '');
-  
-  // 扩展简写格式
-  const expanded = hexClean.length === 3 || hexClean.length === 4
-    ? hexClean.split('').map(c => c + c).join('')
-    : hexClean;
+  if (!hex) {
+    return { r: 0, g: 0, b: 0, a: 1 };
+  }
 
-  const parseChannel = (start: number, end: number) => 
-    parseInt(expanded.slice(start, end), 16) || 0;
+  const match = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(hex.trim());
+  if (!match) {
+    console.warn(`Invalid hex color: ${hex}`);
+    return { r: 0, g: 0, b: 0, a: 1 };
+  }
+
+  let digits = match[1];
+  if (digits.length === 3 || digits.length === 4) {
+    digits = digits.split('').map(c => c + c).join('');
+  }
+
+  const r = parseInt(digits.slice(0, 2), 16);
+  const g = parseInt(digits.slice(2, 4), 16);
+  const b = parseInt(digits.slice(4, 6), 16);
+  const a = digits.length === 8 ? parseInt(digits.slice(6, 8), 16) / 255 : 1;
 
   return {
-    r: parseChannel(0, 2),
-    g: parseChannel(2, 4),
-    b: parseChannel(4, 6),
-    a: expanded.length >= 8 
-      ? parseChannel(6, 8) / 255 
-      : 1
+    r: Number.isNaN(r) ? 1 : r,
+    g: Number.isNaN(g) ? 1 : g,
+    b: Number.isNaN(b) ? 1 : b,
+    a: Number.isNaN(a) ? 1 : a
   };
 }
 
 // 解析 rgb/rgba 函数
 function parseRGBFunction(rgbStr: string): RGBA {
-  const match = rgbStr.match(/rgba?\(([^)]+)\)/);
-  if (!match) throw new Error('Invalid RGB format');
+  const match = rgbStr.match(/rgba?\((.*)\)/i);
+  if (!match) {
+    throw new Error('Invalid RGB format');
+  }
 
-  const components = match[1].split(/[,/]\s*/).map(parseComponent);
-  
+  const inner = match[1].trim();
+  if (!inner) {
+    throw new Error('Invalid RGB format');
+  }
+
+  const { channelTokens, alphaToken } = extractRgbArguments(inner);
+  if (channelTokens.length !== 3) {
+    throw new Error('Invalid RGB format');
+  }
+
   return {
-    r: parseRGBComponent(components[0]),
-    g: parseRGBComponent(components[1]),
-    b: parseRGBComponent(components[2]),
-    a: components[3] !== undefined ? clampAlpha(components[3]) : 1
+    r: parseRgbChannelValue(channelTokens[0]),
+    g: parseRgbChannelValue(channelTokens[1]),
+    b: parseRgbChannelValue(channelTokens[2]),
+    a: alphaToken !== undefined ? parseAlphaToken(alphaToken) : 1
   };
+}
+
+function extractRgbArguments(inner: string): { channelTokens: string[]; alphaToken?: string } {
+  const slashIndex = findTopLevelSlash(inner);
+  let alphaToken: string | undefined;
+  let channelSection = inner;
+
+  if (slashIndex !== -1) {
+    alphaToken = inner.slice(slashIndex + 1).trim();
+    channelSection = inner.slice(0, slashIndex).trim();
+  }
+
+  const tokens = splitRgbChannelSection(channelSection);
+  const channelTokens = tokens.slice(0, 3);
+
+  if (!alphaToken && tokens.length > 3) {
+    const extra = tokens.slice(3).join(' ').trim();
+    if (extra.length) {
+      alphaToken = extra;
+    }
+  }
+
+  return { channelTokens, alphaToken: alphaToken && alphaToken.length ? alphaToken : undefined };
+}
+
+function splitRgbChannelSection(section: string): string[] {
+  if (!section) {
+    return [];
+  }
+
+  const result: string[] = [];
+  let current = '';
+  let depth = 0;
+  const useComma = hasTopLevelComma(section);
+
+  for (let i = 0; i < section.length; i++) {
+    const ch = section[i];
+
+    if (ch === '(') {
+      depth++;
+      current += ch;
+      continue;
+    }
+
+    if (ch === ')') {
+      depth = Math.max(0, depth - 1);
+      current += ch;
+      continue;
+    }
+
+    if (depth === 0) {
+      if (useComma && ch === ',') {
+        if (current.trim().length) {
+          result.push(current.trim());
+        }
+        current = '';
+        continue;
+      }
+
+      if (!useComma && /\s/.test(ch)) {
+        if (current.trim().length) {
+          result.push(current.trim());
+          current = '';
+        }
+        continue;
+      }
+    }
+
+    current += ch;
+  }
+
+  if (current.trim().length) {
+    result.push(current.trim());
+  }
+
+  return result;
+}
+
+function hasTopLevelComma(input: string): boolean {
+  let depth = 0;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (ch === ',' && depth === 0) return true;
+  }
+  return false;
+}
+
+function findTopLevelSlash(input: string): number {
+  let depth = 0;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (ch === '/' && depth === 0) return i;
+  }
+  return -1;
+}
+
+function parseRgbChannelValue(raw: string): number {
+  const { value, isPercentage } = parseRgbNumericToken(raw);
+  if (isPercentage) {
+    return Math.round(clamp(value, 0, 100) * 255 / 100);
+  }
+  return Math.round(clamp(value, 0, 255));
+}
+
+function parseAlphaToken(raw: string): number {
+  const trimmed = raw.trim();
+  if (!trimmed.length) {
+    return 1;
+  }
+  const { value, isPercentage } = parseRgbNumericToken(trimmed);
+  const normalized = isPercentage ? value / 100 : value;
+  return clampAlpha(normalized);
+}
+
+function parseRgbNumericToken(raw: string): { value: number; isPercentage: boolean } {
+  const trimmed = raw.trim();
+  const isPercentage = trimmed.endsWith('%');
+  const numeric = safeParseFloat(isPercentage ? trimmed.slice(0, -1) : trimmed);
+  return { value: numeric, isPercentage };
 }
 
 // 解析 HSL/HSLA 函数
@@ -344,9 +485,3 @@ const clamp = (num: number, min: number, max: number) => Math.min(max, Math.max(
 const clampHue = (h: number) => ((h % 360) + 360) % 360;
 const clampPercentage = (n: number) => clamp(n / 100, 0, 1);
 const clampAlpha = (a: number) => clamp(a, 0, 1);
-
-const parseRGBComponent = (value: number) => {
-  return value > 1 && value <= 100  // 百分比格式
-    ? Math.round((value / 100) * 255)
-    : clamp(value, 0, 255);
-};
