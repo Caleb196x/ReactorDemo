@@ -1,4 +1,4 @@
-declare module "*.module.css" {
+﻿declare module "*.module.css" {
   const css: { [key: string]: string };
   export default css;
 }
@@ -49,4 +49,8 @@ declare module "*.riv" {
   export default value;
 }
 
-declare function getCssStyleForClass(className: string): string;
+/**
+ * @param pseudo Defaults to "base".
+ * @param mediaQuery Defaults to null.
+ */
+declare function getCssStyleFromGlobalCache(className: string, pseudo?: string, mediaQuery?: string | null);

@@ -1,5 +1,5 @@
-
-export function getStylesFromClassSelector(className: string): Record<string, any> {
+﻿
+export function getStylesFromClassSelector(className: string, pseudo?: string): Record<string, any> {
     if (!className) {
         return {};
     }
@@ -10,7 +10,13 @@ export function getStylesFromClassSelector(className: string): Record<string, an
         const classNames = className.split(' ');
         for (const className of classNames) {
             // Get styles associated with this class name
-            const classStyle = convertCssToStyles(getCssStyleForClass(className));
+            let classStyle = {};
+            if (className.startsWith("uniquescope_")) {
+                classStyle = getCssStyleFromGlobalCache(className, pseudo);
+            } else {
+                classStyle = getCssStyleFromGlobalCache("." + className, pseudo);
+            }
+            
             if (classStyle) {
                 // Merge the class styles into our style object
                 classNameStyles = { ...classNameStyles, ...classStyle };
@@ -21,38 +27,40 @@ export function getStylesFromClassSelector(className: string): Record<string, an
     return classNameStyles;
 }
 
-export function getStyleFromIdSelector(id: string): Record<string, any> {
+export function getStyleFromIdSelector(id: string, pseudo?: string): Record<string, any> {
     if (!id) {
         return {};
     }
 
-    const idStyle = convertCssToStyles(getCssStyleForClass(id));
+    const idStyle = getCssStyleFromGlobalCache("#" + id, pseudo);
     return idStyle;
 }
 
-export function getStyleFromTypeSelector(type: string): Record<string, any> {
+export function getStyleFromTypeSelector(type: string, pseudo?: string): Record<string, any> {
     if (!type) {
         return {};
     }
 
-    const typeStyle = convertCssToStyles(getCssStyleForClass(type));
+    const typeStyle = getCssStyleFromGlobalCache(type, pseudo);
     return typeStyle;
 }
 
 /**
  * 从props中获取所有渠道定义的样式
- * @param props 
+ * @param type 元素类型
+ * @param props 组件属性
+ * @param pseudo 是否获取伪类属性
  * @returns 
  */
-export function getAllStyles(type: string, props: any): Record<string, any> {
+export function getAllStyles(type: string, props: any, pseudo?: string): Record<string, any> {
     if (!props) {
         return {};
     }
 
     // get all the styles from css selector and jsx style
-    const classNameStyles = getStylesFromClassSelector(props?.className);
-    const idStyle = getStyleFromIdSelector(props?.id);
-    const typeStyle = getStyleFromTypeSelector(type);
+    const classNameStyles = getStylesFromClassSelector(props?.className, pseudo);
+    const idStyle = getStyleFromIdSelector(props?.id, pseudo);
+    const typeStyle = getStyleFromTypeSelector(type, pseudo);
     const inlineStyles = props?.style || {};
     // When merging styles, properties from objects later in the spread order
     // will override properties from earlier objects if they have the same key.
@@ -67,12 +75,39 @@ export function getAllStyles(type: string, props: any): Record<string, any> {
     return { ...classNameStyles, ...idStyle, ...typeStyle, ...inlineStyles };
 }
 
+export function convertCssToStyles(css: any): Record<string, any> {
+    if (!css || typeof css !== 'object') {
+        return {};
+    }
+
+    const result: Record<string, any> = {};
+    const base = css.base;
+
+    if (base && typeof base === 'object') {
+        Object.assign(result, base);
+    }
+
+    for (const key in css) {
+        if (!Object.prototype.hasOwnProperty.call(css, key) || key === 'base') {
+            continue;
+        }
+
+        result[key] = css[key];
+    }
+
+    if (base !== undefined && typeof base !== 'object') {
+        result.base = base;
+    }
+
+    return result;
+}
+
 /**
  * 将CSS样式的字符串格式转换为JSX样式对象
  * @param css 
  * @returns 
  */
-export function convertCssToStyles(css: string): Record<string, any> {
+export function convertCssToStyles2(css: string): Record<string, any> {
     // Parse the CSS string
     const styles: Record<string, any> = {};
     
@@ -105,3 +140,4 @@ export function convertCssToStyles(css: string): Record<string, any> {
 
     return styles;
 }
+
