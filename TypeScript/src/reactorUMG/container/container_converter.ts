@@ -1,7 +1,7 @@
 import * as UE from "ue";
 import { ElementConverter } from "../converter";
 import { getAllStyles } from "../parsers/cssstyle_parser";
-import { convertGap, convertMargin, convertPadding } from "../parsers/css_margin_parser";
+import { convertMargin, convertPadding } from "../parsers/css_margin_parser";
 import { parseBackgroundProps } from "../parsers/css_background_parser";
 import { parseToLinearColor } from "../parsers/css_color_parser";
 import { convertLengthUnitToSlateUnit, parseScale, parseAspectRatio } from "../parsers/css_length_parser";
@@ -17,7 +17,6 @@ export class ContainerConverter extends ElementConverter {
     proxy: ElementConverter;
     originalWidget: UE.Widget;
     externalSlot: UE.PanelSlot; // 保存外部添加的容器slot
-    wrapBoxWidget: UE.Widget; // 保存wrapbox容器
     sizeBoxWidget: UE.Widget; // 保存sizebox容器
     scaleBoxWidget: UE.Widget; // 保存scalebox容器
     borderWidget: UE.Widget; // 保存border容器
@@ -62,60 +61,6 @@ export class ContainerConverter extends ElementConverter {
         } else {
             return type.toLowerCase();
         }
-    }
-
-    private setupFlexWrap(widget: UE.Widget, wrapBoxWidget?: UE.Widget, updateProps?: any): UE.Widget {
-        let style = this.containerStyle;
-        if (updateProps) {
-            style = getAllStyles(this.typeName, updateProps);
-        }
-
-        const flexWrap = style?.flexWrap || 'nowrap';
-        if (flexWrap !== 'wrap' || flexWrap !== 'wrap-reverse') {
-            return widget;
-        }
-
-        if (!wrapBoxWidget) {
-            wrapBoxWidget = new UE.WrapBox(this.outer);
-        }
-        const wrapBox = wrapBoxWidget as UE.WrapBox;
-        const flexDirection = style?.flexDirection;
-        const gap = style?.gap;
-
-        if (flexDirection) {    
-            wrapBox.Orientation = 
-                (flexDirection === 'column'|| flexDirection === 'column-reverse')
-                ? UE.EOrientation.Orient_Vertical : UE.EOrientation.Orient_Horizontal;
-        }
-
-        if (gap) {
-            wrapBox.SetInnerSlotPadding(convertGap(gap, style));
-        }
-
-        const justifyItemsActionMap = {
-            'flex-start': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
-            'flex-end': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
-            'start': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
-            'end': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
-            'left': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left),
-            'right': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right),
-            'center': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Center),
-            'stretch': () => wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill)
-        }
-
-        // WrapBox中定义的justifyItems决定了子元素的主轴对齐方式
-        const justifyItems = style?.justifyItems;
-        if (justifyItems) {
-            justifyItems.split(' ')
-                .filter(value => justifyItemsActionMap[value])
-                .forEach(value => justifyItemsActionMap[value]());
-        }
-
-        if (!updateProps) {
-            this.externalSlot = wrapBox.AddChild(widget) as UE.WrapBoxSlot;
-        }
-
-        return wrapBox;
     }
 
     private setupBackground(widget: UE.Widget, borderWidget?: UE.Widget, updateProps?: any): UE.Widget {
@@ -326,23 +271,18 @@ export class ContainerConverter extends ElementConverter {
             this.originalWidget = widget;
 
             if (widget) {
-                this.wrapBoxWidget = this.setupFlexWrap(widget);
-                widget = this.wrapBoxWidget;
+                widget = this.setupBackground(widget);
+                this.borderWidget = widget instanceof UE.Border ? widget : null;
             }
 
-            if (this.wrapBoxWidget) {
-                this.borderWidget = this.setupBackground(widget);
-                widget = this.borderWidget;
+            if (widget) {
+                widget = this.setupBoxSize(widget);
+                this.sizeBoxWidget = widget instanceof UE.SizeBox ? widget : null;
             }
 
-            if (this.borderWidget) {
-                this.sizeBoxWidget = this.setupBoxSize(widget);
-                widget = this.sizeBoxWidget;
-            }
-
-            if (this.sizeBoxWidget) {
-                this.scaleBoxWidget = this.setupBoxScale(widget);
-                widget = this.scaleBoxWidget;
+            if (widget) {
+                widget = this.setupBoxScale(widget);
+                this.scaleBoxWidget = widget instanceof UE.ScaleBox ? widget : null;
             }
         }
 
@@ -353,9 +293,6 @@ export class ContainerConverter extends ElementConverter {
         if (this.proxy) {
             this.proxy.update(widget, oldProps, changedProps);
             // update props
-            if (this.wrapBoxWidget) {
-                this.setupFlexWrap(widget, this.wrapBoxWidget, changedProps);
-            }
             if (this.borderWidget) {
                 this.setupBackground(widget, this.borderWidget, changedProps);
             }

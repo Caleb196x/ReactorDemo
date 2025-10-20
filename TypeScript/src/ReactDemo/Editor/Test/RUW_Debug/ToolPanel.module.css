@@ -13,7 +13,7 @@
 .tool-card {
   display: flex;
   flex-direction: column;
-  background: rgb(2, 5, 95);
+  background: rgb(160, 167, 28);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 24px 32px;

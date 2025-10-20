@@ -161,12 +161,6 @@ void FJsEnvRuntime::RestartJsScripts(
 		FPaths::MakePathRelativeTo(RelativePath, *JSContentDir);
 		RelativePath.RemoveFromStart(TEXT("JavaScript/"));
 
-		int32 DotIndex = RelativePath.Find(TEXT("."), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-		if (DotIndex != INDEX_NONE)
-		{
-			RelativePath.RemoveAt(DotIndex, RelativePath.Len() - DotIndex);
-		}
-
 		ModuleNames.Add(RelativePath, SourcePath);
 	}
 

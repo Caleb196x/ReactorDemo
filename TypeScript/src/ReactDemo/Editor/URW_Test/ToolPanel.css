@@ -5,14 +5,14 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f6f8fa;
+  background-color: #9d1b04;
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
 /* 卡片区域 */
 .tool-card {
   flex-direction: column;
-  background: rgb(187, 181, 181);
+  background: rgb(184, 197, 3);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 24px 32px;

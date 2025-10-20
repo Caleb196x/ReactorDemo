@@ -14,7 +14,7 @@ export function ToolPanel() {
   return (
     <div className='tool-container'>
       <div className='tool-card'>
-        <h2 className='tool-title'>工具控制面板</h2>
+        <h2 className='tool-title'>工具控制面板2</h2>
         <p className='tool-subtitle'>一个简单的测试 / 下载 / 查看工具界面</p>
 
         <div className='tool-form'>
