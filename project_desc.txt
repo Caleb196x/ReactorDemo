@@ -1,0 +1,15 @@
+项目描述：将React的核心功能在UE的UI系统UMG上实现出来，让用户能够在UE上用原生的React框架来开发UI。
+
+分析规则：在做代码分析时需要遵循以下规则。
+- 忽略所有隐藏文件夹；
+- 忽略所有目录名为Binaries, Content, Intermediate, Saved, node_modules的文件夹及其子文件；
+- 分析代码位于Source目录或Plugins/ReactorUMG/Source目录的.cpp文件和.h文件；
+- 分析代码位于TypeScript/src目录下的.ts, .tsx, .css文件；
+
+生成规则：
+- 代码生成前必须符合对应代码的代码格式和规范，确保可以编译通过；
+- 符合需求描述；
+- 尽可能采用最优雅简洁的方式实现；
+
+核心工作：
+- 项目的核心工作是要将React的组件，样式等转换成UMG的组件和对应的样式。基于此我们需要编写大量的适配代码来完成转换。

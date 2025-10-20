@@ -19,7 +19,7 @@ export function mergeClassStyleWithInlineStyle(props: any) {
         const classNames = props.className.split(' ');
         for (const className of classNames) {
             // Get styles associated with this class name
-            const classStyle = convertCssToStyles(getCssStyleForClass(className));
+            const classStyle = getCssStyleFromGlobalCache(className);
             // todo@Caleb196x: 解析classStyle
             if (classStyle) {
                 // Merge the class styles into our style object

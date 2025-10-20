@@ -144,10 +144,15 @@ void FJsEnvRuntime::RestartJsScripts(
 	TArray<FString> FileNames;
 	PlatformFile.FindFilesRecursively(FileNames, *JsScriptHomeDir, TEXT(""));
 
+	auto FileShouldReload = [&](const FString& FilePath)
+	{
+		return FilePath.EndsWith(TEXT(".js")) || FilePath.EndsWith(TEXT(".css"));
+	};
+	
 	TMap<FString, FString> ModuleNames;
 	for (FString& SourcePath : FileNames)
 	{
-		if (!SourcePath.EndsWith(TEXT(".js")))
+		if (!FileShouldReload(SourcePath))
 		{
 			continue;
 		}
