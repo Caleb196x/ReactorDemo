@@ -1,4 +1,4 @@
-import * as UE from "ue";
+﻿import * as UE from "ue";
 import { parseToLinearColor } from "../parsers/css_color_parser";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 import { JSXConverter } from "./jsx_converter";
@@ -46,6 +46,15 @@ export class ButtonConverter extends JSXConverter {
         button.ColorAndOpacity.A = rgba.a;
     }
 
+    private isSlateBrush(value: any): value is UE.SlateBrush {
+        return value instanceof UE.SlateBrush ||
+            (value &&
+                typeof value === 'object' &&
+                'DrawAs' in value &&
+                'TintColor' in value &&
+                'ResourceObject' in value);
+    }
+
     private applyStateBrush(
         button: UE.Button,
         state: 'Hovered' | 'Pressed' | 'Disabled',
@@ -58,7 +67,12 @@ export class ButtonConverter extends JSXConverter {
         if (source) {
             try {
                 // fix: should convert source to ImageStyle
-                brush = parseBrush(source);
+                if (this.isSlateBrush(source)) {
+                    brush = source;
+                } else {
+                    // fix: should convert source to ImageStyle
+                    brush = parseBrush(source);
+                }
             } catch (error) {
                 console.warn(`Failed to parse ${state} background`, error);
             }
@@ -102,15 +116,28 @@ export class ButtonConverter extends JSXConverter {
             button.BackgroundColor = new UE.LinearColor(color.r, color.g, color.b, color.a);
         }
 
-        // fix: there is not hoveredBackground, pressedBackground, disabledBackground in props and style according to css standard
-        // so we should parse css fake class to there backgrounds.
-        const hoveredBackground = props?.hoveredBackground ?? style?.hoveredBackground;
-        const pressedBackground = props?.pressedBackground ?? style?.pressedBackground;
-        const disabledBackground = props?.disabledBackground ?? style?.disabledBackground;
+        const hoverPseudoStyle = getAllStyles(this.typeName, this.props, 'hover');
+        const pressPseudoStyle = getAllStyles(this.typeName, this.props, 'press');
+        const disabledPseudoStyle = getAllStyles(this.typeName, this.props, 'disabled');
+        const parsedHoverPseudoBackground = parseBackgroundProps(hoverPseudoStyle);
+        const parsedPressPseudoBackground = parseBackgroundProps(pressPseudoStyle);
+        const parsedDisabledPseudoBackground = parseBackgroundProps(disabledPseudoStyle);
+        const hoveredBackground = props?.hoveredBackground
+            ?? style?.hoveredBackground
+            ?? parsedHoverPseudoBackground?.image;
+        const pressedBackground = props?.pressedBackground
+            ?? style?.pressedBackground
+            ?? parsedPressPseudoBackground?.image;
+        const disabledBackground = props?.disabledBackground
+            ?? style?.disabledBackground
+            ?? parsedDisabledPseudoBackground?.image;
 
-        this.applyStateBrush(button, 'Hovered', hoveredBackground, normalBrush, parsedBackground?.color);
-        this.applyStateBrush(button, 'Pressed', pressedBackground, normalBrush, parsedBackground?.color);
-        this.applyStateBrush(button, 'Disabled', disabledBackground, normalBrush, parsedBackground?.color);
+        const hoverTint = parsedHoverPseudoBackground?.color ?? parsedBackground?.color;
+        const pressTint = parsedPressPseudoBackground?.color ?? parsedBackground?.color;
+        const disabledTint = parsedDisabledPseudoBackground?.color ?? parsedBackground?.color;
+        this.applyStateBrush(button, 'Hovered', hoveredBackground, normalBrush, hoverTint);
+        this.applyStateBrush(button, 'Pressed', pressedBackground, normalBrush, pressTint);
+        this.applyStateBrush(button, 'Disabled', disabledBackground, normalBrush, disabledTint);
     }
 
     private resolveProps(overrides?: any): { props: any, style: any } {
