@@ -11,7 +11,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta = (ShowWorldContextPin), config = Editor)
 class REACTORUMGEDITOR_API UReactorUMGUtilityWidgetBlueprint : public UEditorUtilityWidgetBlueprint
 {
 	GENERATED_UCLASS_BODY()

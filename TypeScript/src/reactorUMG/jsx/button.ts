@@ -1,4 +1,4 @@
-﻿import * as UE from "ue";
+import * as UE from "ue";
 import { parseToLinearColor } from "../parsers/css_color_parser";
 import { getAllStyles } from "../parsers/cssstyle_parser";
 import { JSXConverter } from "./jsx_converter";

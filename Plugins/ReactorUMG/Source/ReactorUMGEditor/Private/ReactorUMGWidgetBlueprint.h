@@ -4,7 +4,7 @@
 #include "ReactorUMGCommonBP.h"
 #include "ReactorUMGWidgetBlueprint.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, meta = (ShowWorldContextPin), config = Editor)
 class REACTORUMGEDITOR_API UReactorUMGWidgetBlueprint : public UWidgetBlueprint
 {
 	GENERATED_UCLASS_BODY()

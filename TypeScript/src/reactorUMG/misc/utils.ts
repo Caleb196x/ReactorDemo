@@ -20,7 +20,7 @@ export function mergeClassStyleWithInlineStyle(props: any) {
         for (const className of classNames) {
             // Get styles associated with this class name
             const classStyle = getCssStyleFromGlobalCache(className);
-            // todo@Caleb196x: 解析classStyle
+            // todo@Caleb196x: 瑙ｆ瀽classStyle
             if (classStyle) {
                 // Merge the class styles into our style object
                 classNameStyles = { ...classNameStyles, ...classStyle };
@@ -33,20 +33,51 @@ export function mergeClassStyleWithInlineStyle(props: any) {
     return mergedStyle;
 }
 
-
 export function twoArraysEqual<T>(a: T[], b: T[]): boolean {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-        if (typeof a[i] === 'object' && a[i] !== null && 
-            typeof b[i] === 'object' && b[i] !== null) 
-        {
-            if (JSON.stringify(a[i]).trim() !== JSON.stringify(b[i]).trim()) 
-                return false;
-        } else if (Array.isArray(a[i]) && Array.isArray(b[i])) {
-            if (!twoArraysEqual(a[i] as any[], b[i] as any[])) return false;
-        } else if (a[i] !== b[i]) {
-            return false;
+    if (a === b) return true;
+    const len = a.length;
+    if (len !== b.length) return false;
+
+    const isPlainObject = (v: any): v is Record<string, any> => {
+        return v !== null && typeof v === 'object' && !Array.isArray(v);
+    };
+
+    const eq = (x: any, y: any): boolean => {
+        if (x === y) return true;
+
+        // Handle Date
+        if (x instanceof Date && y instanceof Date) {
+            return x.getTime() === y.getTime();
         }
+
+        // Arrays
+        if (Array.isArray(x) && Array.isArray(y)) {
+            if (x.length !== y.length) return false;
+            for (let i = 0; i < x.length; i++) {
+                if (!eq(x[i], y[i])) return false;
+            }
+            return true;
+        }
+
+        // Plain objects
+        if (isPlainObject(x) && isPlainObject(y)) {
+            const xKeys = Object.keys(x);
+            const yKeys = Object.keys(y);
+            if (xKeys.length !== yKeys.length) return false;
+            for (let i = 0; i < xKeys.length; i++) {
+                const k = xKeys[i];
+                if (k.startsWith("_") || k.startsWith("$$")) continue;
+                if (!Object.prototype.hasOwnProperty.call(y, k)) return false;
+                if (!eq(x[k], y[k])) return false;
+            }
+            return true;
+        }
+
+        return false;
+    };
+
+    for (let i = 0; i < len; i++) {
+        if (!eq(a[i], b[i])) return false;
     }
     return true;
 }
@@ -69,47 +100,65 @@ export function safeParseFloat(value: string | number) : number {
 export function findChangedProps(oldProps: any, newProps: any): any {
     if (!oldProps) return newProps;
     if (!newProps) return {};
-    
-    const result: any = {};
-    
-    // Iterate through all keys in newProps
-    for (const key in newProps) {
-        // Skip if property doesn't exist in newProps
-        if (!Object.prototype.hasOwnProperty.call(newProps, key)) continue;
-        
-        const oldValue = oldProps[key];
-        const newValue = newProps[key];
-        
-        // If old value doesn't exist, add new value to result
-        if (oldValue === undefined) {
-            result[key] = newValue;
-            continue;
-        }
-        
-        // If both values are objects, recursively find changes
-        if (typeof oldValue === 'object' && oldValue !== null && 
-            typeof newValue === 'object' && newValue !== null) {
-            const nestedChanges = findChangedProps(oldValue, newValue);
-            
-            // Only add to result if there are changes
-            if (Object.keys(nestedChanges).length > 0) {
-                result[key] = nestedChanges;
+
+    const seen = new WeakMap<object, WeakSet<object>>();
+
+    const isPlainObject = (v: any): v is object => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+    function diffObjects(a: any, b: any): any {
+        const result: any = {};
+
+        // Cycle detection for object pairs
+        if (isPlainObject(a) && isPlainObject(b)) {
+            let set = seen.get(a);
+            if (!set) {
+                set = new WeakSet<object>();
+                seen.set(a, set);
             }
-        } 
-        // Handle arrays - compare them by stringifying
-        else if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-            // Compare arrays by stringifying them
-            if (twoArraysEqual(oldValue, newValue)) {
+            if (set.has(b)) {
+                return result; // already compared this pair; avoid infinite recursion
+            }
+            set.add(b);
+        }
+
+        for (const key in b) {
+            if (!Object.prototype.hasOwnProperty.call(b, key)) continue;
+
+            const oldValue = a ? a[key] : undefined;
+            const newValue = b[key];
+
+            if (oldValue === undefined) {
+                result[key] = newValue;
+                continue;
+            }
+
+            // Arrays: compare quickly and assign if changed
+            if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                if (!twoArraysEqual(oldValue, newValue)) {
+                    result[key] = newValue;
+                }
+                continue;
+            }
+
+            // Nested plain objects
+            if (isPlainObject(oldValue) && isPlainObject(newValue)) {
+                const nested = diffObjects(oldValue, newValue);
+                if (nested && Object.keys(nested).length > 0) {
+                    result[key] = nested;
+                }
+                continue;
+            }
+
+            // Primitives or differing types
+            if (oldValue !== newValue) {
                 result[key] = newValue;
             }
         }
-        // If values are different, add to result
-        else if (oldValue !== newValue) {
-            result[key] = newValue;
-        }
+
+        return result;
     }
-    
-    return result;
+
+    return diffObjects(oldProps, newProps);
 }
 
 export function compareTwoFunctions(func1: Function, func2: Function): boolean {

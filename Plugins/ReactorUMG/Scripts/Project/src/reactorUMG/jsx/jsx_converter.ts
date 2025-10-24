@@ -20,9 +20,12 @@ export class JSXConverter extends ElementConverter {
             "input": "InputJSXConverter",
             "img": "ImageConverter",
             "textarea": "TextAreaConverter",
+            "select": "SelectConverter",
             "text": "TextConverter",
             "progress": "ProgressConverter"
         };
+
+        const SkipElement = ["option"];
 
         let type = this.typeName;
         const textKeywords = ["text", "span", "label", "p", "h1", "h2", "h3", "h4", "h5", "h6"];
@@ -30,6 +33,9 @@ export class JSXConverter extends ElementConverter {
             type = "text";
         }
 
+        if (SkipElement.includes(type)) {
+            return null;
+        }
         if (JsxElementConverters.hasOwnProperty(type)) {
             const Module = require(`./${type}`);
             if (Module) {
@@ -65,6 +71,10 @@ export class JSXConverter extends ElementConverter {
             
             this.nativeSlot = nativeSlot;
         }
+
+        if (this.proxy) {
+            this.proxy.appendChild(parent, child, childTypeName, childProps);
+        }
     }
 
     removeChild(parent: UE.Widget, child: UE.Widget) {
@@ -73,3 +83,4 @@ export class JSXConverter extends ElementConverter {
         }
     }
 }
+

@@ -2730,7 +2730,8 @@ bool FJsEnvImpl::RemoveFromDelegate(
             else
 #endif
             {
-                static_cast<FMulticastScriptDelegate*>(DelegatePtr)->Remove(Delegate);
+                FMulticastScriptDelegate* MD = static_cast<FMulticastScriptDelegate*>(DelegatePtr);
+                MD->Remove(Delegate);
             }
 
             SysObjectRetainer.Release(DelegateProxy);
