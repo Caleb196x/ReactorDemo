@@ -149,6 +149,14 @@ export function findChangedProps(oldProps: any, newProps: any): any {
                 continue;
             }
 
+            // Functions: compare by source string
+            if (typeof oldValue === 'function' && typeof newValue === 'function') {
+                if (!compareTwoFunctions(oldValue, newValue)) {
+                    result[key] = newValue;
+                }
+                continue;
+            }
+
             // Primitives or differing types
             if (oldValue !== newValue) {
                 result[key] = newValue;
