@@ -99,7 +99,7 @@ class RootContainer {
 
 const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, UMGWidget, any, any, {}, any, any, any, any, any> = {
     getRootHostContext () { return {}; },
-    //CanvasPanel()的parentHostContext是getRootHostContext返回的值
+    //CanvasPanel()的parentHostContext是getRootHostContext返回的�?    
     getChildHostContext (parentHostContext: {}) { return parentHostContext;},
     appendInitialChild (parent: UMGWidget, child: UMGWidget) { parent.appendChild(child); },
     appendChildToContainer (container: RootContainer, child: UMGWidget) { container.appendChild(child); },
@@ -130,8 +130,19 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     },
   
     //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
+        //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
     prepareUpdate (instance: UMGWidget, type: string, oldProps: any, newProps: any) {
         try{
+            const textContainers = new Set(['text','span','label','p','a','h1','h2','h3','h4','h5','h6']);
+            if (textContainers.has(type)) {
+                const oldChild: any = oldProps ? (oldProps as any).children : undefined;
+                const newChild: any = newProps ? (newProps as any).children : undefined;
+                const oldIsText = typeof oldChild === 'string' || typeof oldChild === 'number';
+                const newIsText = typeof newChild === 'string' || typeof newChild === 'number';
+                if ((oldIsText || newIsText) && oldChild !== newChild) {
+                    return true;
+                }
+            }
             return !deepEquals(oldProps, newProps);
         } catch(e) {
             console.error(e.message);

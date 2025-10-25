@@ -7,9 +7,11 @@ import * as UE from "ue";
 export class CanvasConverter extends ContainerConverter {
     private predefinedAnchors: Record<string, any>;
     private childInfo: Map<UE.Widget, { typeName: string; props: any }>;
+    private childCanvasSlot: Map<UE.Widget, UE.CanvasPanelSlot>;
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
         this.childInfo = new Map();
+        this.childCanvasSlot = new Map();
         this.predefinedAnchors = {
             // 预设16种锚点
             'top left': {min_x: 0, min_y: 0, max_x: 0, max_y: 0},
@@ -61,7 +63,7 @@ export class CanvasConverter extends ContainerConverter {
         for (let i = 0; i < childCount; i++) {
             const child = panel.GetChildAt(i);
             if (!child) continue;
-            const canvasSlot = UE.UMGManager.SlotAsCanvasSlot(child);
+            const canvasSlot = this.childCanvasSlot.get(child);
             if (!canvasSlot) continue;
 
             const info = this.childInfo.get(child);
@@ -84,6 +86,8 @@ export class CanvasConverter extends ContainerConverter {
     }
 
     private initCanvasSlot(canvasSlot: UE.CanvasPanelSlot, childStyle: any): void {
+        if (!canvasSlot) return;
+
         const positionAnchor = this.containerStyle?.positionAnchor;
         const offsetAnchor = this.containerStyle?.offsetAnchor;
 
@@ -156,9 +160,11 @@ export class CanvasConverter extends ContainerConverter {
     }
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
         let canvasPanel = parent as UE.CanvasPanel;
-        const canvasSlot = canvasPanel.AddChildToCanvas(child);
+        const childCanvasSlot = canvasPanel.AddChildToCanvas(child);
+        this.childCanvasSlot.set(child, childCanvasSlot);
+
         const childStyle = getAllStyles(childTypeName, childProps);
-        this.initCanvasSlot(canvasSlot, childStyle);
+        this.initCanvasSlot(childCanvasSlot, childStyle);
         this.childInfo.set(child, { typeName: childTypeName, props: childProps });
     }
 }
