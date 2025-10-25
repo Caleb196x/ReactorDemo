@@ -6,6 +6,7 @@
 #include "ReactorUIWidget.h"
 #include "ReactorUtils.h"
 #include "EditorUtilityWidget.h"
+#include "ReactorUtilityWidget.h"
 
 UReactUMGUtilityFactory::UReactUMGUtilityFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -13,7 +14,7 @@ UReactUMGUtilityFactory::UReactUMGUtilityFactory(const FObjectInitializer& Objec
 	bCreateNew = true;
 	bEditAfterNew = true;
 	SupportedClass = UReactorUMGUtilityWidgetBlueprint::StaticClass();
-	ParentClass = UEditorUtilityWidget::StaticClass();
+	ParentClass = UReactorUtilityWidget::StaticClass();
 }
 
 UObject* UReactUMGUtilityFactory::FactoryCreateNew(UClass* Class, UObject* Parent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)

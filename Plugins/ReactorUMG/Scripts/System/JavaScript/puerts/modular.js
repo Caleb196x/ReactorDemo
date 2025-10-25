@@ -80,11 +80,13 @@ var global = global || (function () { return this; }());
             if (res) return res;
         } else {
             // global
-            const classNameWithScope = GlobalStyleClassesCache['__selectors'][className];
+            if ('__selectors' in GlobalStyleClassesCache) {
+                const classNameWithScope = GlobalStyleClassesCache['__selectors'][className];
 
-            if (classNameWithScope) {
-                const res = getStyle(GlobalStyleClassesCache, classNameWithScope, pseudo, mediaQuery);
-                if (res) return res;
+                if (classNameWithScope) {
+                    const res = getStyle(GlobalStyleClassesCache, classNameWithScope, pseudo, mediaQuery);
+                    if (res) return res;
+                }
             }
         }
 

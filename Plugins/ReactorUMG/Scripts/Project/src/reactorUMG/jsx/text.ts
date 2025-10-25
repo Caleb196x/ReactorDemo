@@ -86,13 +86,17 @@ export class TextConverter extends JSXConverter {
 
     update(widget: UE.Widget, oldProps: any, changedProps: any) {
         const text = widget as UE.TextBlock;
-        const content = changedProps?.children;
+        const content = changedProps?.children ?? changedProps?.text;
+        this.setupTextBlockProperties(text, changedProps);
+        // if (changedProps?.style) {
+        //     UE.UMGManager.SynchronizeWidgetProperties(text);
+        // }
+
         if (content && typeof content === 'string') {
             text.SetText(content);
         }
-        this.setupTextBlockProperties(text, changedProps);
-        if (changedProps?.style) {
-            UE.UMGManager.SynchronizeWidgetProperties(text);
-        }
+
+        UE.UMGManager.SynchronizeWidgetProperties(text);
+
     }
 }
