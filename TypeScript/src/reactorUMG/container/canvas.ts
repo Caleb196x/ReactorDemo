@@ -6,8 +6,10 @@ import * as UE from "ue";
 
 export class CanvasConverter extends ContainerConverter {
     private predefinedAnchors: Record<string, any>;
+    private childInfo: Map<UE.Widget, { typeName: string; props: any }>;
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
+        this.childInfo = new Map();
         this.predefinedAnchors = {
             // 预设16种锚点
             'top left': {min_x: 0, min_y: 0, max_x: 0, max_y: 0},
@@ -48,7 +50,37 @@ export class CanvasConverter extends ContainerConverter {
     }
 
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {
-        
+        const mergedProps = { ...oldProps, ...changedProps };
+        this.props = mergedProps;
+        this.containerStyle = getAllStyles(this.typeName, mergedProps);
+
+        const panel = widget as UE.CanvasPanel;
+        if (!panel || !(panel as any).GetChildrenCount) return;
+
+        const childCount = panel.GetChildrenCount();
+        for (let i = 0; i < childCount; i++) {
+            const child = panel.GetChildAt(i);
+            if (!child) continue;
+            const canvasSlot = UE.UMGManager.SlotAsCanvasSlot(child);
+            if (!canvasSlot) continue;
+
+            const info = this.childInfo.get(child);
+            const childStyle = info ? getAllStyles(info.typeName, info.props) : undefined;
+            if (childStyle) {
+                this.initCanvasSlot(canvasSlot, childStyle);
+            } else {
+                const positionAnchor = this.containerStyle?.positionAnchor;
+                const offsetAnchor = this.containerStyle?.offsetAnchor;
+                const anchors = positionAnchor ? this.predefinedAnchors[positionAnchor]
+                                  : (offsetAnchor ? this.predefinedAnchors[offsetAnchor] : null);
+                if (anchors) {
+                    canvasSlot.SetAnchors(new UE.Anchors(
+                        new UE.Vector2D(anchors.min_x, anchors.min_y),
+                        new UE.Vector2D(anchors.max_x, anchors.max_y)
+                    ));
+                }
+            }
+        }
     }
 
     private initCanvasSlot(canvasSlot: UE.CanvasPanelSlot, childStyle: any): void {
@@ -127,5 +159,6 @@ export class CanvasConverter extends ContainerConverter {
         const canvasSlot = canvasPanel.AddChildToCanvas(child);
         const childStyle = getAllStyles(childTypeName, childProps);
         this.initCanvasSlot(canvasSlot, childStyle);
+        this.childInfo.set(child, { typeName: childTypeName, props: childProps });
     }
 }
