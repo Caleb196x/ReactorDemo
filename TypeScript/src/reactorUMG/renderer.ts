@@ -108,6 +108,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         return new UMGWidget(type, props, rootContainer, hostContext);
     },
     createTextInstance (text: string, rootContainer: RootContainer, hostContext: any) {
+        
         return new UMGWidget("text", {text: text}, rootContainer, hostContext);
     },
     finalizeInitialChildren () { return false; },

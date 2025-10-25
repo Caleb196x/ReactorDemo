@@ -4,6 +4,7 @@ import { getAllStyles } from '../parsers/cssstyle_parser';
 import { parseBackgroundProps } from '../parsers/css_background_parser';
 import { hasFontStyles, setupFontStyles } from '../parsers/css_font_parser';
 import { parseToLinearColor } from '../parsers/css_color_parser';
+import { compareTwoFunctions } from '../misc/utils';
 
 type OptionItem = { value: string; label: string };
 
@@ -11,6 +12,7 @@ export class SelectConverter extends JSXConverter {
     private options: OptionItem[] = [];
     private labelToValue: Map<string, string> = new Map();
     private onChangeBound?: (SelectedItem: string, SelectionType: UE.ESelectInfo) => void;
+    private nativeOnChangeLast: (res: any) => void;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
@@ -101,16 +103,26 @@ export class SelectConverter extends JSXConverter {
             return;
         }
 
-        if (this.onChangeBound) {
-            combo.OnSelectionChanged.Remove(this.onChangeBound);
-            // this.onChangeBound = undefined;
-        }
+        const rebindOnChange = () => {
+            if (this.onChangeBound) {
+                combo.OnSelectionChanged.Remove(this.onChangeBound);
+                this.onChangeBound = undefined;
+            }
 
-        this.onChangeBound = (selectedLabel: string, _type: UE.ESelectInfo) => {
-            const val = this.labelToValue.get(selectedLabel) ?? selectedLabel;
-            try { onChange({ target: { value: val } }); } catch {}
+            this.onChangeBound = (selectedLabel: string, _type: UE.ESelectInfo) => {
+                const val = this.labelToValue.get(selectedLabel) ?? selectedLabel;
+                try { onChange({ target: { value: val } }); } catch {}
+            };
+            combo.OnSelectionChanged.Add(this.onChangeBound);
         };
-        combo.OnSelectionChanged.Add(this.onChangeBound);
+
+        if (isUpdate) {
+            if (!compareTwoFunctions(this.nativeOnChangeLast, onChange)) {
+                rebindOnChange();
+            }
+        } else {
+            rebindOnChange();
+        }
     }
 
     private extractLabelFromChildren(children: any): string | undefined {
