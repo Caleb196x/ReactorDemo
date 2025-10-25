@@ -116,7 +116,13 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     prepareForCommit(containerInfo: RootContainer): any {},
     resetAfterCommit (container: RootContainer) {},
     resetTextContent (instance: UMGWidget) { },
-    shouldSetTextContent (type, props) { return false; },
+    shouldSetTextContent (type, props) {
+        const textContainers = new Set([
+            'text','span','label','p','a','h1','h2','h3','h4','h5','h6'
+        ]);
+        const children = props && props.children;
+        return textContainers.has(type) && (typeof children === 'string' || typeof children === 'number');
+    },
     commitTextUpdate (textInstance: UMGWidget, oldText: string, newText: string) {
         if (textInstance != null && oldText != newText) {
             textInstance.update({}, {text: newText})

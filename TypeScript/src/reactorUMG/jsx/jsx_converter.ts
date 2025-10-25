@@ -28,7 +28,7 @@ export class JSXConverter extends ElementConverter {
         const SkipElement = ["option"];
 
         let type = this.typeName;
-        const textKeywords = ["text", "span", "label", "p", "h1", "h2", "h3", "h4", "h5", "h6"];
+        const textKeywords = ["text", "span", "label", "p", "a", "h1", "h2", "h3", "h4", "h5", "h6"];
         if (textKeywords.includes(this.typeName)) {
             type = "text";
         }
@@ -83,4 +83,3 @@ export class JSXConverter extends ElementConverter {
         }
     }
 }
-
