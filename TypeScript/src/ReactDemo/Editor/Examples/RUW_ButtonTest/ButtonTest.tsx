@@ -32,8 +32,8 @@ class ButtonTestClass extends React.Component<{}, ButtonTestClassState> {
   };
 
   // 处理焦点事件
-  handleFocus = () => { /*this.setState({ isFocused: true });*/ };
-  handleBlur = () => { /*this.setState({ isFocused: false });*/ };
+  handleFocus = () => { this.setState({ isFocused: true }); };
+  handleBlur = () => { this.setState({ isFocused: false }); };
 
   // 切换禁用状态
   toggleDisable = () => {
