@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 
 const CustomImage = ({
   src,
@@ -75,18 +75,18 @@ const CustomImage = ({
 
 const App = () => {
   return (
-    <div>
+    <div style={{flexDirection: 'column', alignItems: 'center'}}>
       <h1>React Image Example</h1>
       <div style={{ maxWidth: '500px' }}>
         <CustomImage
-          src="https://via.placeholder.com/150/0000FF/808080?Text=Digital.com"
+          src="https://picsum.photos/600/400"
           alt="Placeholder Image"
           width="300"
           height="200"
           loading="lazy"
           title="Example Image"
           style={{ borderRadius: '10px', border: '2px solid #ccc' }}
-          onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150/FF0000/FFFFFF?Text=Error'; }}
+          onError={(e) => { console.log(e); (e.target as HTMLImageElement).src = 'https://www.w3.org/Icons/WWW/w3c_home'; }}
         />
       </div>
       <div style={{ marginTop: '20px' }}>
