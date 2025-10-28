@@ -17,6 +17,8 @@ export class ImageConverter extends JSXConverter {
     private onClick: ()=>void;
     private image: UE.Image | undefined;
     private scaleBox: UE.ScaleBox | undefined;
+    private currentReloadTime: number;
+    private reloadMaxTimesWhenError: number;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
@@ -27,6 +29,8 @@ export class ImageConverter extends JSXConverter {
         this.image = undefined;
         this.scaleBox = undefined;
         this.onClick = props?.onClick;
+        this.currentReloadTime = 0;
+        this.reloadMaxTimesWhenError = 5;
     }
 
     private onLoad(object: UE.Object) {
@@ -49,7 +53,8 @@ export class ImageConverter extends JSXConverter {
                     get src() { return self.source; },
                     set src(v: string) {
                         self.source = v;
-                        if (self.image) {
+                        if (self.image && this.currentReloadTime < this.reloadMaxTimesWhenError) {
+                            this.currentReloadTime++;
                             ImageLoader.loadBrushImageObject(self.image, v, __dirname, false, self.onLoad.bind(self), self.onError);
                         }
                     }
