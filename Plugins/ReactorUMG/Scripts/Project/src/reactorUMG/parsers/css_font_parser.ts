@@ -24,31 +24,45 @@ export function parseTextAlign(textAlign: string): UE.ETextJustify {
     }
 }
 
-export function parseFontFaceName(fontStyle: string, fontWeight: string) {
+export function parseFontFaceName(fontStyle?: string, fontWeight?: string) {
     let fontFace = 'Default';
-    if (fontWeight === 'bold' || fontWeight === 'bolder') {
+    const normalizedWeight = (fontWeight ?? '').toString().toLowerCase();
+    const normalizedStyle = (fontStyle ?? '').toString().toLowerCase();
+
+    if (normalizedWeight === 'bold' || normalizedWeight === 'bolder' || parseInt(normalizedWeight, 10) >= 700) {
         fontFace = 'Bold';
-    } else if (fontWeight === 'light' || fontWeight === 'lighter') {
+    } else if (normalizedWeight === 'light' || normalizedWeight === 'lighter' || parseInt(normalizedWeight, 10) <= 300) {
         fontFace = 'Light';
-    } else if (fontWeight === 'normal') {
+    } else if (normalizedWeight === 'normal' || normalizedWeight === 'regular') {
         fontFace = 'Default';
     }
 
-    switch (fontStyle) {
-        case 'italic':
-            fontFace = fontFace == 'Bold' ? 'Bold Italic' : 'Italic';
-        case 'blod italic':
-            fontFace = 'Bold Italic';
+    switch (normalizedStyle) {
+        case '':
         case 'normal':
-            fontFace = 'Default';
+            // keep weight-driven face
+            break;
+        case 'italic':
+        case 'oblique':
+            fontFace = fontFace === 'Bold' ? 'Bold Italic' : 'Italic';
+            break;
+        case 'bold italic':
+        case 'italic bold':
+            fontFace = 'Bold Italic';
+            break;
         default:
-            fontFace = fontStyle;
+            fontFace = fontStyle ?? fontFace;
+            break;
     }
 
     return fontFace;
 }
 
-export function parseFontSkewAmount(fontStyle: string): number {
+export function parseFontSkewAmount(fontStyle?: string): number {
+    if (typeof fontStyle !== 'string') {
+        return 0;
+    }
+
     if (fontStyle.includes('oblique')) {
         const obliqueMatch = fontStyle.match(/oblique\s+(\d+)deg/);
         if (obliqueMatch && obliqueMatch[1]) {
@@ -62,67 +76,85 @@ export function parseFontSkewAmount(fontStyle: string): number {
     return 0;
 }
 
-export function parseFontFamily(cssText: string) {
-    const regex = /\s*:\s*([^;]+);?/i;
-    const match = cssText.match(regex);
-  
-    if (!match) return [];
-  
-    const rawValue = match[1];
-  
+export function parseFontFamily(cssText: unknown) {
+    if (typeof cssText !== 'string') {
+        return [];
+    }
+
+    const match = cssText.match(/\s*:\s*([^;]+);?/i);
+    const rawValue = (match ? match[1] : cssText).trim();
+
+    if (!rawValue) {
+        return [];
+    }
+
     // 使用正则处理带引号和不带引号的字体名
-    const fonts = [];
+    const fonts: string[] = [];
     let current = '';
     let inQuotes = false;
     let quoteChar = '';
-  
+
     for (let i = 0; i < rawValue.length; i++) {
-      const char = rawValue[i];
-  
-      if ((char === '"' || char === "'")) {
-        if (!inQuotes) {
-          inQuotes = true;
-          quoteChar = char;
-        } else if (quoteChar === char) {
-          inQuotes = false;
+        const char = rawValue[i];
+
+        if (char === '"' || char === "'") {
+            if (!inQuotes) {
+                inQuotes = true;
+                quoteChar = char;
+            } else if (quoteChar === char) {
+                inQuotes = false;
+            }
+            continue;
         }
-        continue;
-      }
-  
-      if (char === ',' && !inQuotes) {
-        fonts.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
+
+        if (char === ',' && !inQuotes) {
+            if (current.trim().length > 0) {
+                fonts.push(current.trim());
+            }
+            current = '';
+        } else {
+            current += char;
+        }
     }
-  
-    if (current.trim()) fonts.push(current.trim());
-  
-    return fonts.map(f => f.replace(/^["']|["']$/g, '').trim());
+
+    if (current.trim()) {
+        fonts.push(current.trim());
+    }
+
+    return fonts
+        .map(f => f.replace(/^["']|["']$/g, '').trim())
+        .filter(f => f.length > 0);
 }
 
-export function parseOutline(outline: string, style: any) {
+export function parseOutline(outline?: string, style?: any) {
     // Parse outline with pattern: <width> || <style> || <color>
-    const parts = outline.trim().split(/\s+/);
+    if (typeof outline !== 'string') {
+        return {};
+    }
+
+    const parts = outline.match(/(?:rgba?\([^)]*\)|hsla?\([^)]*\)|#[0-9a-f]{3,8}|[^\s]+)/gi) ?? [];
     const result: any = {};
 
     for (const part of parts) {
-        if (part.match(/^(solid|dashed|dotted|double|groove|ridge|inset|outset|none)$/i)) {
-            // Style
-            result.style = part;
-        } else if (part.match(/^(#|rgb|rgba|hsl|hsla|[a-z]+$)/i)) {
-            // Color
-            result.color = parseToLinearColor(part);
-        } else {
-            // Width - assume it's a length value
-            result.width = convertLengthUnitToSlateUnit(part, style);
+        if (/^(solid|dashed|dotted|double|groove|ridge|inset|outset|none)$/i.test(part)) {
+            result.outlineStyle = part.toLowerCase();
+            continue;
+        }
+
+        if (/^(?:#[0-9a-f]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)|[a-z]+)$/i.test(part)) {
+            result.outlineColor = parseToLinearColor(part);
+            continue;
+        }
+
+        // Width - assume it's a length value; fall back to numeric parsing
+        const convertedWidth = convertLengthUnitToSlateUnit(part, style);
+        if (convertedWidth !== undefined && convertedWidth !== null) {
+            result.outlineWidth = convertedWidth;
         }
     }
 
-    // If only one value provided, assume it's the style
-    if (parts.length === 1 && !result.width && !result.color) {
-        result.style = parts[0];
+    if (parts.length === 1 && !result.outlineWidth && !result.outlineColor) {
+        result.outlineStyle = parts[0].toLowerCase();
     }
 
     return result;
@@ -203,11 +235,15 @@ export function setupFontStyles(outer: UE.Object, font: UE.SlateFontInfo, fontSt
 
     if (fontStyle?.outline) {
         const outlineResult = parseOutline(fontStyle?.outline, fontStyle);
-        font.OutlineSettings.OutlineSize = outlineResult.width;
-        font.OutlineSettings.OutlineColor.R = outlineResult.color.r;
-        font.OutlineSettings.OutlineColor.G = outlineResult.color.g;
-        font.OutlineSettings.OutlineColor.B = outlineResult.color.b;
-        font.OutlineSettings.OutlineColor.A = outlineResult.color.a;
+        if (outlineResult.outlineWidth !== undefined) {
+            font.OutlineSettings.OutlineSize = outlineResult.outlineWidth;
+        }
+        if (outlineResult.outlineColor) {
+            font.OutlineSettings.OutlineColor.R = outlineResult.outlineColor.r;
+            font.OutlineSettings.OutlineColor.G = outlineResult.outlineColor.g;
+            font.OutlineSettings.OutlineColor.B = outlineResult.outlineColor.b;
+            font.OutlineSettings.OutlineColor.A = outlineResult.outlineColor.a;
+        }
     }
 
     if (fontStyle?.outlineColor) {
