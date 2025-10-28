@@ -1,4 +1,5 @@
 import * as React from 'react';
+import food_img from './food.png'
 
 const CustomImage = ({
   src,
@@ -81,8 +82,8 @@ const App = () => {
         <CustomImage
           src="https://picsum.photos/600/400"
           alt="Placeholder Image"
-          width="300"
-          height="200"
+          width="200"
+          height="150"
           loading="lazy"
           title="Example Image"
           style={{ borderRadius: '10px', border: '2px solid #ccc' }}
@@ -94,7 +95,7 @@ const App = () => {
           src="https://www.w3.org/Icons/WWW/w3c_home"
           alt="SVG Logo"
           width="200"
-          height="200"
+          height="150"
           style={{ borderRadius: '50%' }}
           className="logo-image"
         />
@@ -104,7 +105,17 @@ const App = () => {
           src="/Game/Examples/Images/Test.Test"
           alt="SVG Logo"
           width="200"
-          height="200"
+          height="150"
+          style={{ borderRadius: '50%' }}
+          className="logo-image"
+        />
+      </div>
+      <div style={{ marginTop: '20px' }}>
+        <CustomImage
+          src={food_img}
+          alt="Food Image"
+          width="200"
+          height="150"
           style={{ borderRadius: '50%' }}
           className="logo-image"
         />
