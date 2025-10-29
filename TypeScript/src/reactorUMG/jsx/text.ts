@@ -9,9 +9,64 @@ type TextStyleProps = Record<string, any>;
 
 export class TextConverter extends JSXConverter {
     private readonly textFontSetupHandlers: Record<string, (textBlock: UE.TextBlock, prop: any) => void> = {};
+    private static readonly elementDefaultStyles: Record<string, TextStyleProps> = {
+        'text': {
+            lineHeight: '1.4'
+        },
+        'span': {
+            lineHeight: '1.4'
+        },
+        'label': {
+            fontWeight: '600',
+            lineHeight: '1.4'
+        },
+        'p': {
+            lineHeight: '1.6',
+            marginBottom: '12px'
+        },
+        'a': {
+            color: '#1e90ff',
+            textDecoration: 'underline',
+            lineHeight: '1.4'
+        },
+        'h1': {
+            fontSize: '32px',
+            fontWeight: '700',
+            lineHeight: '1.25'
+        },
+        'h2': {
+            fontSize: '28px',
+            fontWeight: '700',
+            lineHeight: '1.3'
+        },
+        'h3': {
+            fontSize: '24px',
+            fontWeight: '600',
+            lineHeight: '1.35'
+        },
+        'h4': {
+            fontSize: '20px',
+            fontWeight: '600',
+            lineHeight: '1.4'
+        },
+        'h5': {
+            fontSize: '18px',
+            fontWeight: '600',
+            lineHeight: '1.45'
+        },
+        'h6': {
+            fontSize: '16px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            lineHeight: '1.45'
+        }
+    };
+    private readonly loweredTypeName: string;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
+        this.loweredTypeName = (typeName ?? '').toLowerCase();
         this.textFontSetupHandlers = {
             color: this.setupFontColor,
             fontColor: this.setupFontColor,
@@ -23,12 +78,13 @@ export class TextConverter extends JSXConverter {
 
     private normalizeStyles(props: any): TextStyleProps {
         const styles = getAllStyles(this.typeName, props) ?? {};
-        const resolved: TextStyleProps = { ...styles };
+        const defaults = TextConverter.elementDefaultStyles[this.loweredTypeName] ?? {};
+        const resolved: TextStyleProps = { ...defaults, ...styles };
 
         if (props) {
             const directKeys = ['color', 'fontColor', 'textAlign', 'textTransform', 'lineHeight'];
             for (const key of directKeys) {
-                if (props[key] !== undefined && resolved[key] === undefined) {
+                if (props[key] !== undefined) {
                     resolved[key] = props[key];
                 }
             }
