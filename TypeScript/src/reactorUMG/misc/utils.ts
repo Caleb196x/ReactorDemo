@@ -169,6 +169,6 @@ export function findChangedProps(oldProps: any, newProps: any): any {
     return diffObjects(oldProps, newProps);
 }
 
-export function compareTwoFunctions(func1: Function, func2: Function): boolean {
-  return func1.toString() === func2.toString();
+export function compareTwoFunctions(func1: Function | undefined | null, func2: Function | undefined | null): boolean {
+    return func1 === func2;
 }

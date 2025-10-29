@@ -37,15 +37,56 @@ export abstract class ElementConverter {
             "RenderTransform": (styles: any, changeProps: any) => {return parseTransform(styles?.transform)},
             "RenderTransformPivot": (styles: any, changeProps: any) => {return parseTransformPivot(styles?.transformOrigin)},
             "Translate": (styles: any, changeProps: any) => {return parseTranslate(styles?.translate)},
-            "RenderOpacity": (styles: any, changeProps: any) => {if (styles?.opacity) return safeParseFloat(styles?.opacity); else return null;},
+            "RenderOpacity": (styles: any, changeProps: any) => {if (styles?.opacity !== undefined && styles?.opacity !== null) return safeParseFloat(styles?.opacity); else return null;},
             "Visibility": (styles: any, changeProps: any) => {return parseVisibility(styles?.visible || styles?.visibility, changeProps?.hitTest)},
-            "ToolTipText": (changeProps: any) => {return changeProps?.toolTip || changeProps?.title || null},
-            "bIsEnabled": (changeProps: any) => {return changeProps?.disable ? !changeProps.disable : true},
-            "bIsVolatile": (changeProps: any) => {return changeProps?.volatil ? changeProps.volatil : false},
-            "PixelSnapping": (changeProps: any) => {return changeProps?.pixelSnapping ? (changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled) : null},
-            "bIsEnabledDelegate": (changeProps: any) => {return changeProps?.disableBinding ? () => {return !changeProps.disableBinding()} : null},
-            "ToolTipTextDelegate": (changeProps: any) => {return changeProps?.toolTipBinding ? changeProps.toolTipBinding : null},
-            "VisibilityDelegate": (changeProps: any) => {return changeProps?.visibilityBinding ? () => {return parseVisibility(changeProps.visibilityBinding())} : null},
+            "ToolTipText": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("toolTip", changeProps)) {
+                    return changeProps.toolTip ?? "";
+                }
+                if (changeProps && isKeyOfRecord("title", changeProps)) {
+                    return changeProps.title ?? "";
+                }
+                return null;
+            },
+            "bIsEnabled": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("disable", changeProps)) {
+                    return changeProps.disable ? false : true;
+                }
+                return null;
+            },
+            "bIsVolatile": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("volatil", changeProps)) {
+                    return !!changeProps.volatil;
+                }
+                return null;
+            },
+            "PixelSnapping": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("pixelSnapping", changeProps)) {
+                    return changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled;
+                }
+                return null;
+            },
+            "bIsEnabledDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("disableBinding", changeProps) && changeProps.disableBinding) {
+                    return () => {return !changeProps.disableBinding();};
+                }
+                return null;
+            },
+            "ToolTipTextDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("toolTipBinding", changeProps)) {
+                    return changeProps.toolTipBinding ?? null;
+                }
+                if (changeProps && isKeyOfRecord("titleBinding", changeProps)) {
+                    return changeProps.titleBinding ?? null;
+                }
+                return null;
+            },
+            "VisibilityDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("visibilityBinding", changeProps) && changeProps.visibilityBinding) {
+                    return () => {return parseVisibility(changeProps.visibilityBinding());};
+                }
+                return null;
+            },
         }
     }
 
@@ -62,6 +103,7 @@ export abstract class ElementConverter {
     updateWidget(widget: UE.Widget, oldProps: any, newProps: any) {
         // Find changed properties between oldProps and newProps
         const changedProps = findChangedProps(oldProps, newProps);
+        this.props = newProps ?? this.props;
         // Update common properties
         this.initOrUpdateCommonProperties(widget, changedProps);
         // Update the widget with changed properties
@@ -70,12 +112,22 @@ export abstract class ElementConverter {
 
     private initOrUpdateCommonProperties(widget: UE.Widget, changeProps: any) {
         const styles = getAllStyles(this.typeName, changeProps);
+        const normalizedStyles = styles || {};
+        const normalizedChangeProps = changeProps || {};
 
         const widgetProps = {};
         for (const key in this.translators) {
             const propName = this.PropMaps[key];
-            if (isKeyOfRecord(propName, styles) || isKeyOfRecord(propName, changeProps)) {
-                const value = this.translators[key](styles, changeProps);
+            let shouldHandle = isKeyOfRecord(propName, normalizedStyles) || isKeyOfRecord(propName, normalizedChangeProps);
+            if (!shouldHandle) {
+                if (key === "ToolTipText" && isKeyOfRecord("title", normalizedChangeProps)) {
+                    shouldHandle = true;
+                } else if (key === "ToolTipTextDelegate" && isKeyOfRecord("titleBinding", normalizedChangeProps)) {
+                    shouldHandle = true;
+                }
+            }
+            if (shouldHandle) {
+                const value = this.translators[key](normalizedStyles, normalizedChangeProps);
                 if (value !== null) {
                     widgetProps[key] = value;
                 }
