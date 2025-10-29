@@ -4,100 +4,113 @@ import { safeParseFloat } from "../misc/utils";
 /**
  * Converts CSS length values to SU (Slate Units) for Unreal Engine UMG
  * Supported units: px, %, em, rem (relative to parent font size)
- * @param length - CSS length string to convert (e.g., "16px", "2em")
+ * @param length - CSS length string or number to convert (e.g., "16px", "2em", 12)
  * @param style - React style object containing font size reference
  * @returns Converted value in SU units
  */
-export function convertLengthUnitToSlateUnit(length: string, style: any): number {
-    // get font size of parent
-    let fontSize = style?.fontSize || '16px';
-    if (!fontSize.endsWith('px')) {
-        fontSize = '16px';
+export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any): number {
+    if (length === undefined || length === null) {
+        return 0;
     }
 
-    const numSize = parseInt(fontSize.replace('px', '')); 
-    if (length.endsWith('px')) {
-        const match = length.match(/([+-]?\d+)px/);
+    if (typeof length === "number") {
+        return length;
+    }
+
+    const normalized = String(length).trim();
+
+    let fontSize = style?.fontSize ?? "16px";
+    if (typeof fontSize === "number") {
+        fontSize = `${fontSize}px`;
+    } else if (typeof fontSize === "string") {
+        fontSize = fontSize.trim();
+    } else {
+        fontSize = "16px";
+    }
+
+    if (!fontSize.endsWith("px")) {
+        fontSize = "16px";
+    }
+
+    const numSize = parseFloat(fontSize.replace("px", "")) || 16;
+
+    if (normalized.endsWith("px")) {
+        const match = normalized.match(/([+-]?\d+(?:\.\d+)?)px/);
         if (match) {
-            return parseInt(match[1]); 
+            return parseFloat(match[1]);
         }
-    } else if (length.endsWith('%')) {
-        // todo@Caleb196x: 需要获取父元素的值
-    } else if (length.endsWith('em')) {
-        const match = length.match(/(\d+)em/);
+    } else if (normalized.endsWith("%")) {
+        // todo@Caleb196x: 需要获取父元素的百分比
+    } else if (normalized.endsWith("em")) {
+        const match = normalized.match(/([+-]?\d+(?:\.\d+)?)em/);
         if (match) {
-            return parseInt(match[1]) * numSize;
+            return parseFloat(match[1]) * numSize;
         }
-    } else if (length.endsWith('rem')) {
-        const match = length.match(/(\d+)rem/);
+    } else if (normalized.endsWith("rem")) {
+        const match = normalized.match(/([+-]?\d+(?:\.\d+)?)rem/);
         if (match) {
-            return parseInt(match[1]) * numSize;
+            return parseFloat(match[1]) * numSize;
         }
-    } else if (length === 'thin') {
+    } else if (normalized === "thin") {
         return 12;
-    } else if (length === 'medium') {
+    } else if (normalized === "medium" || normalized === "normal") {
         return 16;
-    } else if (length === 'normal') {
-        return 16;
-    } else if (length === 'thick') {
+    } else if (normalized === "thick") {
         return 20;
-    } 
-    else if (!isNaN(parseFloat(length))) {
-        // If it's just a number without units, return it directly
-        return parseFloat(length);
+    } else if (!isNaN(parseFloat(normalized))) {
+        return parseFloat(normalized);
     }
 
-    return 0; 
+    return 0;
 }
 
-export function convertLUToSUWithUnitType(length: string, fontSize?: number): {type: string, value: number} {
+export function convertLUToSUWithUnitType(length: string, fontSize?: number): { type: string; value: number } {
     if (!fontSize) {
         fontSize = 16;
     }
 
-    let result = { type: 'auto', value: 0 };
-    if (length === 'auto') {
+    let result = { type: "auto", value: 0 };
+    if (length === "auto") {
         return result;
     }
 
-    if (length === 'thin') {
-        return {type: 'px', value: 12};
-    } else if (length === 'medium') {
-        return {type: 'px', value: 16};
-    } else if (length === 'normal') {
-        return {type: 'px', value: 16};
-    } else if (length === 'thick') {
-        return {type: 'px', value: 20};
-    } 
-    else if (!isNaN(parseFloat(length))) {
+    if (length === "thin") {
+        return { type: "px", value: 12 };
+    } else if (length === "medium") {
+        return { type: "px", value: 16 };
+    } else if (length === "normal") {
+        return { type: "px", value: 16 };
+    } else if (length === "thick") {
+        return { type: "px", value: 20 };
+    } else if (!isNaN(parseFloat(length))) {
         // If it's just a number without units, return it directly
-        return {type: 'px', value: parseFloat(length)};
+        return { type: "px", value: parseFloat(length) };
     }
 
     // Match numeric value and unit
     const match = length.match(/^(\d*\.?\d+)([a-z%]*)$/);
     if (match) {
         let numValue = safeParseFloat(match[1]);
-        const unit = match[2] || 'px';
-        
-        if (unit === 'em' || unit === 'rem') {
+        const unit = match[2] || "px";
+
+        if (unit === "em" || unit === "rem") {
             numValue = numValue * fontSize; // todo@Caleb196x: 读取font size，如果没有font size，则使用默认值16px
         }
 
         // todo@Caleb196x: 需要知道父控件的宽度和长度所占像素值，然后根据px值转换成占比值fr
         return { type: unit, value: numValue };
     }
-    
+
     // Default fallback
-    return { type: 'fr', value: 1 };
+    return { type: "fr", value: 1 };
 }
 
-export function parseScale(scale: string) : UE.Vector2D {
-    if (!scale || scale === 'none') {
+export function parseScale(scale: string): UE.Vector2D {
+    if (!scale || scale === "none") {
         return new UE.Vector2D(1, 1);
     }
 
-    const scaleValues = scale.split(' ').map(Number);
+    const scaleValues = scale.split(" ").map(Number);
     if (scaleValues.length === 1) {
         return new UE.Vector2D(scaleValues[0], scaleValues[0]);
     } else if (scaleValues.length === 2) {
@@ -123,7 +136,7 @@ export function parseAspectRatio(aspectRatio: string) {
     }
 
     // Handle ratio format like '16/9' or '1/1'
-    const parts = aspectRatio.split('/');
+    const parts = aspectRatio.split("/");
     if (parts.length === 2) {
         const numerator = Number(parts[0]);
         const denominator = Number(parts[1]);
@@ -134,3 +147,4 @@ export function parseAspectRatio(aspectRatio: string) {
 
     return 1.0;
 }
+
