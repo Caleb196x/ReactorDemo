@@ -118,7 +118,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     resetTextContent (instance: UMGWidget) { },
     shouldSetTextContent (type, props) {
         const textContainers = new Set([
-            'text','span','label','p','a','h1','h2','h3','h4','h5','h6'
+            'text','span','p','a','h1','h2','h3','h4','h5','h6'
         ]);
         const children = props && props.children;
         return textContainers.has(type) && (typeof children === 'string' || typeof children === 'number');
@@ -133,7 +133,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
     prepareUpdate (instance: UMGWidget, type: string, oldProps: any, newProps: any) {
         try{
-            const textContainers = new Set(['text','span','label','p','a','h1','h2','h3','h4','h5','h6']);
+            const textContainers = new Set(['text','span','p','a','h1','h2','h3','h4','h5','h6']);
             if (textContainers.has(type)) {
                 const oldChild: any = oldProps ? (oldProps as any).children : undefined;
                 const newChild: any = newProps ? (newProps as any).children : undefined;

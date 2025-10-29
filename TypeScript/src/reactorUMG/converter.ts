@@ -141,7 +141,7 @@ export abstract class ElementConverter {
     }
 }
 
-const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas'];
+const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas', 'label', 'form', 'section', 'article', 'main', 'header', 'footer'];
 const jsxComponentsKeywords = [
     'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'p', 'text',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'

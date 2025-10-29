@@ -25,10 +25,10 @@ export class JSXConverter extends ElementConverter {
             "progress": "ProgressConverter"
         };
 
-        const SkipElement = ["option"];
+        const SkipElement = ["option", "style"];
 
         let type = this.typeName;
-        const textKeywords = ["text", "span", "label", "p", "a", "h1", "h2", "h3", "h4", "h5", "h6"];
+        const textKeywords = ["text", "span", "p", "a", "h1", "h2", "h3", "h4", "h5", "h6"];
         if (textKeywords.includes(this.typeName)) {
             type = "text";
         }

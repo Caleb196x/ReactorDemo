@@ -161,7 +161,7 @@ class App extends Component<{}, AppState> {
           </div>
 
           <div>
-            <button type="submit">Submit</button>
+            <button type="submit" style={{color: 'black'}}>Submit</button>
           </div>
         </div>
 
