@@ -54,7 +54,8 @@ class UMGWidget {
             const WidgetTreeOuter = this.rootContainer.widgetTree;
             this.converter = createElementConverter(this.typeName, this.props, WidgetTreeOuter);
             this.native = this.converter.creatWidget();
-            if (this.native === null) {
+            const shouldIgnore = (this.converter as any)?.ignore === true;
+            if (this.native === null && !shouldIgnore) {
                 console.error("Not supported widget: " + this.typeName);
             }
         } catch(e) {
@@ -70,13 +71,13 @@ class UMGWidget {
     }
 
     appendChild(child: UMGWidget) {
-        if (this.native !== null && child !== null) {
+        if (this.native && child && child.native) {
             this.converter.appendChild(this.native, child.native, child.typeName, child.props);
         }
     }
 
     removeChild(child: UMGWidget) {
-        if (this.native !== null && child !== null) {
+        if (this.native && child && child.native) {
             this.converter.removeChild(this.native, child.native);
         }
     }
@@ -89,11 +90,15 @@ class RootContainer {
     }
 
     appendChild(child: UMGWidget) {
-        UE.UMGManager.AddRootWidgetToWidgetTree(this.widgetTree, child.native);
+        if (child?.native) {
+            UE.UMGManager.AddRootWidgetToWidgetTree(this.widgetTree, child.native);
+        }
     }
 
     removeChild(child: UMGWidget) {
-        UE.UMGManager.RemoveRootWidgetFromWidgetTree(this.widgetTree, child.native);
+        if (child?.native) {
+            UE.UMGManager.RemoveRootWidgetFromWidgetTree(this.widgetTree, child.native);
+        }
     }
 }
 

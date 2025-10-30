@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import './TextAreaTest.css';
 
 const ACCENT_COLORS = ['#ffb74d', '#4db6ac', '#9575cd'];
@@ -144,7 +144,7 @@ export class TextAreaClassExample extends React.Component<unknown, TextAreaClass
 
         return (
             <div className="textarea-demo-wrapper">
-                <text className="textarea-demo-header" text="Textarea Component (class demo)" />
+                <div className="textarea-demo-header">Textarea Component (class demo)</div>
 
                 <textarea
                     className={`textarea-field ${isCompact ? 'textarea-compact' : ''}`}
@@ -161,7 +161,7 @@ export class TextAreaClassExample extends React.Component<unknown, TextAreaClass
                         letterSpacing: '0.25px',
                         color: isDisabled ? 'rgba(255,255,255,0.4)' : '#f5f5f5',
                     }}
-                    toolTip="Class controlled textarea exercising props and events."
+                    title="Class controlled textarea exercising props and events."
                 />
 
                 <div className="textarea-controls">
@@ -208,7 +208,7 @@ export class TextAreaClassExample extends React.Component<unknown, TextAreaClass
                         background: 'rgba(20, 50, 50, 0.6)',
                         color: '#c8e6c9',
                     }}
-                    toolTip="Class component defaultValue textarea."
+                    title="Class component defaultValue textarea."
                 />
             </div>
         );

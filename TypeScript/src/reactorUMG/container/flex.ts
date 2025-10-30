@@ -34,7 +34,7 @@ export class FlexConverter extends ContainerConverter {
         }
 
         if (!flexDirection) {
-            flexDirection = 'row';
+            flexDirection = 'column'; // Default to column if not specified
         }
 
         const normalized = flexDirection.trim().toLowerCase();

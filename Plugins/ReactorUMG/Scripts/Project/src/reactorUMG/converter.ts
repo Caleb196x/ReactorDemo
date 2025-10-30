@@ -37,15 +37,64 @@ export abstract class ElementConverter {
             "RenderTransform": (styles: any, changeProps: any) => {return parseTransform(styles?.transform)},
             "RenderTransformPivot": (styles: any, changeProps: any) => {return parseTransformPivot(styles?.transformOrigin)},
             "Translate": (styles: any, changeProps: any) => {return parseTranslate(styles?.translate)},
-            "RenderOpacity": (styles: any, changeProps: any) => {if (styles?.opacity) return safeParseFloat(styles?.opacity); else return null;},
+            "RenderOpacity": (styles: any, changeProps: any) => {
+                if (styles && styles.opacity !== undefined && styles.opacity !== null) {
+                    return safeParseFloat(styles.opacity);
+                }
+                if (isKeyOfRecord("opacity", changeProps)) {
+                    return safeParseFloat(changeProps.opacity);
+                }
+                return null;
+            },
             "Visibility": (styles: any, changeProps: any) => {return parseVisibility(styles?.visible || styles?.visibility, changeProps?.hitTest)},
-            "ToolTipText": (changeProps: any) => {return changeProps?.toolTip || changeProps?.title || null},
-            "bIsEnabled": (changeProps: any) => {return changeProps?.disable ? !changeProps.disable : true},
-            "bIsVolatile": (changeProps: any) => {return changeProps?.volatil ? changeProps.volatil : false},
-            "PixelSnapping": (changeProps: any) => {return changeProps?.pixelSnapping ? (changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled) : null},
-            "bIsEnabledDelegate": (changeProps: any) => {return changeProps?.disableBinding ? () => {return !changeProps.disableBinding()} : null},
-            "ToolTipTextDelegate": (changeProps: any) => {return changeProps?.toolTipBinding ? changeProps.toolTipBinding : null},
-            "VisibilityDelegate": (changeProps: any) => {return changeProps?.visibilityBinding ? () => {return parseVisibility(changeProps.visibilityBinding())} : null},
+            "ToolTipText": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("toolTip", changeProps)) {
+                    return changeProps.toolTip ?? "";
+                }
+                if (changeProps && isKeyOfRecord("title", changeProps)) {
+                    return changeProps.title ?? "";
+                }
+                return null;
+            },
+            "bIsEnabled": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("disable", changeProps)) {
+                    return changeProps.disable ? false : true;
+                }
+                return null;
+            },
+            "bIsVolatile": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("volatil", changeProps)) {
+                    return !!changeProps.volatil;
+                }
+                return null;
+            },
+            "PixelSnapping": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("pixelSnapping", changeProps)) {
+                    return changeProps.pixelSnapping ? UE.EWidgetPixelSnapping.SnapToPixel : UE.EWidgetPixelSnapping.Disabled;
+                }
+                return null;
+            },
+            "bIsEnabledDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("disableBinding", changeProps) && changeProps.disableBinding) {
+                    return () => {return !changeProps.disableBinding();};
+                }
+                return null;
+            },
+            "ToolTipTextDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("toolTipBinding", changeProps)) {
+                    return changeProps.toolTipBinding ?? null;
+                }
+                if (changeProps && isKeyOfRecord("titleBinding", changeProps)) {
+                    return changeProps.titleBinding ?? null;
+                }
+                return null;
+            },
+            "VisibilityDelegate": (_styles: any, changeProps: any) => {
+                if (changeProps && isKeyOfRecord("visibilityBinding", changeProps) && changeProps.visibilityBinding) {
+                    return () => {return parseVisibility(changeProps.visibilityBinding());};
+                }
+                return null;
+            },
         }
     }
 
@@ -89,14 +138,29 @@ export abstract class ElementConverter {
     }
 }
 
-const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas', 'label', 'form', 'section', 'article', 'main', 'header', 'footer'];
+const containerKeywords = ['div', 'Grid', 'grid', 'Overlay', 'overlay', 'Canvas', 'canvas', 'form', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside'];
 const jsxComponentsKeywords = [
     'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'p', 'text',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'
 ];
 
 export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
-    if (containerKeywords.includes(typeName)) {
+    const lowerType = typeName?.toLowerCase?.() ?? typeName;
+    const ignoredElements = new Set(['style', 'script', 'link', 'meta', 'title']);
+    if (ignoredElements.has(lowerType)) {
+        class NullConverter extends ElementConverter {
+            public readonly ignore = true;
+            createNativeWidget(): UE.Widget { return null; }
+            creatWidget(): UE.Widget { return null; }
+            updateWidget(_widget: UE.Widget, _oldProps: any, _newProps: any): void {}
+            update(_widget: UE.Widget, _oldProps: any, _changedProps: any): void {}
+            appendChild(_parent: UE.Widget, _child: UE.Widget, _childTypeName: string, _childProps: any): void {}
+            removeChild(_parent: UE.Widget, _child: UE.Widget): void {}
+        }
+        return new NullConverter(typeName, props, outer);
+    }
+
+    if (containerKeywords.includes(typeName) || containerKeywords.includes(lowerType)) {
         const Module = require(`./container/container_converter`);
         if (Module) {
             return new Module["ContainerConverter"](typeName, props, outer);

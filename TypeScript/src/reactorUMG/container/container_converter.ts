@@ -51,7 +51,9 @@ export class ContainerConverter extends ElementConverter {
     }
 
     private parseContainerType(type: string) {
-        if (type === 'div') {
+        const normalizedType = (type || '').toLowerCase();
+        const semanticDivs = ['form', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside'];
+        if (normalizedType === 'div' || semanticDivs.includes(normalizedType)) {
             const display = this.containerStyle?.display || 'flex';
             if (display === 'grid') {
                 return 'grid';
@@ -59,7 +61,7 @@ export class ContainerConverter extends ElementConverter {
                 return 'flex';
             }
         } else {
-            return type.toLowerCase();
+            return normalizedType;
         }
     }
 
@@ -249,12 +251,16 @@ export class ContainerConverter extends ElementConverter {
     }
 
     initChildPadding(panelSlot: UE.PanelSlot, childStyle: any): void {
-        let margin = convertMargin(childStyle);
+        if (!panelSlot || typeof (panelSlot as any).SetPadding !== 'function') {
+            return;
+        }
+
+        const margin = convertMargin(childStyle);
         if (margin) {
             (panelSlot as any).SetPadding(margin);
         }
         
-        let padding = convertPadding(childStyle);
+        const padding = convertPadding(childStyle);
         if (padding) {
             (panelSlot as any).SetPadding(padding);
         }

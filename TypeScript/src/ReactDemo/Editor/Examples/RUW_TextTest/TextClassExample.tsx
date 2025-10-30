@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import './TextTest.css';
 
 type TextAlign = 'left' | 'center' | 'right';
@@ -103,19 +103,11 @@ export class TextClassExample extends React.Component<unknown, TextClassState> {
 
         return (
             <div className="text-demo-wrapper">
-                <text className="text-demo-header" text="Text Component (class demo)" />
+                <div className="text-demo-header">Text Component (class demo)</div>
 
-                <text
+                <span
                     className="text-outline text-highlight"
-                    text={useChildren ? undefined : derivedContent}
-                    toolTip={`Static tooltip: ${derivedContent}`}
-                    toolTipBinding={() => `Dynamic tooltip (render ${updateCount})`}
                     title={`Alignment: ${alignment}`}
-                    titleBinding={() => `Alignment: ${alignment} | line-height: ${lineHeight.toFixed(1)}`}
-                    disable={isDisabled}
-                    disableBinding={() => isDisabled}
-                    visibilityBinding={() => (isVisible ? 'visible' : 'hidden')}
-                    pixelSnapping={true}
                     style={{
                         fontSize: '24px',
                         fontWeight: isUppercase ? '800' : '600',
@@ -130,22 +122,20 @@ export class TextClassExample extends React.Component<unknown, TextClassState> {
                     }}
                 >
                     {useChildren ? derivedContent : null}
-                </text>
+                </span>
 
-                <text
+                <span
                     className="text-secondary text-with-shadow"
-                    text="A secondary text instance using className styles"
                     style={{
                         fontSize: '18px',
                         fontStyle: 'italic',
                         lineHeight: '1.4',
                         textAlign: 'left',
                     }}
-                />
+                >A secondary text instance using className styles</span>
 
-                <text
+                <span
                     className="text-outline text-ref-style"
-                    text={`Inline styling with outline and alignment ${alignment}`}
                     style={{
                         textAlign: 'center',
                         fontFamily: '"Roboto", "monospace"',
@@ -155,19 +145,20 @@ export class TextClassExample extends React.Component<unknown, TextClassState> {
                         letterSpacing: '2px',
                         textTransform: 'uppercase',
                     }}
-                />
+                >{`Inline styling with outline and alignment ${alignment}`}</span>
 
-                <text
+                <span
                     className="text-meta"
-                    text={`disabled: ${isDisabled ? 'yes' : 'no'} | visible: ${isVisible ? 'yes' : 'no'} | using children: ${
-                        useChildren ? 'yes' : 'no'
-                    }`}
                     style={{
                         textAlign: 'left',
                         fontSize: '14px',
                         lineHeight: '1.3',
                     }}
-                />
+                >
+                    {`disabled: ${isDisabled ? 'yes' : 'no'} | visible: ${isVisible ? 'yes' : 'no'} | using children: ${
+                        useChildren ? 'yes' : 'no'
+                    }`}
+                </span>
 
                 <div className="text-controls">
                     <input

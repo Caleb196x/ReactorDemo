@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import './TextTest.css';
+import * as React from 'react';
 
 type TextAlign = 'left' | 'center' | 'right';
 
@@ -69,23 +70,16 @@ export const TextFunctionExample: React.FC = () => {
 
     return (
         <div className="text-demo-wrapper">
-            <text
+            <span
                 className="text-demo-header"
-                text="Text Component (functional demo)"
-            />
+            >
+                Text Component (functional demo)
+            </span>
 
-            <text
+            <span
                 id="text-from-id"
                 className={`text-outline ${isUppercase ? 'text-highlight' : ''}`}
-                text={useChildren ? undefined : derivedContent}
-                toolTip={`Static tooltip: ${derivedContent}`}
-                toolTipBinding={() => `Dynamic tooltip (render ${updateCount})`}
-                title={`Alignment: ${alignment}`}
-                titleBinding={() => `Alignment: ${alignment} | line-height: ${lineHeight.toFixed(1)}`}
-                disable={isDisabled}
-                disableBinding={() => isDisabled}
-                visibilityBinding={() => (isVisible ? 'visible' : 'hidden')}
-                pixelSnapping
+                title={`Alignment: ${alignment} | line-height: ${lineHeight.toFixed(1)}`}
                 style={{
                     fontSize: '22px',
                     fontWeight: isUppercase ? '700' : '500',
@@ -100,26 +94,28 @@ export const TextFunctionExample: React.FC = () => {
                     outlineOffset: 2,
                     textShadow: '0 0 10px rgba(0, 0, 0, 0.45)',
                     color: accentColor,
+                    visibility: isVisible ? 'visible' : 'hidden',
+                    pointerEvents: isDisabled ? 'none' : undefined,
+                    opacity: isDisabled ? 0.5 : 1,
                 }}
             >
-                {useChildren ? derivedContent : null}
-            </text>
+                {useChildren ? derivedContent : derivedContent}
+            </span>
 
-            <text
+            <span
                 className="text-secondary text-with-shadow"
-                text="Using the text prop with className driven styles"
-                toolTip="Class selectors come from TextTest.css"
                 style={{
                     fontStyle: 'italic',
                     fontSize: '18px',
                     lineHeight: '1.4',
                     textAlign: 'left',
                 }}
-            />
+            >
+                Using the text prop with className driven styles
+            </span>
 
-            <text
+            <span
                 className="text-highlight"
-                text={`CSS + inline styles | line height ${lineHeight.toFixed(1)} | align ${alignment}`}
                 style={{
                     textAlign: 'center',
                     fontFamily: '"Roboto", "monospace"',
@@ -129,11 +125,13 @@ export const TextFunctionExample: React.FC = () => {
                     letterSpacing: '2px',
                     textTransform: 'uppercase',
                 }}
-            />
+            >
+                {`CSS + inline styles | line height ${lineHeight.toFixed(1)} | align ${alignment}`}
+            </span>
 
             <text
                 className="text-meta"
-                text={`disabled: ${isDisabled ? 'yes' : 'no'} | visible: ${isVisible ? 'yes' : 'no'} | using children: ${
+                values={`disabled: ${isDisabled ? 'yes' : 'no'} | visible: ${isVisible ? 'yes' : 'no'} | using children: ${
                     useChildren ? 'yes' : 'no'
                 }`}
                 style={{

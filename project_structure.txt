@@ -1,0 +1,31 @@
+ReactorDemo/
+├─ Config/                         # 项目配置（DefaultEngine.ini 等）
+├─ Content/                        # UE 资源目录
+│  ├─ JavaScript/                  # Puerts JS 生态
+│  │  ├─ src/                      # 运行时 JS 模块
+│  │  ├─ utils/                    # 构建/工具脚本
+│  │  ├─ puerts/                   # Puerts 运行时桥接
+│  │  └─ node_modules/             # JS 依赖
+│  ├─ FirstPerson/                 # 示例关卡资源
+│  ├─ StarterContent/              # UE 默认素材
+│  └─ Test/                        # 自定义测试资产
+├─ Plugins/
+│  └─ ReactorUMG/                  # 自研 UMG 插件
+│     ├─ Scripts/
+│     │  ├─ Project/src/reactorUMG/# TS→JS 转译源码
+│     │  └─ System/JavaScript/     # Puerts 系统脚本
+│     └─ Source/                   # C++ 源码（UMGManager 等）
+├─ Source/                         # UE C++ 项目入口
+├─ TypeScript/                     # React/TS 开发环境
+│  ├─ src/
+│  │  ├─ ReactDemo/                # 编辑器/运行时 UI
+│  │  ├─ reactorUMG/               # TS 版 UMG 框架
+│  │  └─ types/                    # Puerts/UE 类型声明
+│  ├─ node_modules/                # 前端依赖
+│  ├─ tsconfig.json
+│  └─ package.json
+├─ Binaries/                       # UE 构建产物
+├─ Intermediate/                   # UE 临时文件
+├─ Saved/                          # 保存的运行时数据
+├─ DerivedDataCache/               # 资源缓存
+└─ .idea/ / .vs/                   # IDE 项目配置

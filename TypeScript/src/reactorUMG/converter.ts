@@ -37,7 +37,15 @@ export abstract class ElementConverter {
             "RenderTransform": (styles: any, changeProps: any) => {return parseTransform(styles?.transform)},
             "RenderTransformPivot": (styles: any, changeProps: any) => {return parseTransformPivot(styles?.transformOrigin)},
             "Translate": (styles: any, changeProps: any) => {return parseTranslate(styles?.translate)},
-            "RenderOpacity": (styles: any, changeProps: any) => {if (styles?.opacity !== undefined && styles?.opacity !== null) return safeParseFloat(styles?.opacity); else return null;},
+            "RenderOpacity": (styles: any, changeProps: any) => {
+                if (styles && styles.opacity !== undefined && styles.opacity !== null) {
+                    return safeParseFloat(styles.opacity);
+                }
+                if (isKeyOfRecord("opacity", changeProps)) {
+                    return safeParseFloat(changeProps.opacity);
+                }
+                return null;
+            },
             "Visibility": (styles: any, changeProps: any) => {return parseVisibility(styles?.visible || styles?.visibility, changeProps?.hitTest)},
             "ToolTipText": (_styles: any, changeProps: any) => {
                 if (changeProps && isKeyOfRecord("toolTip", changeProps)) {
@@ -103,7 +111,6 @@ export abstract class ElementConverter {
     updateWidget(widget: UE.Widget, oldProps: any, newProps: any) {
         // Find changed properties between oldProps and newProps
         const changedProps = findChangedProps(oldProps, newProps);
-        this.props = newProps ?? this.props;
         // Update common properties
         this.initOrUpdateCommonProperties(widget, changedProps);
         // Update the widget with changed properties
@@ -112,22 +119,12 @@ export abstract class ElementConverter {
 
     private initOrUpdateCommonProperties(widget: UE.Widget, changeProps: any) {
         const styles = getAllStyles(this.typeName, changeProps);
-        const normalizedStyles = styles || {};
-        const normalizedChangeProps = changeProps || {};
 
         const widgetProps = {};
         for (const key in this.translators) {
             const propName = this.PropMaps[key];
-            let shouldHandle = isKeyOfRecord(propName, normalizedStyles) || isKeyOfRecord(propName, normalizedChangeProps);
-            if (!shouldHandle) {
-                if (key === "ToolTipText" && isKeyOfRecord("title", normalizedChangeProps)) {
-                    shouldHandle = true;
-                } else if (key === "ToolTipTextDelegate" && isKeyOfRecord("titleBinding", normalizedChangeProps)) {
-                    shouldHandle = true;
-                }
-            }
-            if (shouldHandle) {
-                const value = this.translators[key](normalizedStyles, normalizedChangeProps);
+            if (isKeyOfRecord(propName, styles) || isKeyOfRecord(propName, changeProps)) {
+                const value = this.translators[key](styles, changeProps);
                 if (value !== null) {
                     widgetProps[key] = value;
                 }
@@ -141,14 +138,29 @@ export abstract class ElementConverter {
     }
 }
 
-const containerKeywords = ['div', 'Grid', 'Overlay', 'Canvas', 'canvas', 'label', 'form', 'section', 'article', 'main', 'header', 'footer'];
+const containerKeywords = ['div', 'Grid', 'grid', 'Overlay', 'overlay', 'Canvas', 'canvas', 'form', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside'];
 const jsxComponentsKeywords = [
     'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'p', 'text',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'
 ];
 
 export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
-    if (containerKeywords.includes(typeName)) {
+    const lowerType = typeName?.toLowerCase?.() ?? typeName;
+    const ignoredElements = new Set(['style', 'script', 'link', 'meta', 'title']);
+    if (ignoredElements.has(lowerType)) {
+        class NullConverter extends ElementConverter {
+            public readonly ignore = true;
+            createNativeWidget(): UE.Widget { return null; }
+            creatWidget(): UE.Widget { return null; }
+            updateWidget(_widget: UE.Widget, _oldProps: any, _newProps: any): void {}
+            update(_widget: UE.Widget, _oldProps: any, _changedProps: any): void {}
+            appendChild(_parent: UE.Widget, _child: UE.Widget, _childTypeName: string, _childProps: any): void {}
+            removeChild(_parent: UE.Widget, _child: UE.Widget): void {}
+        }
+        return new NullConverter(typeName, props, outer);
+    }
+
+    if (containerKeywords.includes(typeName) || containerKeywords.includes(lowerType)) {
         const Module = require(`./container/container_converter`);
         if (Module) {
             return new Module["ContainerConverter"](typeName, props, outer);

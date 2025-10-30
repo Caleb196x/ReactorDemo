@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import './TextAreaTest.css';
+import * as React from 'react';
 
 const ACCENT_COLORS = ['#64b5f6', '#ba68c8', '#ff7043'];
 
@@ -94,7 +95,7 @@ export const TextAreaFunctionExample: React.FC = () => {
 
     return (
         <div className="textarea-demo-wrapper">
-            <text className="textarea-demo-header" text="Textarea Component (functional demo)" />
+            <div className="textarea-demo-header">Textarea Component (functional demo)</div>
 
             <textarea
                 className={`textarea-field ${isCompact ? 'textarea-compact' : ''}`}
@@ -111,7 +112,7 @@ export const TextAreaFunctionExample: React.FC = () => {
                     letterSpacing: '0.3px',
                     color: isDisabled ? 'rgba(255,255,255,0.4)' : '#f5f5f5',
                 }}
-                toolTip="Controlled textarea showcasing value, events, and styling."
+                title="Controlled textarea showcasing value, events, and styling."
             />
 
             <div className="textarea-controls">
@@ -156,7 +157,7 @@ export const TextAreaFunctionExample: React.FC = () => {
                     background: 'rgba(0, 30, 60, 0.6)',
                     color: '#e0f7fa',
                 }}
-                toolTip="Default value textarea demonstrating uncontrolled usage."
+                title="Default value textarea demonstrating uncontrolled usage."
             />
         </div>
     );
