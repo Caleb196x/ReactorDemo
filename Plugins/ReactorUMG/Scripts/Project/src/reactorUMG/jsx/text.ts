@@ -68,11 +68,11 @@ export class TextConverter extends JSXConverter {
         super(typeName, props, outer);
         this.loweredTypeName = (typeName ?? '').toLowerCase();
         this.textFontSetupHandlers = {
-            color: this.setupFontColor,
-            fontColor: this.setupFontColor,
-            textAlign: this.setupTextAlignment,
-            textTransform: this.setupTextTransform,
-            lineHeight: this.setupLineHeight,
+            color: (textBlock, prop) => this.setupFontColor(textBlock, prop),
+            fontColor: (textBlock, prop) => this.setupFontColor(textBlock, prop),
+            textAlign: (textBlock, prop) => this.setupTextAlignment(textBlock, prop),
+            textTransform: (textBlock, prop) => this.setupTextTransform(textBlock, prop),
+            lineHeight: (textBlock, prop) => this.setupLineHeight(textBlock, prop),
         };
     }
 
@@ -103,7 +103,6 @@ export class TextConverter extends JSXConverter {
         if (!specifiedColor) {
             return;
         }
-        
         specifiedColor.R = rgba.r;
         specifiedColor.G = rgba.g;
         specifiedColor.B = rgba.b;
