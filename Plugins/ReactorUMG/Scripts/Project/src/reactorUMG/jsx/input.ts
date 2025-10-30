@@ -5,14 +5,20 @@ import { hasFontStyles, setupFontStyles } from '../parsers/css_font_parser';
 import { compareTwoFunctions } from '../misc/utils';
 export class InputJSXConverter extends JSXConverter {
     private isCheckbox: boolean;
+    private isSlider: boolean;
     private checkboxChangeCallback: (isChecked: boolean) => void;
     private textChangeCallback: (text: string) => void;
+
+    private sliderChangeCallback: (value: number) => void;
+    private lastSliderChangeFunc: Function;
+
     private lastEditTextOnChangeFunc: Function;
     private lastCheckOnChangeFunc: Function;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
         this.isCheckbox = false;
+        this.isSlider = false;
     }
 
     private updateTextChangeHandle(widget: UE.EditableText, onChange: Function) {
@@ -94,6 +100,48 @@ export class InputJSXConverter extends JSXConverter {
         }
     }
 
+    private updateSliderChangeHandle(widget: UE.Slider, onChange: Function) {
+        const onChangeFuncSame: boolean = compareTwoFunctions(this.lastSliderChangeFunc, onChange);
+        if (onChangeFuncSame) return;
+
+        if (this.sliderChangeCallback) {
+            widget.OnValueChanged.Remove(this.sliderChangeCallback);
+        }
+
+        this.sliderChangeCallback = (value: number) => onChange({ target: { value } });
+        widget.OnValueChanged.Add(this.sliderChangeCallback);
+        this.lastSliderChangeFunc = onChange;
+    }
+
+    private setupSliderChangeHandle(widget: UE.Slider, onChange: Function) {
+        this.sliderChangeCallback = (value: number) => onChange({ target: { value } });
+        widget.OnValueChanged.Add(this.sliderChangeCallback);
+        this.lastSliderChangeFunc = onChange;
+    }
+
+    private setupSlider(widget: UE.Slider, props: any, isUpdate: boolean) {
+        const { value, min, max, step, onChange } = props;
+
+        // Set Slider properties
+        if (value !== undefined) widget.SetValue(value);
+        if (min !== undefined) widget.SetMinValue(min);
+        if (max !== undefined) widget.SetMaxValue(max);
+        if (step !== undefined) widget.SetStepSize(step);
+
+        // Set slider style (optional)
+        if (props.sliderBarColor) widget.SetSliderBarColor(props.sliderBarColor);
+        if (props.sliderHandleColor) widget.SetSliderHandleColor(props.sliderHandleColor);
+
+        // Handle onChange event
+        if (typeof onChange === 'function') {
+            if (isUpdate) {
+                this.updateSliderChangeHandle(widget, onChange);
+            } else {
+                this.setupSliderChangeHandle(widget, onChange);
+            }
+        }
+    }
+
     createNativeWidget(): UE.Widget {
         const inputType = this.props?.type || 'text';
         let widget: UE.Widget;
@@ -102,6 +150,9 @@ export class InputJSXConverter extends JSXConverter {
             widget = new UE.CheckBox(this.outer);
             this.setupCheckbox(widget as UE.CheckBox, this.props, false);
             this.isCheckbox = true;
+        } else if (inputType === "range") {
+            widget = new UE.Slider(this.outer);
+            this.setupSlider(widget as UE.Slider, this.props, false);
         } else {
             widget = new UE.EditableText(this.outer);
             if (inputType === 'password') {

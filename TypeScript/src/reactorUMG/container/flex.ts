@@ -23,8 +23,9 @@ export class FlexConverter extends ContainerConverter {
 
     private parseFlexDirection(): boolean[] {
         const style = this.containerStyle || {};
-        let flexDirection = style.flexDirection;
-        const flexFlow = style.flexFlow;
+        let flexDirection = style?.flexDirection;
+        const flexFlow = style?.flexFlow;
+        const display = style?.display;
 
         if (flexFlow) {
             const flexFlowArray = flexFlow.trim().split(' ');
@@ -33,11 +34,14 @@ export class FlexConverter extends ContainerConverter {
             }
         }
 
-        if (!flexDirection) {
+        if (display && display === 'flex' && !flexDirection) {
+            flexDirection = 'row'; // Default to row if display is flex
+        } else {
             flexDirection = 'column'; // Default to column if not specified
         }
 
         const normalized = flexDirection.trim().toLowerCase();
+
         return [
             normalized.startsWith('row'),
             normalized.endsWith('-reverse')

@@ -1,4 +1,5 @@
-﻿
+﻿import { getInlineStyles, normalizePseudo } from './inline_style_registry';
+
 export function getStylesFromClassSelector(className: string, pseudo?: string): Record<string, any> {
     if (!className) {
         return {};
@@ -11,15 +12,22 @@ export function getStylesFromClassSelector(className: string, pseudo?: string): 
         for (const className of classNames) {
             // Get styles associated with this class name
             let classStyle = {};
+            const normalizedPseudo = normalizePseudo(pseudo);
             if (className.startsWith("uniquescope_")) {
-                classStyle = getCssStyleFromGlobalCache(className, pseudo);
+                  classStyle = getCssStyleFromGlobalCache(className, normalizedPseudo) 
+                    || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache(className, normalizedPseudo.slice(1)) : undefined);
             } else {
-                classStyle = getCssStyleFromGlobalCache("." + className, pseudo);
+                classStyle = getCssStyleFromGlobalCache("." + className, normalizedPseudo) 
+                    || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache("." + className, normalizedPseudo.slice(1)) : undefined);
             }
-            
+
             if (classStyle) {
                 // Merge the class styles into our style object
                 classNameStyles = { ...classNameStyles, ...classStyle };
+            }
+            const inlineStyle = getInlineStyles('class', className, normalizedPseudo);
+            if (inlineStyle) {
+                classNameStyles = { ...classNameStyles, ...inlineStyle };
             }
         }
     }
@@ -32,7 +40,13 @@ export function getStyleFromIdSelector(id: string, pseudo?: string): Record<stri
         return {};
     }
 
-    const idStyle = getCssStyleFromGlobalCache("#" + id, pseudo);
+    const normalizedPseudo = normalizePseudo(pseudo);
+    const idStyle = getCssStyleFromGlobalCache("#" + id, normalizedPseudo)
+        || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache("#" + id, normalizedPseudo.slice(1)) : undefined);
+    const inlineStyle = getInlineStyles('id', id, normalizedPseudo);
+    if (inlineStyle) {
+        return { ...(idStyle || {}), ...inlineStyle };
+    }
     return idStyle;
 }
 
@@ -41,7 +55,14 @@ export function getStyleFromTypeSelector(type: string, pseudo?: string): Record<
         return {};
     }
 
-    const typeStyle = getCssStyleFromGlobalCache(type, pseudo);
+    const normalizedPseudo = normalizePseudo(pseudo);
+    const typeStyle = getCssStyleFromGlobalCache(type, normalizedPseudo)
+        || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache(type, normalizedPseudo.slice(1)) : undefined);
+    const inlineStyle = getInlineStyles('type', type, normalizedPseudo);
+    if (inlineStyle) {
+        return { ...(typeStyle || {}), ...inlineStyle };
+    }
+
     return typeStyle;
 }
 

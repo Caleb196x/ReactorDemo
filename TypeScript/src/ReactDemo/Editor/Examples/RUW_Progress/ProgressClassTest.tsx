@@ -1,4 +1,5 @@
 import * as React from "react";
+import './Progress.css';
 
 const PROGRESS_STYLE = `
 .progress-demo {
@@ -373,8 +374,8 @@ export class ProgressClassTest extends React.Component<unknown, ProgressClassSta
       : `${Math.round((value / max) * 100)}%`;
 
     return (
-      <section>
-        <style>{PROGRESS_STYLE}</style>
+      <div>
+        {/* <style>{PROGRESS_STYLE}</style> */}
 
         <h2>
           progress demo (class component)
@@ -468,7 +469,7 @@ export class ProgressClassTest extends React.Component<unknown, ProgressClassSta
             logs.map((entry, index) => <div key={index}>{entry}</div>)
           )}
         </div>
-      </section>
+      </div>
     );
   }
 }

@@ -11,18 +11,22 @@ export class TextConverter extends JSXConverter {
     private readonly textFontSetupHandlers: Record<string, (textBlock: UE.TextBlock, prop: any) => void> = {};
     private static readonly elementDefaultStyles: Record<string, TextStyleProps> = {
         'text': {
-            lineHeight: '1.4'
+            lineHeight: '1.4',
+            color: 'black'
         },
         'span': {
-            lineHeight: '1.4'
+            lineHeight: '1.4',
+            color: 'black'
         },
         'label': {
             fontWeight: '600',
-            lineHeight: '1.4'
+            lineHeight: '1.4',
+            color: 'black'  
         },
         'p': {
             lineHeight: '1.6',
-            marginBottom: '12px'
+            marginBottom: '12px',
+            color: 'black'
         },
         'a': {
             color: '#1e90ff',
@@ -32,34 +36,40 @@ export class TextConverter extends JSXConverter {
         'h1': {
             fontSize: '32px',
             fontWeight: '700',
-            lineHeight: '1.25'
+            lineHeight: '1.25',
+            color: 'black'
         },
         'h2': {
             fontSize: '28px',
             fontWeight: '700',
-            lineHeight: '1.3'
+            lineHeight: '1.3',
+            color: 'black'
         },
         'h3': {
             fontSize: '24px',
             fontWeight: '600',
-            lineHeight: '1.35'
+            lineHeight: '1.35',
+            color: 'black'
         },
         'h4': {
             fontSize: '20px',
             fontWeight: '600',
-            lineHeight: '1.4'
+            lineHeight: '1.4',
+            color: 'black'
         },
         'h5': {
             fontSize: '18px',
             fontWeight: '600',
-            lineHeight: '1.45'
+            lineHeight: '1.45',
+            color: 'black'
         },
         'h6': {
             fontSize: '16px',
             fontWeight: '600',
             textTransform: 'uppercase',
             letterSpacing: '1px',
-            lineHeight: '1.45'
+            lineHeight: '1.45',
+            color: 'black'
         }
     };
     private readonly loweredTypeName: string;
@@ -229,6 +239,12 @@ export class TextConverter extends JSXConverter {
     }
 
     createNativeWidget() {
+        if (this.props?.children) {
+            console.log(typeof this.props.children[1]);
+            console.log(this.props.children[1].$$typeof);
+            console.log(this.props.children[1].type);
+        }
+
         const text = new UE.TextBlock(this.outer);
         this.setupTextBlockProperties(text, this.props);
         const content = this.extractTextContent(this.props);

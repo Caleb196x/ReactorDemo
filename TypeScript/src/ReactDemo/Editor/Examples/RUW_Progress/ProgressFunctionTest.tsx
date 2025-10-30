@@ -1,4 +1,5 @@
 import * as React from "react";
+import './Progress.css';
 
 const { useCallback, useEffect, useMemo, useState } = React;
 
@@ -293,7 +294,7 @@ export const ProgressFunctionTest: React.FC = () => {
     : "idle";
 
   return (
-    <section>
+    <div>
       <style>{PROGRESS_STYLE}</style>
 
       <h2>
@@ -381,7 +382,7 @@ export const ProgressFunctionTest: React.FC = () => {
           logs.map((entry, index) => <div key={index}>{entry}</div>)
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

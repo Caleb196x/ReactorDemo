@@ -53,7 +53,7 @@ class UMGWidget {
         try {
             const WidgetTreeOuter = this.rootContainer.widgetTree;
             this.converter = createElementConverter(this.typeName, this.props, WidgetTreeOuter);
-            this.native = this.converter.creatWidget();
+            this.native = this.converter.createWidget();
             const shouldIgnore = (this.converter as any)?.ignore === true;
             if (this.native === null && !shouldIgnore) {
                 console.error("Not supported widget: " + this.typeName);

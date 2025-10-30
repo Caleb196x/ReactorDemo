@@ -102,7 +102,9 @@ export abstract class ElementConverter {
     abstract update(widget: UE.Widget, oldProps: any, changedProps: any): void;
     abstract appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void;
     abstract removeChild(parent: UE.Widget, child: UE.Widget): void;
-    creatWidget(): UE.Widget {
+    canUpdateWithoutNative(): boolean { return false; }
+    dispose(): void {}
+    createWidget(): UE.Widget {
         let widget = this.createNativeWidget();
         this.initOrUpdateCommonProperties(widget, this.props);
         return widget;
@@ -146,7 +148,13 @@ const jsxComponentsKeywords = [
 
 export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
     const lowerType = typeName?.toLowerCase?.() ?? typeName;
-    const ignoredElements = new Set(['style', 'script', 'link', 'meta', 'title']);
+    const ignoredElements = new Set(['script', 'link', 'meta', 'title']);
+    if (lowerType === 'style') {
+        const Module = require(`./jsx/style`);
+        if (Module) {
+            return new Module["StyleTagConverter"](typeName, props, outer);
+        }
+    }
     if (ignoredElements.has(lowerType)) {
         class NullConverter extends ElementConverter {
             public readonly ignore = true;
