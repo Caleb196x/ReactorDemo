@@ -1,14 +1,19 @@
 import { parseToLinearColor } from '../parsers/css_color_parser';
 import { hasFontStyles, setupFontStyles } from '../parsers/css_font_parser';
 import { convertLengthUnitToSlateUnit } from '../parsers/css_length_parser';
+import { convertGap, convertPadding } from '../parsers/css_margin_parser';
 import { getAllStyles } from '../parsers/cssstyle_parser';
 import { JSXConverter } from './jsx_converter';
+import { isReactElementInChildren } from '../misc/utils';
 import * as UE from 'ue';
 
 type TextStyleProps = Record<string, any>;
 
 export class TextConverter extends JSXConverter {
     private readonly textFontSetupHandlers: Record<string, (textBlock: UE.TextBlock, prop: any) => void> = {};
+    private textWrapBox: UE.WrapBox;
+    private mainText: UE.TextBlock;
+    private textWrapBoxSlot: Record<string, UE.WrapBoxSlot>;
     private static readonly elementDefaultStyles: Record<string, TextStyleProps> = {
         'text': {
             lineHeight: '1.4',
@@ -174,6 +179,69 @@ export class TextConverter extends JSXConverter {
         }
     }
 
+    private setupWrapBoxProperties(wrapBox: UE.WrapBox, props: any) {
+        const styles = getAllStyles(this.typeName, props) ?? {};
+        let isVertical = false;
+
+        // Orientation: default horizontal; allow overriding via props.orientation or styles.flexDirection
+        const orientationRaw = (props?.orientation || styles?.orientation || styles?.flexDirection || '').toString().toLowerCase();
+        if (orientationRaw.includes('vertical') || orientationRaw.includes('column')) {
+            wrapBox.Orientation = UE.EOrientation.Orient_Vertical;
+            isVertical = true;
+        } else {
+            wrapBox.Orientation = UE.EOrientation.Orient_Horizontal;
+            isVertical = false;
+        }
+
+        // Alignment: map textAlign to wrap box horizontal alignment
+        const textAlign = styles?.textAlign || props?.textAlign;
+        if (textAlign) {
+            const v = String(textAlign).toLowerCase();
+            if (v === 'center') {
+                wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Center);
+            } else if (v === 'right') {
+                wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Right);
+            } else if (v === 'left') {
+                wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left);
+            }
+        }
+
+        // Padding between items: prefer CSS gap/rowGap/columnGap
+        let gapX = 0;
+        let gapY = 0;
+        if (styles?.gap) {
+            const v = convertGap(styles.gap, styles);
+            gapX = v?.X ?? 0; // column gap
+            gapY = v?.Y ?? 0; // row gap
+        }
+
+        if (styles?.padding) {
+            const p = convertPadding(styles);
+            if (isVertical) {
+                gapX = p?.Top ?? 0; // column gap
+                gapY = p?.Bottom ?? 0;
+            } else {
+                gapX = p?.Left ?? 0; // column gap
+                gapY = p?.Right ?? 0;
+            }
+            
+        }
+
+        if (styles?.columnGap !== undefined) {
+            gapX = convertLengthUnitToSlateUnit(styles.columnGap, styles) || gapX;
+        }
+        if (styles?.rowGap !== undefined) {
+            gapY = convertLengthUnitToSlateUnit(styles.rowGap, styles) || gapY;
+        }
+
+        // Apply inner slot padding based on orientation
+        if (wrapBox.Orientation === UE.EOrientation.Orient_Horizontal) {
+            wrapBox.SetInnerSlotPadding(new UE.Vector2D(gapX, gapY));
+        } else {
+            wrapBox.SetInnerSlotPadding(new UE.Vector2D(gapY, gapX));
+        }
+    }
+
     private setupTextBlockProperties(textBlock: UE.TextBlock, props: any) {
         const styles = this.normalizeStyles(props);
         if (hasFontStyles(styles)) {
@@ -240,24 +308,52 @@ export class TextConverter extends JSXConverter {
 
     createNativeWidget() {
         if (this.props?.children) {
-            console.log(typeof this.props.children[1]);
-            console.log(this.props.children[1].$$typeof);
-            console.log(this.props.children[1].type);
+            if (!this.textWrapBox && isReactElementInChildren(this.props.children)) {
+                // create wrap box
+                this.textWrapBox = new UE.WrapBox();
+                this.setupWrapBoxProperties(this.textWrapBox, this.props);
+            }
         }
 
-        const text = new UE.TextBlock(this.outer);
-        this.setupTextBlockProperties(text, this.props);
+        this.mainText = new UE.TextBlock(this.outer);
+        this.setupTextBlockProperties(this.mainText, this.props);
         const content = this.extractTextContent(this.props);
-        this.applyTextContent(text, content);
-        UE.UMGManager.SynchronizeWidgetProperties(text);
-        return text;
+        this.applyTextContent(this.mainText, content);
+        UE.UMGManager.SynchronizeWidgetProperties(this.mainText);
+
+        if (this.textWrapBox) {
+            this.textWrapBoxSlot[this.mainText.GetName()] = this.textWrapBox.AddChildToWrapBox(v);
+            return this.textWrapBox;
+        }
+
+        return this.mainText;
     }
 
     update(widget: UE.Widget, _oldProps: any, _changedProps: any) {
-        const text = widget as UE.TextBlock;
-        this.setupTextBlockProperties(text, this.props);
-        const content = this.extractTextContent(this.props);
+
+        if (this.props?.children || _changedProps?.children) {
+            if (!this.textWrapBox && (isReactElementInChildren(this.props.children) || isReactElementInChildren(_changedProps.children))) {
+                this.setupWrapBoxProperties(this.textWrapBox, _changedProps);
+            }
+        }
+
+        const text = this.mainText as UE.TextBlock
+        this.setupTextBlockProperties(text, _changedProps);
+        const content = this.extractTextContent(_changedProps);
         this.applyTextContent(text, content);
         UE.UMGManager.SynchronizeWidgetProperties(text);
+    }
+
+    appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
+        if (parent instanceof UE.WrapBox && this.textWrapBox == parent) {
+            this.textWrapBoxSlot[child.GetName()] = parent.AddChildToWrapBox(child);
+        }
+    }
+
+    removeChild(parent: UE.Widget, child: UE.Widget): void {
+        if (parent instanceof UE.WrapBox && this.textWrapBox == parent) {
+            delete this.textWrapBoxSlot[child.GetName()];
+            parent.RemoveChild(child);
+        }
     }
 }
