@@ -322,7 +322,7 @@ export class TextConverter extends JSXConverter {
         UE.UMGManager.SynchronizeWidgetProperties(this.mainText);
 
         if (this.textWrapBox) {
-            this.textWrapBoxSlot[this.mainText.GetName()] = this.textWrapBox.AddChildToWrapBox(v);
+            this.textWrapBoxSlot[this.mainText.GetName()] = this.textWrapBox.AddChildToWrapBox(this.mainText);
             return this.textWrapBox;
         }
 
