@@ -175,6 +175,12 @@ export function compareTwoFunctions(func1: Function, func2: Function): boolean {
 
 export function isReactElementInChildren(children: any[]): boolean {
     if (!children) return false;
-    const isReactElement = (child: any): boolean => { return typeof child === "object" && child !== null && child.$$typeof === Symbol.for("react.element"); }
-    return children.some(child => isReactElement(child));
+    if (!Array.isArray(children)) return false;
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (typeof child === "object" && child !== null && child.$$typeof === Symbol.for("react.element")) {
+            return true;
+        }
+    }
+    return false;
 }
