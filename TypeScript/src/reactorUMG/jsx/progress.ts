@@ -363,7 +363,10 @@ export class ProgressConverter extends JSXConverter {
         this.configureButtonBase(this.button);
 
         this.progressBar = new UE.ProgressBar(this.outer);
-        this.button.AddChild(this.progressBar);
+        const slot = this.button.AddChild(this.progressBar) as UE.ButtonSlot;
+        slot.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill);
+        slot.SetVerticalAlignment(UE.EVerticalAlignment.VAlign_Fill);
+        slot.SetPadding(new UE.Margin(0, 0, 0, 0));
 
         this.applyProgressStyles(this.progressBar);
         this.applyValueState(this.props);

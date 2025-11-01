@@ -8,6 +8,8 @@ export function parseWidgetSelfAlignment(style: any) {
         padding: new UE.Margin(0, 0, 0, 0)
     }
 
+    const flexDirection = style?.flexDirection ?? 'row';
+
     const justifySelf = style?.justifySelf;
     if (justifySelf) {
         switch (justifySelf) {
@@ -36,8 +38,15 @@ export function parseWidgetSelfAlignment(style: any) {
         }
     }
 
+    const padding = convertPadding(style);
+    if (padding) {
+        alignment.padding = padding;
+    }
+
     const alignSelf = style?.alignSelf;
-    if (alignSelf) {
+    if (!alignSelf) return alignment;
+
+    if (flexDirection === 'row') {
         switch (alignSelf) {
             case 'start':
                 alignment.vertical = UE.EVerticalAlignment.VAlign_Top;
@@ -60,12 +69,32 @@ export function parseWidgetSelfAlignment(style: any) {
             default:
                 alignment.vertical = UE.EVerticalAlignment.VAlign_Center;
                 break;
-        }
-    }
+            }
+    } else  {
+        switch (alignSelf) {
+            case 'start':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
+                break;
+            case 'end':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
+                break;
+            case 'center':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
+                break;
+            case 'stretch':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Fill;
+                break;
+            case 'left':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
+                break;
+            case 'right':
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
+                break;
+            default:
 
-    const padding = convertPadding(style);
-    if (padding) {
-        alignment.padding = padding;
+                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
+                break;
+        }
     }
 
     return alignment;

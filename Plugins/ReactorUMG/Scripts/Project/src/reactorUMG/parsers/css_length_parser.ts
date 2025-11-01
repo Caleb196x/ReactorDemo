@@ -8,7 +8,7 @@ import { safeParseFloat } from "../misc/utils";
  * @param style - React style object containing font size reference
  * @returns Converted value in SU units
  */
-export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any): number {
+export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any, referenceSize?: number): number {
     if (length === undefined || length === null) {
         return 0;
     }
@@ -40,7 +40,12 @@ export function convertLengthUnitToSlateUnit(length: string | number | undefined
             return parseFloat(match[1]);
         }
     } else if (normalized.endsWith("%")) {
-        // todo@Caleb196x: 需要获取父元素的百分比
+        const percent = parseFloat(normalized.substring(0, normalized.length - 1));
+        if (isNaN(percent)) {
+            return 0;
+        }
+        if (referenceSize) return (referenceSize * percent) / 100;
+        else return 0;
     } else if (normalized.endsWith("em")) {
         const match = normalized.match(/([+-]?\d+(?:\.\d+)?)em/);
         if (match) {

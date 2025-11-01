@@ -134,8 +134,28 @@ export function parseTransform(transform: CssType.Property.Transform, translate?
     }
 
     transformParts.forEach(part => {
-        const [property, ...values] = part.match(/[\w.-]+/g);
-        
+        if (!part || typeof part !== 'string') {
+            return;
+        }
+
+        const trimmedPart = (part as string).trim();
+        let property = trimmedPart;
+        let values: string[] = [];
+
+        const openParenIndex = trimmedPart.indexOf('(');
+        if (openParenIndex !== -1) {
+            const closeParenIndex = trimmedPart.lastIndexOf(')');
+            property = trimmedPart.slice(0, openParenIndex).trim();
+            const innerValues = closeParenIndex > openParenIndex
+                ? trimmedPart.slice(openParenIndex + 1, closeParenIndex)
+                : trimmedPart.slice(openParenIndex + 1);
+
+            values = innerValues
+                .split(/[,\s]+/)
+                .map(value => value.trim())
+                .filter(value => value.length > 0);
+        }
+
         switch (property) {
             case 'translate':
             case 'translate3d':

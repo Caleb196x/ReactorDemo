@@ -122,6 +122,10 @@ export abstract class ElementConverter {
     private initOrUpdateCommonProperties(widget: UE.Widget, changeProps: any) {
         const styles = getAllStyles(this.typeName, changeProps);
 
+        const desiredSize = widget.GetDesiredSize();
+        console.log("widget name: ", widget.GetName());
+        console.log("desiredSize:", desiredSize.ToString());
+
         const widgetProps = {};
         for (const key in this.translators) {
             const propName = this.PropMaps[key];

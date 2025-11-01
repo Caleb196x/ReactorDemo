@@ -11,9 +11,7 @@ type TextStyleProps = Record<string, any>;
 
 export class TextConverter extends JSXConverter {
     private readonly textFontSetupHandlers: Record<string, (textBlock: UE.TextBlock, prop: any) => void> = {};
-    private textWrapBox: UE.WrapBox;
-    private mainText: UE.TextBlock;
-    private textWrapBoxSlot: Record<string, UE.WrapBoxSlot>;
+    private textWrapBoxSlots: Map<UE.Widget, UE.WrapBoxSlot>;
     private static readonly elementDefaultStyles: Record<string, TextStyleProps> = {
         'text': {
             lineHeight: '1.4',
@@ -89,6 +87,7 @@ export class TextConverter extends JSXConverter {
             textTransform: (textBlock, prop) => this.setupTextTransform(textBlock, prop),
             lineHeight: (textBlock, prop) => this.setupLineHeight(textBlock, prop),
         };
+        this.textWrapBoxSlots = new Map();
     }
 
     private normalizeStyles(props: any): TextStyleProps {
@@ -308,51 +307,57 @@ export class TextConverter extends JSXConverter {
 
     createNativeWidget() {
         if (this.props?.children) {
-            if (!this.textWrapBox && isReactElementInChildren(this.props.children)) {
+            if (isReactElementInChildren(this.props.children)) {
                 // create wrap box
-                this.textWrapBox = new UE.WrapBox();
-                this.setupWrapBoxProperties(this.textWrapBox, this.props);
+                const textWrapBox = new UE.WrapBox();
+                this.setupWrapBoxProperties(textWrapBox, this.props);
+
+                return textWrapBox;
             }
         }
 
-        this.mainText = new UE.TextBlock(this.outer);
-        this.setupTextBlockProperties(this.mainText, this.props);
+        const text = new UE.TextBlock(this.outer);
+        this.setupTextBlockProperties(text, this.props);
         const content = this.extractTextContent(this.props);
-        this.applyTextContent(this.mainText, content);
-        UE.UMGManager.SynchronizeWidgetProperties(this.mainText);
+        this.applyTextContent(text, content);
+        UE.UMGManager.SynchronizeWidgetProperties(text);
 
-        if (this.textWrapBox) {
-            this.textWrapBoxSlot[this.mainText.GetName()] = this.textWrapBox.AddChildToWrapBox(this.mainText);
-            return this.textWrapBox;
-        }
-
-        return this.mainText;
+        return text;
+        
     }
 
     update(widget: UE.Widget, _oldProps: any, _changedProps: any) {
 
-        if (this.props?.children || _changedProps?.children) {
-            if (!this.textWrapBox && (isReactElementInChildren(this.props.children) || isReactElementInChildren(_changedProps.children))) {
-                this.setupWrapBoxProperties(this.textWrapBox, _changedProps);
+        if (widget instanceof UE.WrapBox) {
+            
+            if (this.props?.children || _changedProps?.children) {
+                if ((isReactElementInChildren(this.props.children) 
+                    || isReactElementInChildren(_changedProps.children))) 
+                {
+                    this.setupWrapBoxProperties(widget as UE.WrapBox, _changedProps);
+                }
             }
-        }
 
-        const text = this.mainText as UE.TextBlock
-        this.setupTextBlockProperties(text, _changedProps);
-        const content = this.extractTextContent(_changedProps);
-        this.applyTextContent(text, content);
-        UE.UMGManager.SynchronizeWidgetProperties(text);
+        } else if (widget instanceof UE.TextBlock) {
+            const text = widget as UE.TextBlock;
+            this.setupTextBlockProperties(text, _changedProps);
+            const content = this.extractTextContent(_changedProps);
+            this.applyTextContent(text, content);
+            UE.UMGManager.SynchronizeWidgetProperties(text);
+        }
     }
 
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
-        if (parent instanceof UE.WrapBox && this.textWrapBox == parent) {
-            this.textWrapBoxSlot[child.GetName()] = parent.AddChildToWrapBox(child);
+        if (parent instanceof UE.WrapBox) {
+            const slot = parent.AddChildToWrapBox(child);
+            slot.bFillEmptySpace = true;
+            this.textWrapBoxSlots.set(child, slot);
         }
     }
 
     removeChild(parent: UE.Widget, child: UE.Widget): void {
-        if (parent instanceof UE.WrapBox && this.textWrapBox == parent) {
-            delete this.textWrapBoxSlot[child.GetName()];
+        if (parent instanceof UE.WrapBox) {
+            this.textWrapBoxSlots.delete(child);
             parent.RemoveChild(child);
         }
     }

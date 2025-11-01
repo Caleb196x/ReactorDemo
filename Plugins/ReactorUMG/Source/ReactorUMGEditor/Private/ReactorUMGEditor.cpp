@@ -136,8 +136,8 @@ void CopyPredefinedTSProject()
 			const FString ReactorUMGLib = FPaths::Combine(PredefineDir, TEXT("src/reactorUMG"));
 			if (FPaths::DirectoryExists(ReactorUMGLib))
 			{
-				const FString DestLibPath = FPaths::Combine(TSProjectDir, TEXT("src/reactorUMG"));
-				FReactorUtils::CopyDirectoryTree(ReactorUMGLib, DestLibPath, true);
+				/*const FString DestLibPath = FPaths::Combine(TSProjectDir, TEXT("src/reactorUMG"));
+				FReactorUtils::CopyDirectoryTree(ReactorUMGLib, DestLibPath, true);*/
 			}
 		}
 	}

@@ -58,7 +58,12 @@ export class ContainerConverter extends ElementConverter {
             if (display === 'grid') {
                 return 'grid';
             } else {
-                return 'flex';
+                const position = this.containerStyle?.position || 'absolute';
+                if (position === 'relative') {
+                    return 'overlay';
+                } else {
+                    return 'flex';
+                }
             }
         } else {
             return normalizedType;

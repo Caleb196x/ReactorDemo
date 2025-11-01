@@ -14,6 +14,8 @@
 #include "Engine/StreamableManager.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/Widget.h"
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -420,3 +422,31 @@ void UUMGManager::RemoveRootWidgetFromWidgetTree(UWidgetTree* Container, UWidget
 
     Container->RootWidget = nullptr;
 }
+
+FVector2D UUMGManager::GetWidgetScreenPixelSize(UWidget* Widget, bool bReturnInLogicalViewportUnits)
+{
+    if (!IsValid(Widget))
+    {
+        return FVector2D::ZeroVector;
+    }
+
+    // 注意：首次 AddToViewport 的同帧，几何体还未完成布局，尺寸可能为零。
+    const FGeometry& Geo = Widget->GetCachedGeometry();
+
+    // 方式A：用布局边界（绝对/桌面空间）
+    const FSlateRect Rect = Geo.GetLayoutBoundingRect();
+    FVector2D SizePixels(Rect.Right - Rect.Left, Rect.Bottom - Rect.Top);
+
+    //（可选）如果你想要“逻辑单位”（DPI 缩放前的 viewport 单位），除以当前 ViewportScale
+    if (bReturnInLogicalViewportUnits)
+    {
+        const float Scale = UWidgetLayoutLibrary::GetViewportScale(Widget);
+        if (Scale > 0.f)
+        {
+            SizePixels /= Scale;
+        }
+    }
+
+    return SizePixels;
+}
+
