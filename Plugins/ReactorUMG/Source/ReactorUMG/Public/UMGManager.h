@@ -83,6 +83,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static FVector2D GetWidgetScreenPixelSize(UWidget* Widget, bool bReturnInLogicalViewportUnits = false);
+
+	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
+	static FVector2D GetCanvasSizeDIP(UObject* WorldContextObject);
+
 private:
 	static FString ProcessAssetFilePath(const FString& RelativePath, const FString& DirName);
 	static void LoadImageBrushAsset(const FString& AssetPath, UObject* Context, bool bIsSyncLoad, FAssetLoadedDelegate OnLoaded, FEasyDelegate OnFailed);

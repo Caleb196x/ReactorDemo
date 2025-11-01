@@ -145,12 +145,18 @@ export class ContainerConverter extends ElementConverter {
                 sizeBoxWidget = new UE.SizeBox(this.outer);
             }
             const sizeBox = sizeBoxWidget as UE.SizeBox;
+            const viewportSize = UE.UMGManager.GetCanvasSizeDIP(sizeBox);
+            setTimeout(()=>{const viewportSize = UE.UMGManager.GetCanvasSizeDIP(sizeBox); console.log("view size: ", viewportSize.ToString()); }, 5000)
             if (width !== 'auto') {
-                sizeBox.SetWidthOverride(convertLengthUnitToSlateUnit(width, this.containerStyle));
+                const widthPx = convertLengthUnitToSlateUnit(width, this.containerStyle, undefined, viewportSize);
+                if (widthPx !== 0)
+                    sizeBox.SetWidthOverride(widthPx);
             }
 
             if (height !== 'auto') {
-                sizeBox.SetHeightOverride(convertLengthUnitToSlateUnit(height, this.containerStyle));
+                const heightPx = convertLengthUnitToSlateUnit(height, this.containerStyle, undefined, viewportSize);
+                if (heightPx !== 0)
+                    sizeBox.SetHeightOverride(heightPx);
             }
 
             const maxWidth = this.containerStyle?.maxWidth;

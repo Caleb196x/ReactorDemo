@@ -1,4 +1,4 @@
-import * as UE from "ue";
+﻿import * as UE from "ue";
 import { safeParseFloat } from "../misc/utils";
 
 /**
@@ -8,7 +8,7 @@ import { safeParseFloat } from "../misc/utils";
  * @param style - React style object containing font size reference
  * @returns Converted value in SU units
  */
-export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any, referenceSize?: number): number {
+export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any, referenceSize?: number, viewSize?: UE.Vector2D): number {
     if (length === undefined || length === null) {
         return 0;
     }
@@ -30,6 +30,41 @@ export function convertLengthUnitToSlateUnit(length: string | number | undefined
 
     if (!fontSize.endsWith("px")) {
         fontSize = "16px";
+    }
+
+    const parseViewSize = (Value, isVertical) => {
+        let match;
+        if (isVertical) {
+            match = normalized.match(/([+-]?\d+(?:\.\d+)?)vh/);
+        } else {
+            match = normalized.match(/([+-]?\d+(?:\.\d+)?)vw/);
+        }
+
+        if (!match) {
+            return 0;
+        }
+        const value = parseFloat(match[1]) ?? 0;
+        if (isNaN(value) || !viewSize) {
+            return 0;
+        }
+
+        if (isVertical) {
+            const viewportHeight =
+                typeof viewSize.Y === "number"
+                    ? viewSize.Y
+                    : typeof (viewSize as any).y === "number"
+                    ? (viewSize as any).y
+                    : 0;
+            return (viewportHeight * value) / 100;
+        } else {
+            const viewportWidth =
+                typeof viewSize.X === "number"
+                    ? viewSize.X
+                    : typeof (viewSize as any).x === "number"
+                    ? (viewSize as any).x
+                    : 0;
+            return (viewportWidth * value) / 100;
+        }
     }
 
     const numSize = parseFloat(fontSize.replace("px", "")) || 16;
@@ -56,13 +91,17 @@ export function convertLengthUnitToSlateUnit(length: string | number | undefined
         if (match) {
             return parseFloat(match[1]) * numSize;
         }
+    } else if (normalized.endsWith("vh")) {
+        return parseViewSize(normalized, true);
+    }else if (normalized.endsWith("vw")) {
+        return parseViewSize(normalized, false);
     } else if (normalized === "thin") {
         return 12;
     } else if (normalized === "medium" || normalized === "normal") {
         return 16;
     } else if (normalized === "thick") {
         return 20;
-    } else if (!isNaN(parseFloat(normalized))) {
+    }else if (!isNaN(parseFloat(normalized))) {
         return parseFloat(normalized);
     }
 
@@ -152,4 +191,5 @@ export function parseAspectRatio(aspectRatio: string) {
 
     return 1.0;
 }
+
 

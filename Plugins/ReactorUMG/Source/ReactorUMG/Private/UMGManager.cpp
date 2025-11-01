@@ -450,3 +450,10 @@ FVector2D UUMGManager::GetWidgetScreenPixelSize(UWidget* Widget, bool bReturnInL
     return SizePixels;
 }
 
+FVector2D UUMGManager::GetCanvasSizeDIP(UObject* WorldContextObject)
+{
+    const auto ParentWidget = UWidgetLayoutLibrary::GetViewportWidgetGeometry(WorldContextObject);
+    const float Scale = UWidgetLayoutLibrary::GetViewportScale(WorldContextObject);
+    const FVector2D ViewportSizePx = ParentWidget.GetLocalSize();
+    return ViewportSizePx / FMath::Max(Scale, 0.0001f);
+}
