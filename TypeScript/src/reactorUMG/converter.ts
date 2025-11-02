@@ -142,13 +142,14 @@ export abstract class ElementConverter {
 
 const containerKeywords = ['div', 'Grid', 'grid', 'Overlay', 'overlay', 'Canvas', 'canvas', 'form', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside'];
 const jsxComponentsKeywords = [
-    'button', 'input', 'textarea', 'select', 'option', 'label', 'span', 'p', 'text',
+    'button', 'input', 'textarea', 'select', 'label', 'span', 'p', 'text',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'audio', 'progress'
 ];
 
 export function createElementConverter(typeName: string, props: any, outer: any): ElementConverter {
     const lowerType = typeName?.toLowerCase?.() ?? typeName;
-    const ignoredElements = new Set(['script', 'link', 'meta', 'title']);
+    const ignoredElements = new Set(['option', 'script', 'link', 'meta', 'title']);
+    const shouldBeAppendedElements = new Set(['option']);
     if (lowerType === 'style') {
         const Module = require(`./jsx/style`);
         if (Module) {
@@ -158,6 +159,8 @@ export function createElementConverter(typeName: string, props: any, outer: any)
     if (ignoredElements.has(lowerType)) {
         class NullConverter extends ElementConverter {
             public readonly ignore = true;
+            public forceAppend = false;
+            constructor(typeName: string, props: any, outer: any, shouldBeAppend: boolean = false) { super(typeName, props, outer); this.forceAppend = shouldBeAppend; }
             createNativeWidget(): UE.Widget { return null; }
             creatWidget(): UE.Widget { return null; }
             updateWidget(_widget: UE.Widget, _oldProps: any, _newProps: any): void {}
@@ -165,6 +168,11 @@ export function createElementConverter(typeName: string, props: any, outer: any)
             appendChild(_parent: UE.Widget, _child: UE.Widget, _childTypeName: string, _childProps: any): void {}
             removeChild(_parent: UE.Widget, _child: UE.Widget): void {}
         }
+
+        if (shouldBeAppendedElements.has(lowerType)) {
+            return new NullConverter(typeName, props, outer, true);
+        }
+
         return new NullConverter(typeName, props, outer);
     }
 

@@ -12,7 +12,7 @@ export class SelectConverter extends JSXConverter {
     private options: OptionItem[] = [];
     private labelToValue: Map<string, string> = new Map();
     private onChangeBound?: (SelectedItem: string, SelectionType: UE.ESelectInfo) => void;
-    private nativeOnChangeLast: (res: any) => void;
+    private nativeOnChangeLast: Function;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
@@ -95,18 +95,12 @@ export class SelectConverter extends JSXConverter {
 
     private ensureOnChange(combo: UE.ComboBoxString, props: any, isUpdate: boolean) {
         const onChange = props?.onChange;
-        if (typeof onChange !== 'function') {
-            if (isUpdate && this.onChangeBound) {
-                combo.OnSelectionChanged.Remove(this.onChangeBound);
-                this.onChangeBound = undefined;
-            }
-            return;
-        }
 
         const rebindOnChange = () => {
+            if (!onChange) return;
+
             if (this.onChangeBound) {
                 combo.OnSelectionChanged.Remove(this.onChangeBound);
-                this.onChangeBound = undefined;
             }
 
             this.onChangeBound = (selectedLabel: string, _type: UE.ESelectInfo) => {
@@ -121,7 +115,11 @@ export class SelectConverter extends JSXConverter {
                 rebindOnChange();
             }
         } else {
-            rebindOnChange();
+            if (onChange && typeof onChange === 'function') {
+                rebindOnChange();
+            }
+
+            // this.nativeOnChangeLast = onchange;
         }
     }
 
