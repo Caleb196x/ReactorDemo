@@ -96,7 +96,7 @@ export class SelectConverter extends JSXConverter {
     private ensureOnChange(combo: UE.ComboBoxString, props: any, isUpdate: boolean) {
         const onChange = props?.onChange;
 
-        const rebindOnChange = () => {
+        const rebindOnChange = (onChange: Function) => {
             if (!onChange) return;
 
             if (this.onChangeBound) {
@@ -112,14 +112,13 @@ export class SelectConverter extends JSXConverter {
 
         if (isUpdate) {
             if (!compareTwoFunctions(this.nativeOnChangeLast, onChange)) {
-                rebindOnChange();
+                rebindOnChange(onChange);
             }
         } else {
             if (onChange && typeof onChange === 'function') {
-                rebindOnChange();
+                rebindOnChange(onChange);
+                this.nativeOnChangeLast = onChange;
             }
-
-            // this.nativeOnChangeLast = onchange;
         }
     }
 
