@@ -73,6 +73,13 @@ export class OverlayConverter extends ContainerConverter {
         overlaySlot.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Left);
         overlaySlot.SetVerticalAlignment(UE.EVerticalAlignment.VAlign_Top);
         overlaySlot.SetPadding(new UE.Margin(0, 0, 0, 0));
+
+        const styleLeft = style?.left;
+        const styleTop = style?.top;
+        if (!styleLeft && !styleTop) return;
+
+        if (styleLeft.endsWith("%") && styleLeft === "50%") { overlaySlot.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Center); }
+        if (styleTop.endsWith("%") && styleTop === "50%") { overlaySlot.SetVerticalAlignment(UE.EVerticalAlignment.VAlign_Center); }
         UE.UMGManager.SynchronizeSlotProperties(overlaySlot);
 
         this.scheduleAbsoluteChildLayout(meta, style, 0);

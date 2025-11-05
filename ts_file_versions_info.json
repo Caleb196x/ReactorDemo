@@ -342,6 +342,22 @@
         "processed": false,
         "isBP": false
     },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Editor/Examples/NewReactorUMGUtilityWidgetBlueprint/NewReactorUMGUtilityWidgetBlueprint.tsx": {
+        "version": "4460307e36b288e3b19a00242483f0b7",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Editor/Examples/NewReactorUMGUtilityWidgetBlueprint/ToolPanel.tsx": {
+        "version": "1a8eb0d25bfc9fab1103151974b0c3b6",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Editor/Examples/NewReactorUMGUtilityWidgetBlueprint/index.ts": {
+        "version": "8c62e352f130839d7ddc068f4b783c06",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Editor/Examples/NewReactorUMGUtilityWidgetBlueprint/launch.tsx": {
+        "version": "645e339a34018fe8f00838103dad7b32",
+        "processed": false
+    },
     "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Editor/Examples/RUW_ButtonTest/ButtonTest.tsx": {
         "version": "5227504a45ee0a2b5c0836ff33306221",
         "processed": false,
@@ -748,7 +764,7 @@
         "isBP": false
     },
     "F:/AI_UI/ReactorDemo/TypeScript/src/reactorUMG/container/container_converter.ts": {
-        "version": "5d5229172461c1c7e8e85319e021cf49",
+        "version": "52f589b7c39ac8fc8a6cfe64badc1a7e",
         "processed": false,
         "isBP": false
     },
@@ -857,7 +873,7 @@
         "isBP": false
     },
     "F:/AI_UI/ReactorDemo/TypeScript/src/reactorUMG/parsers/css_length_parser.ts": {
-        "version": "383246f7f92065e8153be895284e43c4",
+        "version": "f7097e027a58b37881a9f4ce32fcd2be",
         "processed": false,
         "isBP": false
     },
@@ -1043,6 +1059,22 @@
     },
     "F:/AI_UI/ReactorDemo/TypeScript/node_modules/@types/react-reconciler/index.d.ts": {
         "version": "8caec537a13c87ec2ca3211652a7b522",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Examples/RUW_ToolPanel/NewReactorUMGUtilityWidgetBlueprint.tsx": {
+        "version": "4460307e36b288e3b19a00242483f0b7",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Examples/RUW_ToolPanel/ToolPanel.tsx": {
+        "version": "1a8eb0d25bfc9fab1103151974b0c3b6",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Examples/RUW_ToolPanel/index.ts": {
+        "version": "8c62e352f130839d7ddc068f4b783c06",
+        "processed": false
+    },
+    "F:/AI_UI/ReactorDemo/TypeScript/src/ReactDemo/Examples/RUW_ToolPanel/launch.tsx": {
+        "version": "645e339a34018fe8f00838103dad7b32",
         "processed": false
     }
 }

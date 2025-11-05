@@ -1,41 +1,46 @@
 import * as UE from "ue";
 import { convertPadding } from "./css_margin_parser";
 
+const HORIZONTAL_ALIGN_MAP: Readonly<Record<string, UE.EHorizontalAlignment>> = {
+    start: UE.EHorizontalAlignment.HAlign_Left,
+    left: UE.EHorizontalAlignment.HAlign_Left,
+    "flex-start": UE.EHorizontalAlignment.HAlign_Left,
+    end: UE.EHorizontalAlignment.HAlign_Right,
+    right: UE.EHorizontalAlignment.HAlign_Right,
+    "flex-end": UE.EHorizontalAlignment.HAlign_Right,
+    center: UE.EHorizontalAlignment.HAlign_Center,
+    stretch: UE.EHorizontalAlignment.HAlign_Fill
+};
+
+const VERTICAL_ALIGN_MAP: Readonly<Record<string, UE.EVerticalAlignment>> = {
+    start: UE.EVerticalAlignment.VAlign_Top,
+    top: UE.EVerticalAlignment.VAlign_Top,
+    "flex-start": UE.EVerticalAlignment.VAlign_Top,
+    end: UE.EVerticalAlignment.VAlign_Bottom,
+    bottom: UE.EVerticalAlignment.VAlign_Bottom,
+    "flex-end": UE.EVerticalAlignment.VAlign_Bottom,
+    center: UE.EVerticalAlignment.VAlign_Center,
+    stretch: UE.EVerticalAlignment.VAlign_Fill
+};
+
+const getHorizontalAlignment = (value: string) =>
+    HORIZONTAL_ALIGN_MAP[value] ?? UE.EHorizontalAlignment.HAlign_Center;
+
+const getVerticalAlignment = (value: string) =>
+    VERTICAL_ALIGN_MAP[value] ?? UE.EVerticalAlignment.VAlign_Center;
+
 export function parseWidgetSelfAlignment(style: any) {
-    let alignment = {
+    const alignment = {
         horizontal: UE.EHorizontalAlignment.HAlign_Fill,
         vertical: UE.EVerticalAlignment.VAlign_Fill,
         padding: new UE.Margin(0, 0, 0, 0)
-    }
+    };
 
-    const flexDirection = style?.flexDirection ?? 'row';
+    const flexDirection = style?.flexDirection ?? "row";
 
     const justifySelf = style?.justifySelf;
     if (justifySelf) {
-        switch (justifySelf) {
-            case 'start':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
-                break;
-            case 'end':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
-                break;
-            case 'center':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
-                break;
-            case 'stretch':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Fill;
-                break;
-            case 'left':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
-                break;
-            case 'right':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
-                break;
-            default:
-
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
-                break;
-        }
+        alignment.horizontal = getHorizontalAlignment(justifySelf);
     }
 
     const padding = convertPadding(style);
@@ -44,57 +49,14 @@ export function parseWidgetSelfAlignment(style: any) {
     }
 
     const alignSelf = style?.alignSelf;
-    if (!alignSelf) return alignment;
+    if (!alignSelf) {
+        return alignment;
+    }
 
-    if (flexDirection === 'row') {
-        switch (alignSelf) {
-            case 'start':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Top;
-                break;
-            case 'end':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Bottom;
-                break;
-            case 'center':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Center;
-                break;
-            case 'stretch':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Fill;
-                break;
-            case 'top':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Top;
-                break;
-            case 'bottom':
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Bottom;
-                break;
-            default:
-                alignment.vertical = UE.EVerticalAlignment.VAlign_Center;
-                break;
-            }
-    } else  {
-        switch (alignSelf) {
-            case 'start':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
-                break;
-            case 'end':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
-                break;
-            case 'center':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
-                break;
-            case 'stretch':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Fill;
-                break;
-            case 'left':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Left;
-                break;
-            case 'right':
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Right;
-                break;
-            default:
-
-                alignment.horizontal = UE.EHorizontalAlignment.HAlign_Center;
-                break;
-        }
+    if (flexDirection === "row") {
+        alignment.vertical = getVerticalAlignment(alignSelf);
+    } else {
+        alignment.horizontal = getHorizontalAlignment(alignSelf);
     }
 
     return alignment;

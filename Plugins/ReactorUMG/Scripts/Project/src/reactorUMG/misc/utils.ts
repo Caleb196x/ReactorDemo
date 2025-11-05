@@ -170,7 +170,8 @@ export function findChangedProps(oldProps: any, newProps: any): any {
 }
 
 export function compareTwoFunctions(func1: Function, func2: Function): boolean {
-  return func1.toString() === func2.toString();
+    if (!func1 || !func2) return false;
+    try { return func1.toString() === func2.toString(); } catch (_) { return false; }
 }
 
 export function isReactElementInChildren(children: any[]): boolean {

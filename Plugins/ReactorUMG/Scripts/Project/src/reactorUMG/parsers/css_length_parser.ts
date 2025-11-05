@@ -1,4 +1,4 @@
-import * as UE from "ue";
+﻿import * as UE from "ue";
 import { safeParseFloat } from "../misc/utils";
 
 /**
@@ -8,7 +8,7 @@ import { safeParseFloat } from "../misc/utils";
  * @param style - React style object containing font size reference
  * @returns Converted value in SU units
  */
-export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any, referenceSize?: number): number {
+export function convertLengthUnitToSlateUnit(length: string | number | undefined, style: any, referenceSize?: number, canvasSize?: UE.Vector2D/*目前无法在非运行时下获取到画布大小*/): number {
     if (length === undefined || length === null) {
         return 0;
     }
@@ -30,6 +30,43 @@ export function convertLengthUnitToSlateUnit(length: string | number | undefined
 
     if (!fontSize.endsWith("px")) {
         fontSize = "16px";
+    }
+
+    const parseViewSize = (input, isVertical) => {
+        if (!canvasSize) return 0;
+        
+        let match;
+        if (isVertical) {
+            match = input.match(/([+-]?\d+(?:\.\d+)?)vh/);
+        } else {
+            match = input.match(/([+-]?\d+(?:\.\d+)?)vw/);
+        }
+
+        if (!match) {
+            return 0;
+        }
+        const value = parseFloat(match[1]) ?? 0;
+        if (isNaN(value)) {
+            return 0;
+        }
+
+        if (isVertical) {
+            const viewportHeight =
+                typeof canvasSize.Y === "number"
+                    ? canvasSize.Y
+                    : typeof (canvasSize as any).y === "number"
+                    ? (canvasSize as any).y
+                    : 0;
+            return (viewportHeight * value) / 100;
+        } else {
+            const viewportWidth =
+                typeof canvasSize.X === "number"
+                    ? canvasSize.X
+                    : typeof (canvasSize as any).x === "number"
+                    ? (canvasSize as any).x
+                    : 0;
+            return (viewportWidth * value) / 100;
+        }
     }
 
     const numSize = parseFloat(fontSize.replace("px", "")) || 16;
@@ -56,13 +93,17 @@ export function convertLengthUnitToSlateUnit(length: string | number | undefined
         if (match) {
             return parseFloat(match[1]) * numSize;
         }
+    } else if (normalized.endsWith("vh")) {
+        return parseViewSize(normalized, true);
+    }else if (normalized.endsWith("vw")) {
+        return parseViewSize(normalized, false);
     } else if (normalized === "thin") {
         return 12;
     } else if (normalized === "medium" || normalized === "normal") {
         return 16;
     } else if (normalized === "thick") {
         return 20;
-    } else if (!isNaN(parseFloat(normalized))) {
+    }else if (!isNaN(parseFloat(normalized))) {
         return parseFloat(normalized);
     }
 
@@ -152,4 +193,5 @@ export function parseAspectRatio(aspectRatio: string) {
 
     return 1.0;
 }
+
 

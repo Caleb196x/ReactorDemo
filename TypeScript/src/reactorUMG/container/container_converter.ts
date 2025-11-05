@@ -145,16 +145,14 @@ export class ContainerConverter extends ElementConverter {
                 sizeBoxWidget = new UE.SizeBox(this.outer);
             }
             const sizeBox = sizeBoxWidget as UE.SizeBox;
-            const viewportSize = UE.UMGManager.GetCanvasSizeDIP(this.outer);
-            setTimeout(()=>{const viewportSize = UE.UMGManager.GetCanvasSizeDIP(this.outer); console.log("view size: ", viewportSize.ToString()); }, 5000)
             if (width !== 'auto') {
-                const widthPx = convertLengthUnitToSlateUnit(width, this.containerStyle, undefined, viewportSize);
+                const widthPx = convertLengthUnitToSlateUnit(width, this.containerStyle, undefined);
                 if (widthPx !== 0)
                     sizeBox.SetWidthOverride(widthPx);
             }
 
             if (height !== 'auto') {
-                const heightPx = convertLengthUnitToSlateUnit(height, this.containerStyle, undefined, viewportSize);
+                const heightPx = convertLengthUnitToSlateUnit(height, this.containerStyle, undefined);
                 if (heightPx !== 0)
                     sizeBox.SetHeightOverride(heightPx);
             }
@@ -186,7 +184,7 @@ export class ContainerConverter extends ElementConverter {
             }
 
             if (!updateProps) {
-                this.externalSlot = sizeBox.AddChild(Widget) as UE.SizeBoxSlot;
+                this.externalSlot = sizeBox.AddChild(Widget) as UE.SizeBoxSlot
             }
 
             return sizeBox;

@@ -146,11 +146,15 @@ export class ContainerConverter extends ElementConverter {
             }
             const sizeBox = sizeBoxWidget as UE.SizeBox;
             if (width !== 'auto') {
-                sizeBox.SetWidthOverride(convertLengthUnitToSlateUnit(width, this.containerStyle));
+                const widthPx = convertLengthUnitToSlateUnit(width, this.containerStyle, undefined);
+                if (widthPx !== 0)
+                    sizeBox.SetWidthOverride(widthPx);
             }
 
             if (height !== 'auto') {
-                sizeBox.SetHeightOverride(convertLengthUnitToSlateUnit(height, this.containerStyle));
+                const heightPx = convertLengthUnitToSlateUnit(height, this.containerStyle, undefined);
+                if (heightPx !== 0)
+                    sizeBox.SetHeightOverride(heightPx);
             }
 
             const maxWidth = this.containerStyle?.maxWidth;
@@ -180,7 +184,7 @@ export class ContainerConverter extends ElementConverter {
             }
 
             if (!updateProps) {
-                this.externalSlot = sizeBox.AddChild(Widget) as UE.SizeBoxSlot;
+                this.externalSlot = sizeBox.AddChild(Widget) as UE.SizeBoxSlot
             }
 
             return sizeBox;

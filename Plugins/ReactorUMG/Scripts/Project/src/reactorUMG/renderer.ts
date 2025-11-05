@@ -56,7 +56,7 @@ class UMGWidget {
             this.native = this.converter.createWidget();
             const shouldIgnore = (this.converter as any)?.ignore === true;
             if (this.native === null && !shouldIgnore) {
-                console.error("Not supported widget: " + this.typeName);
+                console.warn("Not supported widget: " + this.typeName);
             }
         } catch(e) {
             console.error("Failed to create widget: " + this.typeName + ", error: " + e);
@@ -71,7 +71,9 @@ class UMGWidget {
     }
 
     appendChild(child: UMGWidget) {
-        if (this.native && child && child.native) {
+        const shouldForceAppend = (child.converter as any)?.forceAppend === true;
+        if ((shouldForceAppend &&this.native && child ) 
+            || (this.native && child && child.native)) {
             this.converter.appendChild(this.native, child.native, child.typeName, child.props);
         }
     }
@@ -104,7 +106,7 @@ class RootContainer {
 
 const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, UMGWidget, any, any, {}, any, any, any, any, any> = {
     getRootHostContext () { return {}; },
-    //CanvasPanel()的parentHostContext是getRootHostContext返回的�?    
+    //CanvasPanel()的parentHostContext是getRootHostContext返回的
     getChildHostContext (parentHostContext: {}) { return parentHostContext;},
     appendInitialChild (parent: UMGWidget, child: UMGWidget) { parent.appendChild(child); },
     appendChildToContainer (container: RootContainer, child: UMGWidget) { container.appendChild(child); },
@@ -135,7 +137,6 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
     },
   
     //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
-        //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
     prepareUpdate (instance: UMGWidget, type: string, oldProps: any, newProps: any) {
         try{
             const textContainers = new Set(['text','span','textarea','label','p','a','h1','h2','h3','h4','h5','h6']);
@@ -159,7 +160,7 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         try{
             instance.update(oldProps, newProps);
         } catch(e) {
-            console.error("commitUpdate fail!, " + e);
+            console.error("commitUpdate fail!, " + e + "\n" + e.stack);
         }
     },
 
